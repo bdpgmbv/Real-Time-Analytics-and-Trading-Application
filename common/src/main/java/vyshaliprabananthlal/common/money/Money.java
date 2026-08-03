@@ -6,19 +6,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Objects;
 
-/**
- * An amount in a single currency.
- *
- * <p>Always {@link BigDecimal}, never {@code double}. A fund's exposure runs to eleven figures and
- * binary floating point loses cents at that magnitude.
- *
- * <p>Arithmetic here never rounds. A valuation chain - price x quantity x FX rate x weight - rounds
- * once at the end via {@link #roundToMinorUnits()}. Rounding at each step accumulates drift that
- * surfaces as a phantom unhedged balance on large notionals.
- */
 public record Money(Ccy ccy, BigDecimal amount) implements Serializable {
-
-  /** Division precision: 34 significant digits, i.e. IEEE 754-2008 decimal128. */
   public static final MathContext DIVISION = new MathContext(34, RoundingMode.HALF_EVEN);
 
   public Money {
@@ -52,7 +40,6 @@ public record Money(Ccy ccy, BigDecimal amount) implements Serializable {
     return new Money(ccy, amount.negate());
   }
 
-  /** Scales by a dimensionless factor: a quantity, an exposure weight, a hedge ratio. */
   public Money times(BigDecimal factor) {
     Objects.requireNonNull(factor, "factor");
     return new Money(ccy, amount.multiply(factor));
@@ -66,7 +53,6 @@ public record Money(Ccy ccy, BigDecimal amount) implements Serializable {
     return new Money(ccy, amount.divide(divisor, DIVISION));
   }
 
-  /** Rounds half-even to the currency's minor units. Call once, at the boundary. */
   public Money roundToMinorUnits() {
     int scale = ccy.minorUnits();
     BigDecimal rounded = amount.setScale(scale, RoundingMode.HALF_EVEN);
@@ -85,11 +71,6 @@ public record Money(Ccy ccy, BigDecimal amount) implements Serializable {
     return amount.signum();
   }
 
-  /**
-   * Value equality ignoring scale: 100 USD and 100.00 USD are the same money. The record's
-   * generated {@code equals} delegates to {@link BigDecimal#equals}, which is scale-sensitive and
-   * would call those two unequal. Use this for domain comparisons.
-   */
   public boolean isEqualValue(Money other) {
     requireSameCcy(other);
     return amount.compareTo(other.amount) == 0;

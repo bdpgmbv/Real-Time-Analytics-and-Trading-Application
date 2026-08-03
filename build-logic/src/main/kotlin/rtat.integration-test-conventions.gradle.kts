@@ -7,9 +7,6 @@ plugins {
 
 val libs = the<LibrariesForLibs>()
 
-// Integration tests need Docker and take seconds to minutes. Keeping them out of
-// `test` means `./gradlew test` stays fast and runs anywhere, while `check` still
-// runs everything.
 testing {
     suites {
         register<JvmTestSuite>("integrationTest") {

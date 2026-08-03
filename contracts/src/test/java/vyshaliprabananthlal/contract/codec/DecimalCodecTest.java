@@ -11,7 +11,6 @@ import vyshaliprabananthlal.common.money.Money;
 import vyshaliprabananthlal.contract.v1.Decimal;
 
 class DecimalCodecTest {
-
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -19,9 +18,9 @@ class DecimalCodecTest {
         "1",
         "-1",
         "0.00",
-        "121012951.50", // a real exposure figure from the legacy grid
+        "121012951.50",
         "-9038572.29",
-        "3676923340.00", // JPY notional
+        "3676923340.00",
         "1765848971.54",
         "0.000000000001",
         "-99999999999999999999.999999999999"

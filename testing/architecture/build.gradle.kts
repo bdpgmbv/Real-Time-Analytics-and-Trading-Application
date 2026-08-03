@@ -10,8 +10,6 @@ dependencies {
     testImplementation(project(":contracts"))
 }
 
-// This module has no production classes of its own, so a coverage threshold here
-// measures nothing.
 tasks.named("jacocoTestCoverageVerification") {
     enabled = false
 }

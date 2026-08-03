@@ -11,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class CcyTest {
-
   @Test
   void normalisesCaseAndWhitespace() {
     assertThat(Ccy.of(" usd ").code()).isEqualTo("USD");
@@ -61,8 +60,6 @@ class CcyTest {
   void equalityHandlesSelfNullAndForeignTypes() {
     Ccy usd = Ccy.of("USD");
 
-    // Typed as Object deliberately: the equals contract must reject a foreign type at
-    // runtime, and a String literal here would just be a compile-time error instead.
     Object foreignType = "USD";
 
     assertThat(usd.equals(usd)).isTrue();

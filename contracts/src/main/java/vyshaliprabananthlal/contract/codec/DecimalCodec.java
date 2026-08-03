@@ -6,14 +6,7 @@ import java.math.BigInteger;
 import vyshaliprabananthlal.common.money.Ccy;
 import vyshaliprabananthlal.contract.v1.Decimal;
 
-/**
- * Converts between wire decimals and {@link BigDecimal}, losslessly in both directions.
- *
- * <p>This is the boundary. Generated protobuf types stop here - everything above works with plain
- * Java records and {@link BigDecimal}.
- */
 public final class DecimalCodec {
-
   private DecimalCodec() {}
 
   public static Decimal toProto(BigDecimal value) {
@@ -24,11 +17,6 @@ public final class DecimalCodec {
         .build();
   }
 
-  /**
-   * A default-constructed {@link Decimal} has an empty unscaled field, and {@code new
-   * BigInteger(new byte[0])} throws. Reading empty as zero keeps an unset optional from becoming a
-   * decode failure deep inside a Flink operator.
-   */
   public static BigDecimal fromProto(Decimal proto) {
     ByteString unscaled = proto.getUnscaled();
     if (unscaled.isEmpty()) {

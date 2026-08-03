@@ -15,8 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "realtimeanalyticsandtrading"
 
-// Modules are added one per build step rather than declared up front, so the
-// build stays green at every commit.
 include("common")
 include("contracts")
 include("testing:architecture")

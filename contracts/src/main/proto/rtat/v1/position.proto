@@ -8,13 +8,10 @@ import "rtat/v1/common.proto";
 option java_package = "vyshaliprabananthlal.contract.v1";
 option java_multiple_files = true;
 
-// One holding of one product in one account. Natural key: (account_id, product_id).
 message Position {
   string account_id = 1;
   string product_id = 2;
 
-  // Denormalised from the hierarchy so grid roll-ups and entitlement filters do
-  // not need a refdata join per position.
   string fund_id = 3;
   string client_id = 4;
 
@@ -22,12 +19,9 @@ message Position {
   PositionType position_type = 6;
   optional Money cost_basis = 7;
 
-  // Grid grouping attributes, deliberately NOT levels of the ownership hierarchy.
-  // The grid groups by these and users regroup freely without a model change.
   optional string manager = 8;
   optional string deal = 9;
 
-  // Forward and swap legs only.
   optional google.protobuf.Timestamp value_date = 10;
 }
 
@@ -42,21 +36,12 @@ enum PositionType {
   POSITION_TYPE_FUTURE = 7;
 }
 
-// Positions arrive as a snapshot per account.
-//
-// A whole snapshot in one message would be tens of megabytes for a large account -
-// past Kafka's default max.message.bytes, and it would serialise the work onto one
-// consumer. So positions stream individually, bracketed by boundary markers.
 message PositionEvent {
   EventMeta meta = 1;
   string snapshot_id = 2;
   Position position = 3;
 }
 
-// Delimits a snapshot. The COMPLETE marker carries the expected count, which is how
-// a consumer tells a finished load from a truncated one instead of valuing a partial
-// portfolio. It is also the trigger for reporting sign-off once every account in a
-// client has completed.
 message SnapshotBoundary {
   EventMeta meta = 1;
   string snapshot_id = 2;
@@ -64,7 +49,6 @@ message SnapshotBoundary {
   SnapshotKind kind = 4;
   Marker marker = 5;
 
-  // Set on COMPLETE only: how many PositionEvents belong to this snapshot.
   optional int64 position_count = 6;
 
   enum Marker {

@@ -7,44 +7,25 @@ import "google/protobuf/timestamp.proto";
 option java_package = "vyshaliprabananthlal.contract.v1";
 option java_multiple_files = true;
 
-// An exact decimal.
-//
-// Protobuf has no decimal type, and double silently loses cents at fund-level
-// notionals. Values travel as a BigDecimal taken apart and are reassembled with
-// new BigDecimal(new BigInteger(unscaled), scale) - lossless in both directions.
 message Decimal {
-  // Two's-complement big-endian unscaled value, i.e. BigInteger.toByteArray().
-  // Empty is read as zero so a default-constructed message is not a decode error.
   bytes unscaled = 1;
 
-  // Digits right of the decimal point. May be negative, as BigDecimal permits.
   int32 scale = 2;
 }
 
-// An amount in a single currency.
 message Money {
-  // ISO 4217 where one exists. CNH is accepted although ISO does not list it.
   string ccy = 1;
   Decimal amount = 2;
 }
 
-// Metadata every event on the bus carries.
 message EventMeta {
-  // Unique per event. Consumers dedupe on this. Producers must keep it stable
-  // across retries, or exactly-once quietly degrades to at-least-once.
   string event_id = 1;
 
-  // When the fact happened in the source system. This drives Flink watermarks.
-  // It is not the time we received it.
   google.protobuf.Timestamp event_time = 2;
 
-  // When this platform accepted it. Diagnostics and lag metrics only - never
-  // used for windowing, or late data would be silently treated as on time.
   google.protobuf.Timestamp ingest_time = 3;
 
-  // Upstream that produced the fact, e.g. "position-feed", "trade-feed".
   string source = 4;
 
-  // Ties an event back to the request or batch that caused it, across services.
   string correlation_id = 5;
 }

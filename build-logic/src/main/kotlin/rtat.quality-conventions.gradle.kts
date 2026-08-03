@@ -18,8 +18,7 @@ val libs = the<LibrariesForLibs>()
 dependencies {
     errorprone(libs.errorprone.core)
     errorprone(libs.nullaway)
-    // JSpecify supplies @Nullable/@NonNull. compileOnly: annotations are not needed
-    // at runtime and should not appear on a consumer's classpath.
+
     compileOnly(libs.jspecify)
     testCompileOnly(libs.jspecify)
 }
@@ -30,7 +29,7 @@ spotless {
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
-        // Generated protobuf sources are not ours to format.
+
         targetExclude("**/build/generated/**")
     }
     kotlinGradle {
@@ -41,20 +40,19 @@ spotless {
 tasks.withType<JavaCompile>().configureEach {
     options.errorprone {
         disableWarningsInGeneratedCode = true
-        // Generated code is excluded wholesale rather than annotated.
+
         excludedPaths = ".*/build/generated/.*"
 
         check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
         option("NullAway:AnnotatedPackages", "vyshaliprabananthlal")
-        // Treat a missing @Nullable as a bug, not a warning: a null slipping into a
-        // valuation chain surfaces as a wrong number, not an exception.
+
         option("NullAway:UnannotatedSubPackages", "vyshaliprabananthlal.contract.v1")
     }
 }
 
 spotbugs {
     effort = Effort.MAX
-    // LOW would drown the build in style noise; MEDIUM catches real defects.
+
     reportLevel = Confidence.MEDIUM
     excludeFilter = rootProject.layout.projectDirectory.file("config/spotbugs/exclude.xml").asFile
 }
@@ -64,7 +62,6 @@ tasks.withType<SpotBugsTask>().configureEach {
     reports.create("xml") { required = false }
 }
 
-// SpotBugs on test sources finds little of value and slows every build.
 tasks.named("spotbugsTest") {
     enabled = false
 }
@@ -113,8 +110,6 @@ tasks.named("check") {
     dependsOn(tasks.named("jacocoTestCoverageVerification"))
 }
 
-// Reproducible archives: identical sources must produce byte-identical jars, or
-// "the same build" cannot be verified across machines.
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true

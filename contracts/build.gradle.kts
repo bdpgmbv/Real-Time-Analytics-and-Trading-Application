@@ -16,9 +16,6 @@ protobuf {
     }
 }
 
-// protoc-generated sources do not survive -Xlint:all -Werror, and we cannot fix
-// warnings in code we do not write. This module compiles permissively; every other
-// module keeps the strict flags from the convention plugin.
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs = listOf("-Xlint:none", "-parameters")
 }

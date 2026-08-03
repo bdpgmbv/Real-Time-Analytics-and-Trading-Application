@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class MoneyTest {
-
   @Test
   void addsAndSubtractsWithinOneCurrency() {
     Money a = Money.of("EUR", "100000.00");

@@ -7,20 +7,12 @@ import "google/protobuf/timestamp.proto";
 option java_package = "vyshaliprabananthlal.contract.v1";
 option java_multiple_files = true;
 
-// Ownership hierarchy: Client > Fund > Account > Product > Position.
-// These four levels are reference data and change far more slowly than positions.
-
-// A hedge fund company, and the entitlement boundary: users are granted clients.
 message Client {
   string client_id = 1;
   string name = 2;
   bool active = 3;
 }
 
-// A fund managed by a client.
-//
-// base_ccy lives here, not on the account: an exposure only means something
-// relative to the currency the fund reports in.
 message Fund {
   string fund_id = 1;
   string client_id = 2;
@@ -29,20 +21,14 @@ message Fund {
   bool active = 5;
 }
 
-// A custody or portfolio account within a fund.
-//
-// Position loads arrive per account, which is why account_id is the partition
-// key on position topics - keying by client_id would make a large client a hot
-// partition and cap parallelism at the number of clients.
 message Account {
   string account_id = 1;
   string fund_id = 2;
-  string client_id = 3;   // denormalised: no join on the entitlement hot path
+  string client_id = 3;
   string name = 4;
   bool active = 5;
 }
 
-// What a position is held in.
 message Product {
   string product_id = 1;
   ProductIdentifier primary_identifier = 2;
@@ -50,12 +36,10 @@ message Product {
   string description = 4;
   AssetCategory asset_category = 5;
 
-  // Currency the instrument is issued in, and the one it settles in. They differ
-  // more often than you would expect, and the exposure calculation needs both.
   string issue_ccy = 6;
   string settle_ccy = 7;
 
-  optional google.protobuf.Timestamp maturity_date = 8;  // forwards, bonds
+  optional google.protobuf.Timestamp maturity_date = 8;
   optional string exchange = 9;
   optional string market_data_symbol = 10;
 }
