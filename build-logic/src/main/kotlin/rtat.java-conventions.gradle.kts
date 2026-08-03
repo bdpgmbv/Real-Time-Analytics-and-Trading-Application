@@ -1,7 +1,9 @@
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
-    java
+    // java-library, not java: modules like contracts expose generated types to
+    // consumers, which needs the `api` configuration.
+    `java-library`
 }
 
 val libs = the<LibrariesForLibs>()

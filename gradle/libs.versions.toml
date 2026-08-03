@@ -10,6 +10,7 @@ springBoot = "4.0.7"
 springCloud = "2025.1.2"
 
 protobuf = "4.35.1"
+protobufPlugin = "0.10.0"
 junit = "6.1.2"
 assertj = "3.27.7"
 testcontainers = "2.0.5"
@@ -28,6 +29,7 @@ spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies"
 spring-cloud-bom = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "springCloud" }
 
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
@@ -38,3 +40,4 @@ awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" 
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
