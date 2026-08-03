@@ -13,10 +13,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # buf breaking compares against main, which needs real history.
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -27,13 +30,36 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build and test
+      # Fails on unformatted code rather than reformatting it, so a diff never
+      # appears in a build that was not asked for one.
+      - name: Formatting
+        run: ./gradlew spotlessCheck
+
+      # Compiles with ErrorProne and NullAway, runs SpotBugs, unit tests,
+      # integration tests and the coverage gate.
+      - name: Build, test and verify
         run: ./gradlew checkAll --stacktrace
 
-      - name: Upload test reports
+      - name: Software bill of materials
+        run: ./gradlew cyclonedxBom
+
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
+      - name: Proto lint
+        run: buf lint
+
+      - name: Proto breaking-change check
+        if: github.event_name == 'pull_request'
+        run: buf breaking --against "https://github.com/${GITHUB_REPOSITORY}.git#branch=main"
+
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
-          path: '**/build/reports/tests/**'
+          name: build-reports
+          path: |
+            **/build/reports/**
+            **/build/reports/jacoco/**
           retention-days: 7

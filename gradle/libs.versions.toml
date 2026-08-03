@@ -15,6 +15,17 @@ junit = "6.1.2"
 assertj = "3.27.7"
 testcontainers = "2.0.5"
 awaitility = "4.3.0"
+archunit = "1.4.2"
+jspecify = "1.0.1"
+
+# Quality gates
+errorpronePlugin = "5.1.0"
+errorprone = "2.50.0"
+nullaway = "0.13.8"
+spotlessPlugin = "8.9.0"
+googleJavaFormat = "1.36.1"
+spotbugsPlugin = "6.5.9"
+cyclonedxPlugin = "3.3.0"
 
 [libraries]
 # Flink core is compileOnly in job modules - the cluster provides it at runtime.
@@ -36,8 +47,24 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+testcontainers-junit = { module = "org.testcontainers:junit-jupiter" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
+archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+
+errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
+nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+
+spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "springBoot" }
+errorprone-gradle-plugin = { module = "net.ltgt.gradle:gradle-errorprone-plugin", version.ref = "errorpronePlugin" }
+spotless-gradle-plugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotlessPlugin" }
+spotbugs-gradle-plugin = { module = "com.github.spotbugs.snom:spotbugs-gradle-plugin", version.ref = "spotbugsPlugin" }
+cyclonedx-gradle-plugin = { module = "org.cyclonedx:cyclonedx-gradle-plugin", version.ref = "cyclonedxPlugin" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotlessPlugin" }
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorpronePlugin" }
+spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugsPlugin" }
+cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedxPlugin" }

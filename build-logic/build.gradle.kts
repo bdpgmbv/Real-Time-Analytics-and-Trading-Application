@@ -13,4 +13,11 @@ dependencies {
     // plugins. Putting the generated accessor classes on the classpath lets the
     // convention plugins reference `libs`, so every version stays in one file.
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+
+    // Plugins applied from inside precompiled script plugins must be on this
+    // classpath, not just declared in the catalog.
+    implementation(libs.errorprone.gradle.plugin)
+    implementation(libs.spotless.gradle.plugin)
+    implementation(libs.spotbugs.gradle.plugin)
+    implementation(libs.cyclonedx.gradle.plugin)
 }

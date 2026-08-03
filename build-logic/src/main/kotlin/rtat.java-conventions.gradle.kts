@@ -4,6 +4,7 @@ plugins {
     // java-library, not java: modules like contracts expose generated types to
     // consumers, which needs the `api` configuration.
     `java-library`
+    id("rtat.quality-conventions")
 }
 
 val libs = the<LibrariesForLibs>()
@@ -47,3 +48,11 @@ tasks.withType<Test>().configureEach {
         showStandardStreams = false
     }
 }
+
+// Lock resolved versions so a build today and a rebuild in six months produce the
+// same bytes. Only runtime classpaths: locking every configuration makes routine
+// dependency edits painful for no reproducibility gain.
+configurations.matching { it.name.contains("ompileClasspath") || it.name.contains("untimeClasspath") }
+    .configureEach {
+        resolutionStrategy.activateDependencyLocking()
+    }

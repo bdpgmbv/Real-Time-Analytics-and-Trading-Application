@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+
+  <!-- Generated protobuf sources. Not ours to fix. -->
+  <Match>
+    <Package name="~vyshaliprabananthlal\.contract\.v1.*"/>
+  </Match>
+
+  <!-- SpotBugs flags every BigDecimal and record accessor that hands back a
+       reference as "exposing internal representation". BigDecimal is immutable,
+       so this is noise here, not a finding. -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+
+</FindBugsFilter>

@@ -19,3 +19,4 @@ rootProject.name = "realtimeanalyticsandtrading"
 // build stays green at every commit.
 include("common")
 include("contracts")
+include("testing:architecture")
