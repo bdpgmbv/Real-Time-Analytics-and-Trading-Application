@@ -1,0 +1,40 @@
+[versions]
+# Flink 2.2.x, NOT 2.3.0: flink-connector-kafka's newest build is 5.0.0-2.2, which
+# targets the 2.2 line. Connector alignment beats being on the newest core.
+flink = "2.2.1"
+flinkKafka = "5.0.0-2.2"
+
+# Boot 4.0.7, NOT 4.1.0: spring-cloud-dependencies 2025.1.2 declares
+# spring-boot.version=4.0.7. Match the train that was actually tested together.
+springBoot = "4.0.7"
+springCloud = "2025.1.2"
+
+protobuf = "4.35.1"
+junit = "6.1.2"
+assertj = "3.27.7"
+testcontainers = "2.0.5"
+awaitility = "4.3.0"
+
+[libraries]
+# Flink core is compileOnly in job modules - the cluster provides it at runtime.
+flink-streaming-java = { module = "org.apache.flink:flink-streaming-java", version.ref = "flink" }
+flink-clients = { module = "org.apache.flink:flink-clients", version.ref = "flink" }
+flink-connector-base = { module = "org.apache.flink:flink-connector-base", version.ref = "flink" }
+flink-statebackend-rocksdb = { module = "org.apache.flink:flink-statebackend-rocksdb", version.ref = "flink" }
+flink-test-utils = { module = "org.apache.flink:flink-test-utils", version.ref = "flink" }
+flink-connector-kafka = { module = "org.apache.flink:flink-connector-kafka", version.ref = "flinkKafka" }
+
+spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }
+spring-cloud-bom = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "springCloud" }
+
+protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
