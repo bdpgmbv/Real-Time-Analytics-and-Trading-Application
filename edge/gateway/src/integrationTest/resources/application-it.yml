@@ -1,0 +1,29 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri:
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: echo
+              uri: forward:/internal/echo
+              predicates:
+                - Path=/api/v1/echo
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientKeyResolver}"
+                    rate-limiter: "#{@failOpenRateLimiter}"
+                    redis-rate-limiter.replenishRate: 1
+                    redis-rate-limiter.burstCapacity: 5
+
+management:
+  server:
+    port: 0
+  tracing:
+    enabled: false

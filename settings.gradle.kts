@@ -18,3 +18,4 @@ rootProject.name = "realtimeanalyticsandtrading"
 include("common")
 include("contracts")
 include("testing:architecture")
+include("edge:gateway")

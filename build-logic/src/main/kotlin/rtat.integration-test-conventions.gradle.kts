@@ -17,6 +17,7 @@ testing {
                 implementation(platform(libs.junit.bom))
                 implementation(libs.assertj.core)
                 implementation(platform(libs.testcontainers.bom))
+                implementation(libs.testcontainers.core)
                 implementation(libs.testcontainers.junit)
                 implementation(libs.awaitility)
             }
@@ -28,6 +29,14 @@ testing {
             }
         }
     }
+}
+
+configurations.named("integrationTestImplementation") {
+    extendsFrom(configurations.getByName("implementation"))
+}
+
+configurations.named("integrationTestRuntimeOnly") {
+    extendsFrom(configurations.getByName("runtimeOnly"))
 }
 
 tasks.named("check") {

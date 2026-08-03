@@ -9,6 +9,7 @@ kotlin {
 dependencies {
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
+    implementation(libs.spring.boot.gradle.plugin)
     implementation(libs.errorprone.gradle.plugin)
     implementation(libs.spotless.gradle.plugin)
     implementation(libs.spotbugs.gradle.plugin)
