@@ -18,7 +18,28 @@ In rtat: aggregating exposure to `(fund, currency)` reduced state to 39,600 keys
 
 ---
 
-## 2 — Provisioning for periodic traffic peaks
+## 2 — Kafka reachable inside Docker but not outside
+
+> Kafka is running in Docker. It works from other containers, but your application cannot connect. Walk me through why.
+
+**What they are testing:** whether you know that a Kafka client is redirected after its first connection.
+
+**Strong answer.** Kafka does not simply accept the connection you make. On connect it returns metadata telling the client which address to use for the actual brokers — `advertised.listeners`, not `listeners`. If that value is the Docker service name, only containers on that network can resolve it. A client on the host fails with `UnknownHostException`, even though the port is published correctly.
+
+The fix is two listeners on different ports, each advertising an address valid for its caller:
+
+```
+KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+```
+
+**Weak answer:** "the port isn't mapped." The port is mapped — that is what makes this confusing. The redirect is the mechanism, and candidates who have not hit it in practice reach for port mapping first.
+
+*Observed live during rtat Step 1: identical command succeeded inside the network and failed from the host with `java.net.UnknownHostException: kafka`.*
+
+---
+
+## 3 — Provisioning for periodic traffic peaks
 
 > Your system has four traffic peaks a day, six hours apart, driven by market opens. Do you autoscale or provision for peak? What breaks if you get it wrong?
 
@@ -32,7 +53,7 @@ Mention the saving grace in rtat: the four opens are hours apart, so the peak is
 
 ---
 
-## 3 — Fan-out asymmetry in event-driven systems
+## 4 — Fan-out asymmetry in event-driven systems
 
 > Two event types hit the same system. One affects 39 records, the other affects 543,000. Same code path?
 
