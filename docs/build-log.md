@@ -80,7 +80,7 @@ mkdir -p ~/.ssh && mv ~/Downloads/rtat-key.pem ~/.ssh/ && chmod 400 ~/.ssh/rtat-
 | | |
 |---|---|
 | Name | `rtat-sg` |
-| Inbound | SSH, port 22, source **My IP** → `70.111.197.108/32` |
+| Inbound | SSH, port 22, source **My IP** → `<your-ip>/32` |
 | Outbound | All traffic, `0.0.0.0/0` — left as-is |
 
 Source is a single IP, not `0.0.0.0/0`. Outbound stays open because the machine must reach Docker Hub, the SEC and the ECB.
@@ -101,7 +101,7 @@ Source is a single IP, not `0.0.0.0/0`. Outbound stays open because the machine 
 # Part 4 — First connection
 
 ```bash
-ssh -i ~/.ssh/rtat-key.pem ubuntu@54.87.216.148
+ssh -i ~/.ssh/rtat-key.pem ubuntu@<instance-ip>
 ```
 
 ```
@@ -126,7 +126,7 @@ sudo apt update && sudo apt upgrade -y
 **This dropped the SSH connection partway through:**
 
 ```
-Read from remote host 54.87.216.148: Connection reset by peer
+Read from remote host <instance-ip>: Connection reset by peer
 client_loop: send disconnect: Broken pipe
 ```
 

@@ -163,7 +163,7 @@ FX rates are different. There are only 30 currencies, and *every* position has a
 
 Same system. Same kind of event. **14,000 times more work.**
 
-That gap is the hardest problem in FXAN, and it is why the exposure engine cannot treat both the same way.
+That gap is the hardest problem in this system, and it is why the exposure engine cannot treat both the same way.
 
 ---
 

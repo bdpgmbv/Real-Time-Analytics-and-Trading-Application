@@ -14,8 +14,10 @@ public final class EdgarClient {
 
   public static final String SEC_DATA = "https://data.sec.gov";
 
+  static final String USER_AGENT_ENV = "SEC_USER_AGENT";
+
   private static final String USER_AGENT =
-      System.getenv().getOrDefault("SEC_USER_AGENT", "rtat-learning vyshalibdp@gmail.com");
+      System.getenv().getOrDefault(USER_AGENT_ENV, "rtat-loader");
 
   private final HttpClient http;
   private final Path outputDir;
