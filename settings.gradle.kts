@@ -15,7 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "realtimeanalyticsandtrading"
 
-include("common")
-include("contracts")
-include("architecture")
-include("apps:gateway")

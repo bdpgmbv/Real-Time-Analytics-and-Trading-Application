@@ -30,12 +30,9 @@ deliberate and should not be bumped casually:
 Folders are grouped by how a thing runs, not by what language it is written in.
 
 ```
-common/        library - money and currency, no framework dependencies
-contracts/     library - protobuf schemas, the shared wire vocabulary
-apps/          runs as a service (Spring Boot)      - gateway
-jobs/          runs on a Flink cluster              - empty for now
-sim/           fake upstream feeds, never deployed  - empty for now
-architecture/  rules enforced as tests across every module
+apps/          runs as a service (Spring Boot)
+jobs/          runs on a Flink cluster
+sim/           fake upstream feeds, never deployed
 build-logic/   shared build configuration
 deploy/        docker compose
 tools/         buf, k6 load tests
@@ -47,10 +44,12 @@ web service, and a simulator must never reach production at all.
 
 ## Scale
 
-Target volumes are in [docs/scale-numbers.md](docs/scale-numbers.md) — 400 clients,
+Every target volume is in [docs/scale-numbers.md](docs/scale-numbers.md) — 400 clients,
 1,320 funds, 10,440 accounts, 16.3M positions. Each figure is broken into small, medium
 and large client tiers rather than averaged, because 10% of clients hold 72% of the
 positions and evenly-spread test data hides every problem worth finding.
+
+**That document is the source of truth.** Code is written from it, not the other way round.
 
 ## Build
 
