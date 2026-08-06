@@ -54,7 +54,7 @@ spotbugs {
     effort = Effort.MAX
 
     reportLevel = Confidence.MEDIUM
-    excludeFilter = rootProject.layout.projectDirectory.file("config/spotbugs/exclude.xml").asFile
+    excludeFilter = rootProject.layout.projectDirectory.file("build-logic/spotbugs-exclude.xml").asFile
 }
 
 tasks.withType<SpotBugsTask>().configureEach {

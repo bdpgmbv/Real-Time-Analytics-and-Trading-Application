@@ -11,6 +11,22 @@ message Client {
   string client_id = 1;
   string name = 2;
   bool active = 3;
+  Region region = 4;
+  ClientTier tier = 5;
+}
+
+enum Region {
+  REGION_UNSPECIFIED = 0;
+  REGION_AMERICAS = 1;
+  REGION_EMEA = 2;
+  REGION_APAC = 3;
+}
+
+enum ClientTier {
+  CLIENT_TIER_UNSPECIFIED = 0;
+  CLIENT_TIER_SMALL = 1;
+  CLIENT_TIER_MEDIUM = 2;
+  CLIENT_TIER_LARGE = 3;
 }
 
 message Fund {
@@ -21,12 +37,26 @@ message Fund {
   bool active = 5;
 }
 
+message Custodian {
+  string custodian_id = 1;
+  string name = 2;
+  CustodianKind kind = 3;
+  bool active = 4;
+}
+
+enum CustodianKind {
+  CUSTODIAN_KIND_UNSPECIFIED = 0;
+  CUSTODIAN_KIND_INTERNAL = 1;
+  CUSTODIAN_KIND_EXTERNAL = 2;
+}
+
 message Account {
   string account_id = 1;
   string fund_id = 2;
   string client_id = 3;
   string name = 4;
   bool active = 5;
+  string custodian_id = 6;
 }
 
 message Product {

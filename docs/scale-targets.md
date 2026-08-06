@@ -1,3 +1,12 @@
+> **SUPERSEDED.** Use [`scale-numbers.md`](scale-numbers.md) instead.
+>
+> Two figures in this file are wrong: accounts are **10,440** (not 9,600) once external
+> custodian accounts are counted, and peak concurrency is **780** (not 200) once regional
+> market opens are accounted for. Positions are **16,308,000**, derived from small/medium/large
+> client tiers rather than a flat average.
+>
+> Kept only for the legacy-vs-modern comparison, which is still useful.
+
 # Scale Targets — Legacy vs Modern
 
 Build targets for the rtat replica at full FXAN scale.

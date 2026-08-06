@@ -23,6 +23,9 @@ message Position {
   optional string deal = 9;
 
   optional google.protobuf.Timestamp value_date = 10;
+
+  string ccy = 11;
+  string custodian_id = 12;
 }
 
 enum PositionType {
@@ -51,6 +54,8 @@ message SnapshotBoundary {
 
   optional int64 position_count = 6;
 
+  ArrivalPath arrival_path = 7;
+
   enum Marker {
     MARKER_UNSPECIFIED = 0;
     MARKER_BEGIN = 1;
@@ -63,4 +68,12 @@ enum SnapshotKind {
   SNAPSHOT_KIND_UNSPECIFIED = 0;
   SNAPSHOT_KIND_EOD = 1;
   SNAPSHOT_KIND_INTRADAY = 2;
+}
+
+enum ArrivalPath {
+  ARRIVAL_PATH_UNSPECIFIED = 0;
+  ARRIVAL_PATH_INTERNAL_FEED = 1;
+  ARRIVAL_PATH_SFTP_OVERNIGHT = 2;
+  ARRIVAL_PATH_SFTP_INTRADAY = 3;
+  ARRIVAL_PATH_UI_UPLOAD = 4;
 }
