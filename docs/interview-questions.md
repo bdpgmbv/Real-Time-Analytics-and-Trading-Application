@@ -1,6 +1,8 @@
 # Senior / Architect Interview Questions from the rtat Build
 
-Questions raised naturally by decisions made while building. Each one has come up in real senior and staff interviews. Appended as we go.
+Questions raised by design decisions in the exposure and hedging system itself — the parts an interviewer would actually probe.
+
+Deliberately excluded: build tooling, Docker configuration, and the data-sourcing scaffolding. Those are real problems and they get solved, but nobody is asked about a Kafka listener setting or an HTTP header in a senior design interview. Keeping them out means every question here is worth rehearsing.
 
 ---
 
@@ -18,28 +20,7 @@ In rtat: aggregating exposure to `(fund, currency)` reduced state to 39,600 keys
 
 ---
 
-## 2 — Kafka reachable inside Docker but not outside
-
-> Kafka is running in Docker. It works from other containers, but your application cannot connect. Walk me through why.
-
-**What they are testing:** whether you know that a Kafka client is redirected after its first connection.
-
-**Strong answer.** Kafka does not simply accept the connection you make. On connect it returns metadata telling the client which address to use for the actual brokers — `advertised.listeners`, not `listeners`. If that value is the Docker service name, only containers on that network can resolve it. A client on the host fails with `UnknownHostException`, even though the port is published correctly.
-
-The fix is two listeners on different ports, each advertising an address valid for its caller:
-
-```
-KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
-KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
-```
-
-**Weak answer:** "the port isn't mapped." The port is mapped — that is what makes this confusing. The redirect is the mechanism, and candidates who have not hit it in practice reach for port mapping first.
-
-*Observed live during rtat Step 1: identical command succeeded inside the network and failed from the host with `java.net.UnknownHostException: kafka`.*
-
----
-
-## 3 — Provisioning for periodic traffic peaks
+## 2 — Provisioning for periodic traffic peaks
 
 > Your system has four traffic peaks a day, six hours apart, driven by market opens. Do you autoscale or provision for peak? What breaks if you get it wrong?
 
@@ -53,7 +34,7 @@ Mention the saving grace in rtat: the four opens are hours apart, so the peak is
 
 ---
 
-## 4 — Fan-out asymmetry in event-driven systems
+## 3 — Fan-out asymmetry in event-driven systems
 
 > Two event types hit the same system. One affects 39 records, the other affects 543,000. Same code path?
 
