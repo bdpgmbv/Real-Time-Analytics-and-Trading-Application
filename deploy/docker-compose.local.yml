@@ -1,0 +1,44 @@
+services:
+  kafka:
+    environment:
+      KAFKA_HEAP_OPTS: "-Xmx768m -Xms768m"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  postgres:
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=1536MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - max_connections=50
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - checkpoint_completion_target=0.9
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - 384mb
+      - --maxmemory-policy
+      - allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 512M
