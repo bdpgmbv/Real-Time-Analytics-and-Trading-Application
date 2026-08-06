@@ -21,5 +21,5 @@ dependencies {
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    archiveFileName = "${project.name}.jar"
+    archiveFileName = "rtat-${project.name}.jar"
 }

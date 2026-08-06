@@ -1,7 +1,7 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /build
-COPY gateway.jar gateway.jar
-RUN java -Djarmode=tools -jar gateway.jar extract --layers --destination extracted
+COPY rtat-gateway.jar rtat-gateway.jar
+RUN java -Djarmode=tools -jar rtat-gateway.jar extract --layers --destination extracted
 
 FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S rtat && adduser -S -G rtat rtat
@@ -20,4 +20,4 @@ ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -XX:+UseZGC"
 HEALTHCHECK --interval=10s --timeout=3s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:8090/actuator/health/readiness || exit 1
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar gateway.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar rtat-gateway.jar"]
