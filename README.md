@@ -8,16 +8,23 @@ Short prefix used throughout for artifacts, Kafka topics and database schemas: *
 
 ## Stack
 
-| Concern | Choice |
-|---|---|
-| Language / build | Java 21, Gradle 9 (multi-module, version catalog) |
-| Stream processing | Apache Flink 2.2.1, DataStream API, RocksDB state |
-| Messaging | Kafka + Schema Registry, Protobuf contracts |
-| Services | Spring Boot 4.0.7, Spring Cloud 2025.1.2 |
-| Edge | Spring Cloud Gateway, Redis token-bucket rate limiting |
-| Storage | PostgreSQL (JdbcTemplate, Flyway), Redis, MinIO |
-| Observability | OpenTelemetry, Prometheus, Grafana, Loki |
-| Testing | JUnit 6, AssertJ, Testcontainers, Flink MiniCluster |
+| Concern | Choice | Built |
+|---|---|---|
+| Language / build | Java 21, Gradle 9 (multi-module, version catalog) | yes |
+| Services | Spring Boot 4.0.7 | yes — `ingest`, `stream`, `api` |
+| Messaging | Kafka, JSON on the wire | yes |
+| Storage | PostgreSQL, JdbcTemplate, SQL in files | yes |
+| Auth | OIDC / JWT (Keycloak), entitlements per request | yes |
+| Observability | Micrometer, Prometheus, Grafana, OpenTelemetry, Jaeger | yes |
+| Testing | JUnit 6, AssertJ, Testcontainers, Flink operator harness | yes |
+| Stream processing | Apache Flink 2.2.1, DataStream API | operators tested, **never run on a cluster** |
+| Edge | Spring Cloud Gateway, Redis rate limiting | **not built** |
+| Caching | Redis | **not built** — the container runs, nothing uses it |
+| Schema Registry, Protobuf | | **not built** — JSON on the wire today |
+| Flyway, MinIO, Loki | | **not built** |
+
+The right-hand column exists because the left-hand one used to be a wish list. Anything
+marked *not built* is a plan, not a fact.
 
 Versions are pinned in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). Two pins are
 deliberate and should not be bumped casually:
