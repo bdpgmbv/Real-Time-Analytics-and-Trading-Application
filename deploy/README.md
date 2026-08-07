@@ -29,6 +29,43 @@ Use this for quick checks — does the code compile, does it connect, does one m
 
 ---
 
+## Making the data — two sizes
+
+The laptop is the default. You have to ask for the full set on purpose.
+
+```bash
+docker exec -i rtat-postgres psql -U rtat -d rtat < db/1-schema.sql
+docker exec -i rtat-postgres psql -U rtat -d rtat < db/2-reference.sql
+docker exec -i rtat-postgres psql -U rtat -d rtat < db/3-generate.sql
+docker exec -i rtat-postgres psql -U rtat -d rtat < db/4-indexes.sql
+docker exec -i rtat-postgres psql -U rtat -d rtat < db/5-verify.sql
+```
+
+On the cloud box, pass `where=cloud` to step 3 and nothing else changes:
+
+```bash
+psql -U rtat -d rtat -v where=cloud -f db/3-generate.sql
+```
+
+| | laptop (default) | cloud (`-v where=cloud`) |
+|---|---|---|
+| clients | 40 | 400 |
+| funds | 132 | 1,320 |
+| accounts | 1,044 | 10,440 |
+| **positions** | **1,630,800** | **16,308,000** |
+| position_exposure | 16,805 | 168,099 |
+| products | 1,050,060 | 1,050,060 |
+| prices | 1,050,060 | 1,050,060 |
+| database on disk | 395 MB | 1,761 MB |
+| generate step | 12s | 45s |
+| index step | 4s | 23s |
+
+**Products and prices do not shrink.** The product universe is shared — thousands of funds hold the same Airbus row. Scaling it down would change the shape of every join and make laptop timings meaningless in a way the position count does not. Only the client tree gets smaller.
+
+The shape that matters survives the cut. On both sizes the large clients hold **71.7%** of positions, and every account still carries exactly 400, 1,000 or 2,500 rows by client size — so `5-verify.sql` passes unchanged at either size.
+
+---
+
 ## Reaching the cloud services from a laptop
 
 The security group opens SSH only. Postgres and Kafka are not exposed to the internet and must not be.

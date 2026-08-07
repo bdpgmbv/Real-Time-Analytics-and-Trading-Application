@@ -1,10 +1,26 @@
-\if :{?clients}
+\if :{?where}
 \else
+  \set where laptop
+\endif
+
+SELECT :'where' = 'cloud' AS running_in_the_cloud \gset
+
+\if :running_in_the_cloud
   \set clients 400
+  \set how_big 'THE WHOLE THING   -   16,308,000 positions,  about 25 GB of disk'
+\else
+  \set clients 40
+  \set how_big 'A TENTH OF IT     -    1,630,800 positions,  about 2.5 GB of disk'
 \endif
 
 \echo '=============================================='
-\echo 'MAKING THE DATA   -   clients =' :clients
+\echo 'MAKING THE DATA'
+\echo '  running on   :' :where
+\echo '  size         :' :how_big
+\echo '  clients      :' :clients
+\echo ''
+\echo '  laptop is the default. For the full set:'
+\echo '    psql -v where=cloud -f db/3-generate.sql'
 \echo '=============================================='
 
 
