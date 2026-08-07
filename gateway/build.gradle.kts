@@ -22,7 +22,8 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
 }
 
-val provedByRunningIt = listOf("vyshaliprabananthlal/gateway/GatewayApplication*", "vyshaliprabananthlal/gateway/limit/HowWeAreSecuredAtTheEdge*")
+val provedByRunningIt =
+    listOf("vyshaliprabananthlal/gateway/GatewayApplication*", "vyshaliprabananthlal/gateway/limit/HowWeAreSecuredAtTheEdge*")
 
 tasks.named<JacocoReport>("jacocoTestReport") {
     classDirectories.setFrom(
