@@ -300,3 +300,48 @@ waited. Every request after it was 7 ms.
 
 The 140 ms did not disappear — it moved to startup, where nobody is waiting for it. This
 is the kind of thing metrics alone would have shown as a p99 spike with no cause attached.
+
+---
+
+## Live screens
+
+```
+GET /api/funds/{id}/exposure/live      text/event-stream
+```
+
+Same entitlement check as the plain endpoint — another company's fund is 403 on the
+stream too, before any connection is held open.
+
+**The hard part is not streaming, it is not streaming too much.** Prices arrive at 208 a
+second and burst to 4,167. A screen cannot use that and a person cannot read it. So:
+
+```
+  kafka topics ──► mark dirty ──► every second ──► recalculate watched funds
+                   (a flag, not                    ──► send only if the numbers
+                    a queue)                            actually differ
+```
+
+Measured over 25 seconds with prices flowing:
+
+| | |
+|---|---|
+| messages through Kafka | 44,057 |
+| SSE events sent | 6 |
+| ratio | **7,342 to 1** |
+| event rate | 0.24/sec against a 1.00 cap |
+| pushes suppressed as unchanged | 5 |
+
+Three things this does deliberately:
+
+- **Nobody watching means no work.** No screens open, nothing is calculated, however much
+  moves. The cost is driven by open screens, not by market activity.
+- **A dirty flag, not a queue.** Forty-four thousand messages set the same boolean. There
+  is nothing to drain and nothing to fall behind on.
+- **Unchanged numbers are not resent.** `rtat_live_unchanged_total` counts the suppressed
+  pushes, so you can see the ratio in Grafana.
+
+The limit is honest: every watched fund is recalculated each tick at roughly 14 ms
+(`rtat_exposure_calculated_seconds`), so one node sustains around 70 concurrently watched
+funds per second before the sweep overruns its own interval. Past that, either raise
+`RTAT_LIVE_EVERY` or work out which funds a tick actually touched instead of recalculating
+all of them.

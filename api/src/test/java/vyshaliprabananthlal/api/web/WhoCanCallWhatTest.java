@@ -44,6 +44,7 @@ class WhoCanCallWhatTest {
 
   @MockitoBean private org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
   @MockitoBean private org.springframework.jdbc.core.JdbcTemplate database;
+  @MockitoBean private io.micrometer.core.instrument.MeterRegistry meters;
   @MockitoBean private Entitlements entitlements;
   @MockitoBean private ExposureCalculator calculator;
   @MockitoBean private HedgeAdviser adviser;

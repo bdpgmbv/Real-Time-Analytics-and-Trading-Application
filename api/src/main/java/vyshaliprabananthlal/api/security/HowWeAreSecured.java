@@ -1,7 +1,9 @@
 package vyshaliprabananthlal.api.security;
 
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,6 +17,18 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 public class HowWeAreSecured {
 
   @Bean
+  @Order(1)
+  SecurityFilterChain theAdminPortIsForTheMonitoring(HttpSecurity http) throws Exception {
+    return http.securityMatcher(EndpointRequest.toAnyEndpoint())
+        .authorizeHttpRequests(what -> what.anyRequest().permitAll())
+        .csrf(csrf -> csrf.disable())
+        .httpBasic(basic -> basic.disable())
+        .formLogin(form -> form.disable())
+        .build();
+  }
+
+  @Bean
+  @Order(2)
   SecurityFilterChain everyRequestNeedsAToken(HttpSecurity http) throws Exception {
     return http.authorizeHttpRequests(
             what ->
