@@ -1,31 +1,27 @@
 plugins {
-    application
+    alias(libs.plugins.spring.boot)
 }
 
 description = "Reads the Kafka topics and writes what arrives into Postgres."
 
 dependencies {
-    implementation(libs.postgresql)
-    implementation(libs.kafka.clients)
+    implementation(platform(libs.spring.boot.bom))
+
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation(libs.jackson.databind)
+    runtimeOnly(libs.postgresql)
+
+    testImplementation(platform(libs.spring.boot.bom))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation(platform(libs.testcontainers.bom))
+    testImplementation(libs.testcontainers.core)
+    testImplementation(libs.testcontainers.junit)
+    testImplementation(libs.testcontainers.postgresql)
 }
 
-application {
-    mainClass = "vyshaliprabananthlal.ingest.PositionReceiver"
-}
-
-val receivers =
-    mapOf(
-        "receivePositions" to "PositionReceiver",
-        "receivePrices" to "PriceReceiver",
-        "receiveRates" to "RateReceiver",
-    )
-
-receivers.forEach { (taskName, className) ->
-    tasks.register<JavaExec>(taskName) {
-        group = "rtat ingest"
-        description = "Reads a Kafka topic and writes the changes into Postgres."
-        mainClass = "vyshaliprabananthlal.ingest.$className"
-        classpath = sourceSets["main"].runtimeClasspath
-    }
+tasks.named<ProcessResources>("processTestResources") {
+    from(rootProject.file("db")) { into("db") }
 }
