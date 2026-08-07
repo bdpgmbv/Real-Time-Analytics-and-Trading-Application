@@ -400,3 +400,71 @@ not. Two limits are honest and unfixed:
 - Every task manager holds the whole map — 248,402 rows on the laptop dataset. At full
   scale that is ten times larger and belongs in keyed state fed by a stream, not a
   HashMap in `open()`.
+
+---
+
+## Running this alongside other projects
+
+Twenty projects each with their own Postgres, Kafka and Redis does not fit on a laptop,
+and no Docker setting makes it fit. The arithmetic:
+
+```
+  this project, local profile
+    kafka 1G + postgres 2G + redis 512M                    = 3.5 GB
+    prometheus, grafana, jaeger, keycloak                 ~ 1.5 GB
+                                                            -------
+    one project                                             5 GB
+    twenty projects                                       100 GB
+    a 16 GB laptop                                         16 GB
+```
+
+Four things that actually help, best first.
+
+### 1. One Postgres and one Kafka for every project
+
+```bash
+SHARED_DB_PASSWORD=... docker compose -p shared -f deploy/shared/docker-compose.yml up -d
+./deploy/shared/new-project.sh rtat
+```
+
+One Postgres process holds as many databases as you like. One broker holds as many topics
+as you like, and this project already prefixes every topic with `rtat.`. Twenty projects
+then cost **4.5 GB once**, not 4.5 GB each.
+
+Point this project at it:
+
+```bash
+RTAT_DB_URL=jdbc:postgresql://localhost:5432/rtat RTAT_KAFKA=localhost:9092 ...
+```
+
+### 2. Start only the part you are working on
+
+The stack is deliberately in five files, not one. Running all of them is a choice:
+
+| | cost | when you need it |
+|---|---|---|
+| `docker-compose.yml` + `.local.yml` | 3.5 GB | always |
+| `docker-compose.observability.yml` | ~700 MB | measuring something |
+| `docker-compose.auth.yml` | ~600 MB | touching the API |
+| `docker-compose.tracing.yml` | ~300 MB | chasing a slow request |
+
+### 3. Let the tests share one database
+
+Eleven test classes used to start eleven Postgres containers. They now share one, and
+`withReuse(true)` keeps it alive between runs, so the second `./gradlew check` does not
+pay for a cold start at all.
+
+Reuse needs one line on the machine, which is deliberately not a repo file — it is a
+per-developer choice:
+
+```bash
+echo 'testcontainers.reuse.enable=true' >> ~/.testcontainers.properties
+```
+
+Without it nothing breaks; containers simply go back to being thrown away each run.
+
+### 4. Put the heavy things on the cloud box
+
+The EC2 instance has 30 GB of memory and 188 GB of disk and is mostly idle. Postgres and
+Kafka can live there while you work on the laptop — the SSH tunnel above already does
+exactly this, and nothing new is exposed.
