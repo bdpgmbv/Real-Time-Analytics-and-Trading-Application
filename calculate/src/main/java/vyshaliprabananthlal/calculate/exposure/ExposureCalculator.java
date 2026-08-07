@@ -1,5 +1,7 @@
 package vyshaliprabananthlal.calculate.exposure;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +15,16 @@ public class ExposureCalculator {
   private final JdbcTemplate database;
   private final ExchangeRates exchangeRates;
   private final Sql sql;
+  private final Timer howLongItTakes;
 
-  public ExposureCalculator(JdbcTemplate database, ExchangeRates exchangeRates, Sql sql) {
+  public ExposureCalculator(
+      JdbcTemplate database, ExchangeRates exchangeRates, Sql sql, MeterRegistry meters) {
+
     this.database = database;
     this.exchangeRates = exchangeRates;
     this.sql = sql;
+    this.howLongItTakes =
+        Timer.builder("rtat.exposure.calculated").publishPercentileHistogram().register(meters);
   }
 
   public FundExposure forWholeFund(int fundId) {
@@ -25,6 +32,16 @@ public class ExposureCalculator {
   }
 
   public FundExposure forAccounts(int fundId, List<Integer> accountIds) {
+    Timer.Sample timing = Timer.start();
+
+    try {
+      return workItOut(fundId, accountIds);
+    } finally {
+      timing.stop(howLongItTakes);
+    }
+  }
+
+  private FundExposure workItOut(int fundId, List<Integer> accountIds) {
     String reportingCurrency = reportingCurrencyOf(fundId);
 
     if (accountIds.isEmpty()) {

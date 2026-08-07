@@ -30,6 +30,15 @@ rtat:
     look-every-milliseconds: 2000
 
 management:
+  tracing:
+    enabled: ${RTAT_TRACING:true}
+    sampling:
+      probability: ${RTAT_TRACE_SAMPLE:1.0}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${RTAT_OTLP:http://localhost:4320/v1/traces}
   endpoints:
     web:
       exposure:
@@ -50,6 +59,8 @@ server:
   port: ${RTAT_PORT:8090}
 
 logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
   level:
     root: WARN
     org.springframework.kafka: INFO

@@ -263,3 +263,40 @@ Two things the checks deliberately do:
   message as one that does, so probing learns nothing either way.
 - **Account lists are narrowed, not rejected.** Passing `?account=` values from another fund
   drops them and answers with what you were allowed to see.
+
+---
+
+## Traces
+
+```bash
+docker compose --env-file deploy/.env -f deploy/docker-compose.tracing.yml up -d
+```
+
+Jaeger on http://localhost:16687. Services send OTLP to `127.0.0.1:4320`.
+
+Metrics say a request was slow. Traces say which part of it was. Every log line carries
+the trace id, so a complaint about one slow page leads to the exact spans:
+
+```
+%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]
+[rtat-api,2ae964b6e6b0fb2e3776ddd806da5252,702f8ce708c52fc9]
+```
+
+`RTAT_TRACE_SAMPLE` is 1.0 here, which records everything. Lower it under real load —
+tracing every request at 33,000 rows a second costs more than it tells you.
+
+### What the traces found immediately
+
+The first authenticated request after a restart took **137 ms, of which 100 ms was
+`authenticate bearertoken`** — fetching Keycloak's signing keys, lazily, while a client
+waited. Every request after it was 7 ms.
+
+`WarmUpTheTokenKeys` now fetches them during startup instead:
+
+| | first request | warm |
+|---|---|---|
+| before | 137 ms | 7 ms |
+| after | 47 ms | 10–16 ms |
+
+The 140 ms did not disappear — it moved to startup, where nobody is waiting for it. This
+is the kind of thing metrics alone would have shown as a p99 spike with no cause attached.

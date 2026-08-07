@@ -20,6 +20,15 @@ server:
   port: ${RTAT_PORT:8095}
 
 management:
+  tracing:
+    enabled: ${RTAT_TRACING:true}
+    sampling:
+      probability: ${RTAT_TRACE_SAMPLE:1.0}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${RTAT_OTLP:http://localhost:4320/v1/traces}
   endpoints:
     web:
       exposure:
@@ -41,6 +50,8 @@ rtat:
     too-small-to-bother: ${RTAT_HEDGE_FLOOR:100000}
 
 logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
   level:
     root: WARN
     vyshaliprabananthlal: INFO

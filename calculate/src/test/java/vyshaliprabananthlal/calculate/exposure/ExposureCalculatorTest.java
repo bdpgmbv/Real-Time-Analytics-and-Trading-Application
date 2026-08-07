@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,9 @@ class ExposureCalculatorTest {
   @BeforeEach
   void oneFundReportingInUsdHoldingEuropeanShares() {
     Sql sql = new Sql();
-    calculator = new ExposureCalculator(database, new ExchangeRates(database, sql), sql);
+    calculator =
+        new ExposureCalculator(
+            database, new ExchangeRates(database, sql), sql, new SimpleMeterRegistry());
 
     database.execute(
         "TRUNCATE position_exposure, position, price, product, account, fund, client,"

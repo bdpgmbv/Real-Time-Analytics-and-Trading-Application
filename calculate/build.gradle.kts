@@ -9,6 +9,7 @@ dependencies {
 
     api("org.springframework:spring-context")
     api("org.springframework:spring-jdbc")
+    api("io.micrometer:micrometer-core")
 
     testImplementation(platform(libs.spring.boot.bom))
     testImplementation("org.springframework.boot:spring-boot-starter-test")

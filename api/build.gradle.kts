@@ -16,6 +16,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation(libs.micrometer.prometheus)
+    implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
+    implementation("org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry")
     runtimeOnly(libs.postgresql)
 
     testImplementation(platform(libs.spring.boot.bom))
