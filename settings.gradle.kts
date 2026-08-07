@@ -17,3 +17,4 @@ rootProject.name = "realtimeanalyticsandtrading"
 include("stream")
 
 include("ingest")
+include("calculate")

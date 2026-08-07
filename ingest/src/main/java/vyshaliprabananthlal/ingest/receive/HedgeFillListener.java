@@ -39,7 +39,7 @@ public class HedgeFillListener {
   public void whenFillsArrive(List<String> arrived, Acknowledgment kafka) {
     List<Object[]> fills = arrived.stream().map(this::asRow).toList();
 
-    int recorded = batch.write(recordTheFill, fills);
+    int recorded = batch.write("hedge-fill", recordTheFill, fills);
 
     for (Object[] fill : fills) {
       database.update(moveTheHedgeOn, fill[1]);

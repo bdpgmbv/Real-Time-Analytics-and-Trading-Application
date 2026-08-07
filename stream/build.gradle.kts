@@ -1,47 +1,27 @@
 plugins {
-    application
+    alias(libs.plugins.spring.boot)
 }
 
 description = "Sends continuously-changing data to Kafka."
 
 dependencies {
-    implementation(libs.postgresql)
-    implementation(libs.kafka.clients)
+    implementation(platform(libs.spring.boot.bom))
 
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
-    testImplementation(libs.assertj.core)
-    testRuntimeOnly(libs.junit.platform.launcher)
-}
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation(libs.micrometer.prometheus)
+    runtimeOnly(libs.postgresql)
 
-application {
-    mainClass = "vyshaliprabananthlal.stream.send.CurrencyRateSender"
-}
-
-val streams =
-    mapOf(
-        "sendCurrencyRates" to "CurrencyRateSender",
-        "sendPrices" to "PriceSender",
-        "sendPositions" to "PositionSender",
-        "sendTrades" to "TradeSender",
-        "sendHedgeFills" to "HedgeFillSender",
-    )
-
-streams.forEach { (taskName, className) ->
-    tasks.register<JavaExec>(taskName) {
-        group = "rtat stream"
-        description = "Streams $className to Kafka."
-        mainClass = "vyshaliprabananthlal.stream.send.$className"
-        classpath = sourceSets["main"].runtimeClasspath
-    }
+    testImplementation(platform(libs.spring.boot.bom))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 val provedByTheLiveRunNotByUnitTests =
     listOf(
         "vyshaliprabananthlal/stream/send/**",
-        "vyshaliprabananthlal/stream/plumbing/Database*",
-        "vyshaliprabananthlal/stream/plumbing/Kafka*",
-        "vyshaliprabananthlal/stream/plumbing/Rows*",
+        "vyshaliprabananthlal/stream/StreamApplication*",
     )
 
 tasks.named<JacocoReport>("jacocoTestReport") {

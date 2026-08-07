@@ -10,6 +10,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation(libs.micrometer.prometheus)
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation(libs.jackson.databind)
     runtimeOnly(libs.postgresql)

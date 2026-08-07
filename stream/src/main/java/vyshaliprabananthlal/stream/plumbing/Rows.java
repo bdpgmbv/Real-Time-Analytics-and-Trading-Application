@@ -1,34 +1,25 @@
 package vyshaliprabananthlal.stream.plumbing;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
 
-public final class Rows {
+@Component
+public class Rows {
 
-  private Rows() {}
+  private final JdbcTemplate database;
 
-  public static <T> List<T> loadFrom(String question, ReadOneRow<T> reader) throws SQLException {
-    List<T> loaded = new ArrayList<>();
-
-    try (Connection database = Database.connect();
-        Statement asking = database.createStatement();
-        ResultSet answer = asking.executeQuery(question)) {
-
-      while (answer.next()) {
-        loaded.add(reader.from(answer));
-      }
-    }
-    return loaded;
+  public Rows(JdbcTemplate database) {
+    this.database = database;
   }
 
-  public static <T> List<T> loadOrComplain(String question, ReadOneRow<T> reader, String complaint)
-      throws SQLException {
+  public <T> List<T> loadOrEmpty(String question, RowMapper<T> reader) {
+    return database.query(question, reader);
+  }
 
-    List<T> loaded = loadFrom(question, reader);
+  public <T> List<T> loadOrComplain(String question, RowMapper<T> reader, String complaint) {
+    List<T> loaded = database.query(question, reader);
 
     if (loaded.isEmpty()) {
       throw new IllegalStateException(complaint);

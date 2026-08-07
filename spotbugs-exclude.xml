@@ -6,9 +6,9 @@
   </Match>
 
   <Match>
-    <Class name="vyshaliprabananthlal.stream.plumbing.Kafka"/>
+    <Class name="vyshaliprabananthlal.stream.plumbing.SendToKafka"/>
     <Method name="send"/>
-    <Bug pattern="DLS_DEAD_LOCAL_STORE,DLS_DEAD_STORE_OF_CLASS_LITERAL"/>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
   </Match>
 
 </FindBugsFilter>

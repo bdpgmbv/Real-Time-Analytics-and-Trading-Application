@@ -1,0 +1,57 @@
+groups:
+  - name: rtat
+    rules:
+      - alert: IngestIsDown
+        expr: up{job="rtat-ingest"} == 0
+        for: 30s
+        labels:
+          severity: page
+        annotations:
+          summary: "ingest is not answering"
+          runbook: "check the process, then the database, then Kafka"
+
+      - alert: KafkaLagIsGrowing
+        expr: kafka_consumer_fetch_manager_records_lag > 100000
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.client_id }} is more than 100,000 messages behind"
+          runbook: "the writer cannot keep up. Check database latency first."
+
+      - alert: WritesAreFailing
+        expr: rate(rtat_messages_failed_total[1m]) > 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "messages are failing to send to {{ $labels.topic }}"
+
+      - alert: DatabasePoolExhausted
+        expr: hikaricp_connections_pending > 0
+        for: 1m
+        labels:
+          severity: warn
+        annotations:
+          summary: "threads are queueing for a database connection"
+          runbook: "either a slow query is holding connections, or the pool of 8 is too small"
+
+      - alert: BatchWriteIsSlow
+        expr: |
+          histogram_quantile(0.99,
+            rate(rtat_batch_write_seconds_bucket[5m])) > 1
+        for: 2m
+        labels:
+          severity: warn
+        annotations:
+          summary: "99th percentile batch write is over a second"
+
+      - alert: CustodianFileRejectedEverything
+        expr: increase(rtat_file_rows_rejected_total[10m]) > 0
+              and increase(rtat_file_rows_loaded_total[10m]) == 0
+        for: 1m
+        labels:
+          severity: warn
+        annotations:
+          summary: "a custodian file loaded nothing and rejected everything"
+          runbook: "the custodian probably changed their format. Check file_row_problem."

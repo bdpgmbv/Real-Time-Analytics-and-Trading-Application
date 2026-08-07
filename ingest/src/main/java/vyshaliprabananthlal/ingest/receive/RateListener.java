@@ -32,7 +32,7 @@ public class RateListener {
     List<Object[]> rows = arrived.stream().map(this::asRow).toList();
 
     howManyRowsChangedSoFar =
-        howManyRowsChangedSoFar + batch.writeThenAcknowledge(statement, rows, kafka);
+        howManyRowsChangedSoFar + batch.writeThenAcknowledge("rate", statement, rows, kafka);
 
     LOG.info("rates changed so far: {}", howManyRowsChangedSoFar);
   }

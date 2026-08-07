@@ -3,6 +3,7 @@ package vyshaliprabananthlal.ingest.files;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -51,7 +52,8 @@ class FileLoaderTest {
             database,
             new LoadBook(database, new Sql()),
             List.of(new CommaFormat(), new PipeFormat()),
-            new Sql());
+            new Sql(),
+            new SimpleMeterRegistry());
 
     database.execute(
         "TRUNCATE file_row_problem, file_load, position, account, fund, client, product,"

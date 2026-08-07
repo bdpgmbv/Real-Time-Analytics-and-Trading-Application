@@ -2,6 +2,7 @@ package vyshaliprabananthlal.ingest.files;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +60,8 @@ class FolderWatcherTest {
             database,
             new LoadBook(database, new Sql()),
             List.of(new CommaFormat(), new PipeFormat()),
-            new Sql());
+            new Sql(),
+            new SimpleMeterRegistry());
     watcher = new FolderWatcher(loader, incoming.toString(), finished.toString());
 
     database.execute(
@@ -137,7 +139,11 @@ class FolderWatcherTest {
   void aMissingFolderIsIgnored() {
     FileLoader loader =
         new FileLoader(
-            database, new LoadBook(database, new Sql()), List.of(new CommaFormat()), new Sql());
+            database,
+            new LoadBook(database, new Sql()),
+            List.of(new CommaFormat()),
+            new Sql(),
+            new SimpleMeterRegistry());
     FolderWatcher lookingAtNothing =
         new FolderWatcher(loader, workingArea.resolve("not-there").toString(), finished.toString());
 

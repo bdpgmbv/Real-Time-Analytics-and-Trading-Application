@@ -2,48 +2,55 @@ package vyshaliprabananthlal.stream.send;
 
 import java.util.List;
 import java.util.Random;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.WaitingHedge;
-import vyshaliprabananthlal.stream.plumbing.Kafka;
 import vyshaliprabananthlal.stream.plumbing.Pace;
 import vyshaliprabananthlal.stream.plumbing.Rows;
+import vyshaliprabananthlal.stream.plumbing.SendToKafka;
 
-public final class HedgeFillSender {
+@Component
+public class HedgeFillSender implements Sender {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HedgeFillSender.class);
 
   private static final String KAFKA_TOPIC = "rtat.hedge-fill";
 
   private static final int HOW_MANY_PER_SECOND = 20;
   private static final int HOW_MANY_TO_LOAD = 20000;
   private static final int ONE_IN_THIS_MANY_IS_SPLIT = 3;
+  private static final int LOOK_AGAIN_AFTER_SECONDS = 5;
 
   private static final Random DICE = new Random();
 
-  private HedgeFillSender() {}
+  private final Rows rows;
+  private final SendToKafka kafka;
 
-  public static void main(String[] args) throws Exception {
-    List<WaitingHedge> waiting =
-        Rows.loadOrComplain(
-            "SELECT hedge_id, client_chose, their_reference FROM hedge"
-                + " WHERE status IN ('SENT', 'PARTIALLY FILLED')"
-                + " ORDER BY hedge_id LIMIT "
-                + HOW_MANY_TO_LOAD,
-            row -> new WaitingHedge(row.getLong(1), row.getDouble(2), row.getString(3)),
-            "no hedges are waiting to be filled");
-
-    System.out.println("loaded " + waiting.size() + " hedges waiting to be filled");
-    System.out.println("sending " + HOW_MANY_PER_SECOND + " fills a second to " + KAFKA_TOPIC);
-    System.out.println("one in " + ONE_IN_THIS_MANY_IS_SPLIT + " comes back as two part fills");
-
-    sendFills(waiting);
+  public HedgeFillSender(Rows rows, SendToKafka kafka) {
+    this.rows = rows;
+    this.kafka = kafka;
   }
 
-  private static void sendFills(List<WaitingHedge> waiting) throws InterruptedException {
-    long nextFillNumber = System.currentTimeMillis();
-    long howManySent = 0;
+  @Override
+  public String name() {
+    return "hedge-fill";
+  }
 
+  @Override
+  public void sendUntilStopped() throws InterruptedException {
+    long nextFillNumber = System.currentTimeMillis();
     Pace pace = new Pace();
 
-    try (KafkaProducer<String, String> kafka = Kafka.connect()) {
+    while (!Thread.currentThread().isInterrupted()) {
+      List<WaitingHedge> waiting = whatIsWaiting();
+
+      if (waiting.isEmpty()) {
+        LOG.info("nothing waiting to be filled, looking again in a moment");
+        Thread.sleep(LOOK_AGAIN_AFTER_SECONDS * 1000L);
+        continue;
+      }
+
       for (WaitingHedge hedge : waiting) {
         boolean itComesBackInTwoParts = DICE.nextInt(ONE_IN_THIS_MANY_IS_SPLIT) == 0;
 
@@ -51,18 +58,19 @@ public final class HedgeFillSender {
         nextFillNumber = nextFillNumber + fills.size();
 
         for (String fill : fills) {
-          Kafka.send(kafka, KAFKA_TOPIC, hedge.messageKey(), fill);
-
-          howManySent = howManySent + 1;
-          if (howManySent % 100 == 0) {
-            System.out.println("sent " + howManySent + " fills");
-          }
-
+          kafka.send(KAFKA_TOPIC, hedge.messageKey(), fill);
           pace.waitYourTurn(HOW_MANY_PER_SECOND);
         }
       }
     }
+  }
 
-    System.out.println("sent " + howManySent + " fills, nothing left waiting");
+  private List<WaitingHedge> whatIsWaiting() {
+    return rows.loadOrEmpty(
+        "SELECT hedge_id, client_chose, their_reference FROM hedge"
+            + " WHERE status IN ('SENT', 'PARTIALLY FILLED')"
+            + " ORDER BY hedge_id LIMIT "
+            + HOW_MANY_TO_LOAD,
+        (row, number) -> new WaitingHedge(row.getLong(1), row.getDouble(2), row.getString(3)));
   }
 }

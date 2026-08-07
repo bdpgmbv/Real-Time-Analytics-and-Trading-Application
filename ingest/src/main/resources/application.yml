@@ -7,7 +7,7 @@ spring:
     username: ${RTAT_DB_USER:rtat}
     password: ${RTAT_DB_PASSWORD:rtat_dev_only}
     hikari:
-      maximum-pool-size: 8
+      maximum-pool-size: ${RTAT_DB_POOL:24}
       connection-init-sql: SET TIME ZONE 'UTC'
 
   kafka:
@@ -21,6 +21,7 @@ spring:
     listener:
       type: batch
       ack-mode: manual_immediate
+      concurrency: ${RTAT_LISTENER_THREADS:3}
 
 rtat:
   custodian-files:
@@ -32,10 +33,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, metrics, info
+        include: health, metrics, prometheus, info
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: rtat-ingest
 
 server:
   port: ${RTAT_PORT:8090}

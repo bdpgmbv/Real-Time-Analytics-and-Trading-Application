@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,8 +39,8 @@ class KafkaBatchTest {
     when(database.batchUpdate(Mockito.anyString(), Mockito.<List<Object[]>>any()))
         .thenReturn(new int[] {1});
 
-    new KafkaBatch(database)
-        .writeThenAcknowledge("UPDATE x", List.<Object[]>of(new Object[] {1}), kafka);
+    new KafkaBatch(database, new SimpleMeterRegistry())
+        .writeThenAcknowledge("test", "UPDATE x", List.<Object[]>of(new Object[] {1}), kafka);
 
     InOrder whatHappenedFirst = Mockito.inOrder(database, kafka);
     whatHappenedFirst
@@ -56,10 +57,10 @@ class KafkaBatchTest {
     when(database.batchUpdate(Mockito.anyString(), Mockito.<List<Object[]>>any()))
         .thenThrow(new IllegalStateException("the database went away"));
 
-    KafkaBatch batch = new KafkaBatch(database);
+    KafkaBatch batch = new KafkaBatch(database, new SimpleMeterRegistry());
 
     try {
-      batch.writeThenAcknowledge("UPDATE x", List.<Object[]>of(new Object[] {1}), kafka);
+      batch.writeThenAcknowledge("test", "UPDATE x", List.<Object[]>of(new Object[] {1}), kafka);
     } catch (IllegalStateException expected) {
       assertThat(expected).hasMessage("the database went away");
     }

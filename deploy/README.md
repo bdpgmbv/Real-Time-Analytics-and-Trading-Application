@@ -110,3 +110,54 @@ docker compose down -v
 ```
 
 Deletes the volumes too. Kafka's volume must be removed after changing listener names, because those are recorded in the cluster metadata and a stale copy will override the new configuration.
+
+---
+
+## Watching it run
+
+```bash
+docker compose -f deploy/docker-compose.observability.yml up -d
+```
+
+| | where | what |
+|---|---|---|
+| Grafana | http://localhost:3000 | dashboards, anonymous viewer |
+| Prometheus | http://localhost:9090 | raw queries and alert state |
+| ingest metrics | http://localhost:8090/actuator/prometheus | |
+| stream metrics | http://localhost:8091/actuator/prometheus | |
+
+Metrics the alerts depend on:
+
+| metric | what it tells you |
+|---|---|
+| `rtat_rows_changed_total{feed}` | rows the database actually changed, not messages read |
+| `rtat_batch_write_seconds{feed}` | how long one batch took, with percentiles |
+| `rtat_batch_failed_total{feed}` | writes that threw, per feed |
+| `rtat_messages_sent_total{topic}` | producer side, per topic |
+| `rtat_messages_failed_total{topic}` | producer failures — the alert watches this |
+| `rtat_file_rows_loaded_total` | custodian rows accepted |
+| `rtat_file_rows_rejected_total` | custodian rows refused |
+| `hikaricp_connections_pending` | threads queueing for a database connection |
+
+`rtat_rows_changed_total` counts rows, not messages, on purpose. An earlier version
+counted messages read and reported success for four hours a night while the FX rate
+writer was matching zero rows.
+
+## Running a sender
+
+```bash
+java -jar stream/build/libs/rtat-stream-0.1.0-SNAPSHOT.jar --rtat.send=position
+```
+
+`position`, `price`, `rate`, `trade`, `hedge-fill`. Naming none of them lists them.
+
+## Tuning
+
+| setting | default | why |
+|---|---|---|
+| `RTAT_LISTENER_THREADS` | 3 | one per partition. At 1 it was 10,157 rows/sec, at 3 it is 33,284 |
+| `RTAT_DB_POOL` | 24 | must exceed listener threads × feeds, or they queue |
+
+Raising threads above the partition count does nothing — Kafka gives a partition to
+one consumer. Ordering per account survives because messages are keyed on `accountId`,
+so an account always lands on the same partition and therefore the same thread.

@@ -32,7 +32,7 @@ public class PositionListener {
     List<Object[]> rows = arrived.stream().map(this::asRow).toList();
 
     howManyRowsChangedSoFar =
-        howManyRowsChangedSoFar + batch.writeThenAcknowledge(statement, rows, kafka);
+        howManyRowsChangedSoFar + batch.writeThenAcknowledge("position", statement, rows, kafka);
 
     LOG.info("positions changed so far: {}", howManyRowsChangedSoFar);
   }

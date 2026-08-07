@@ -1,5 +1,7 @@
 package vyshaliprabananthlal.ingest.files;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -20,14 +22,24 @@ public class FileLoader {
   private final LoadBook book;
   private final List<CustodianFormat> knownFormats;
   private final String savePosition;
+  private final Counter rowsLoadedCounter;
+  private final Counter rowsRejectedCounter;
+  private final Counter filesSkippedCounter;
 
   public FileLoader(
-      JdbcTemplate database, LoadBook book, List<CustodianFormat> knownFormats, Sql sql) {
+      JdbcTemplate database,
+      LoadBook book,
+      List<CustodianFormat> knownFormats,
+      Sql sql,
+      MeterRegistry meters) {
 
     this.database = database;
     this.book = book;
     this.knownFormats = knownFormats;
     this.savePosition = sql.statement("save-position-from-file");
+    this.rowsLoadedCounter = meters.counter("rtat.file.rows.loaded");
+    this.rowsRejectedCounter = meters.counter("rtat.file.rows.rejected");
+    this.filesSkippedCounter = meters.counter("rtat.file.skipped");
   }
 
   public LoadResult load(String fileName, String contents, String arrivedHow) {
@@ -36,6 +48,7 @@ public class FileLoader {
     Optional<Integer> alreadyLoaded = book.findLoadOf(fingerprint);
     if (alreadyLoaded.isPresent()) {
       LOG.info("{} has been loaded before, skipping it", fileName);
+      filesSkippedCounter.increment();
       return LoadResult.alreadySeen(alreadyLoaded.get());
     }
 
@@ -52,6 +65,8 @@ public class FileLoader {
     Tally tally = readEveryLine(lines, format, fileLoadId);
 
     book.finishALoad(fileLoadId, tally.loaded(), tally.rejected());
+    rowsLoadedCounter.increment(tally.loaded());
+    rowsRejectedCounter.increment(tally.rejected());
     LOG.info("{}: {} rows loaded, {} rejected", fileName, tally.loaded(), tally.rejected());
 
     return new LoadResult(

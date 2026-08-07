@@ -2,13 +2,14 @@ package vyshaliprabananthlal.stream.send;
 
 import java.util.List;
 import java.util.Random;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.MovingPrice;
-import vyshaliprabananthlal.stream.plumbing.Kafka;
 import vyshaliprabananthlal.stream.plumbing.Pace;
 import vyshaliprabananthlal.stream.plumbing.Rows;
+import vyshaliprabananthlal.stream.plumbing.SendToKafka;
 
-public final class PriceSender {
+@Component
+public class PriceSender implements Sender {
 
   private static final String KAFKA_TOPIC = "rtat.price";
 
@@ -19,51 +20,43 @@ public final class PriceSender {
 
   private static final Random DICE = new Random();
 
-  private PriceSender() {}
+  private final Rows rows;
+  private final SendToKafka kafka;
 
-  public static void main(String[] args) throws Exception {
-    List<MovingPrice> prices =
-        Rows.loadOrComplain(
-            "SELECT product_id, price FROM price WHERE price > 1",
-            row -> new MovingPrice(row.getInt(1), row.getDouble(2)),
-            "no prices found - run db/3-generate.sql first");
-
-    System.out.println("loaded " + prices.size() + " prices");
-    System.out.println("sending " + NORMAL_PER_SECOND + " a second to " + KAFKA_TOPIC);
-    System.out.println("every 20 minutes it speeds up to " + BUSY_PER_SECOND + " a second");
-
-    sendPricesForever(prices);
+  public PriceSender(Rows rows, SendToKafka kafka) {
+    this.rows = rows;
+    this.kafka = kafka;
   }
 
-  private static void sendPricesForever(List<MovingPrice> prices) throws InterruptedException {
-    long startedAtSecond = System.currentTimeMillis() / 1000;
-    long howManySent = 0;
+  @Override
+  public String name() {
+    return "price";
+  }
 
+  @Override
+  public void sendUntilStopped() throws InterruptedException {
+    List<MovingPrice> prices =
+        rows.loadOrComplain(
+            "SELECT product_id, price FROM price WHERE price > 1",
+            (row, number) -> new MovingPrice(row.getInt(1), row.getDouble(2)),
+            "no prices found - run db/3-generate.sql first");
+
+    long startedAtSecond = System.currentTimeMillis() / 1000;
     Pace pace = new Pace();
 
-    try (KafkaProducer<String, String> kafka = Kafka.connect()) {
-      while (true) {
-        boolean busy = inABusySpell(startedAtSecond);
+    while (!Thread.currentThread().isInterrupted()) {
+      MovingPrice price = prices.get(DICE.nextInt(prices.size()));
+      price.moveALittle();
 
-        MovingPrice price = prices.get(DICE.nextInt(prices.size()));
-        price.moveALittle();
+      kafka.send(KAFKA_TOPIC, price.messageKey(), price.asMessage());
 
-        Kafka.send(kafka, KAFKA_TOPIC, price.messageKey(), price.asMessage());
-
-        howManySent = howManySent + 1;
-        if (howManySent % 2000 == 0) {
-          System.out.println("sent " + howManySent + " prices" + (busy ? "   BUSY" : ""));
-        }
-
-        pace.waitYourTurn(busy ? BUSY_PER_SECOND : NORMAL_PER_SECOND);
-      }
+      pace.waitYourTurn(inABusySpell(startedAtSecond) ? BUSY_PER_SECOND : NORMAL_PER_SECOND);
     }
   }
 
   private static boolean inABusySpell(long startedAtSecond) {
     long secondsRunning = System.currentTimeMillis() / 1000 - startedAtSecond;
-    long whereWeAreInTheCycle = secondsRunning % A_BUSY_SPELL_ARRIVES_EVERY_SECONDS;
 
-    return whereWeAreInTheCycle < A_BUSY_SPELL_LASTS_SECONDS;
+    return secondsRunning % A_BUSY_SPELL_ARRIVES_EVERY_SECONDS < A_BUSY_SPELL_LASTS_SECONDS;
   }
 }

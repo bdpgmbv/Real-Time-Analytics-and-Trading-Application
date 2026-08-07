@@ -34,7 +34,7 @@ public class TradeListener {
     List<Object[]> rows = arrived.stream().map(this::asRow).toList();
 
     howManyTradesRecorded =
-        howManyTradesRecorded + batch.writeThenAcknowledge(statement, rows, kafka);
+        howManyTradesRecorded + batch.writeThenAcknowledge("trade", statement, rows, kafka);
 
     LOG.info("trades recorded so far: {}", howManyTradesRecorded);
   }

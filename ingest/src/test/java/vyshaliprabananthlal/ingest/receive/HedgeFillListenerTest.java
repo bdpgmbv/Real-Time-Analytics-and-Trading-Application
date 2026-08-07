@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +47,12 @@ class HedgeFillListenerTest {
 
   @BeforeEach
   void startWithOneHedgeWaitingToBeFilled() {
-    listener = new HedgeFillListener(database, new KafkaBatch(database), new Messages(), new Sql());
+    listener =
+        new HedgeFillListener(
+            database,
+            new KafkaBatch(database, new SimpleMeterRegistry()),
+            new Messages(),
+            new Sql());
     kafka = mock(Acknowledgment.class);
 
     database.execute("TRUNCATE hedge_fill, hedge, fund, client, currency CASCADE");

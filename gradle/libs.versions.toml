@@ -30,6 +30,7 @@ spotbugsPlugin = "6.5.9"
 cyclonedxPlugin = "3.3.0"
 
 [libraries]
+micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
 # Flink core is compileOnly in job modules - the cluster provides it at runtime.
 flink-streaming-java = { module = "org.apache.flink:flink-streaming-java", version.ref = "flink" }
 flink-clients = { module = "org.apache.flink:flink-clients", version.ref = "flink" }

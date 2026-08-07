@@ -32,7 +32,7 @@ public class PriceListener {
     List<Object[]> rows = arrived.stream().map(this::asRow).toList();
 
     howManyRowsChangedSoFar =
-        howManyRowsChangedSoFar + batch.writeThenAcknowledge(statement, rows, kafka);
+        howManyRowsChangedSoFar + batch.writeThenAcknowledge("price", statement, rows, kafka);
 
     LOG.info("prices changed so far: {}", howManyRowsChangedSoFar);
   }

@@ -2,13 +2,14 @@ package vyshaliprabananthlal.stream.send;
 
 import java.util.List;
 import java.util.Random;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.WhatToTrade;
-import vyshaliprabananthlal.stream.plumbing.Kafka;
 import vyshaliprabananthlal.stream.plumbing.Pace;
 import vyshaliprabananthlal.stream.plumbing.Rows;
+import vyshaliprabananthlal.stream.plumbing.SendToKafka;
 
-public final class TradeSender {
+@Component
+public class TradeSender implements Sender {
 
   private static final String KAFKA_TOPIC = "rtat.trade";
   private static final int HOW_MANY_PER_SECOND = 8;
@@ -16,41 +17,37 @@ public final class TradeSender {
 
   private static final Random DICE = new Random();
 
-  private TradeSender() {}
+  private final Rows rows;
+  private final SendToKafka kafka;
 
-  public static void main(String[] args) throws Exception {
-    List<WhatToTrade> choices =
-        Rows.loadOrComplain(
-            "SELECT account_id, product_id FROM position LIMIT " + HOW_MANY_TO_LOAD,
-            row -> new WhatToTrade(row.getInt(1), row.getInt(2)),
-            "no positions found - run db/3-generate.sql first");
-
-    System.out.println("loaded " + choices.size() + " account and product pairs");
-    System.out.println("sending " + HOW_MANY_PER_SECOND + " trades a second to " + KAFKA_TOPIC);
-
-    sendTradesForever(choices);
+  public TradeSender(Rows rows, SendToKafka kafka) {
+    this.rows = rows;
+    this.kafka = kafka;
   }
 
-  private static void sendTradesForever(List<WhatToTrade> choices) throws InterruptedException {
-    long nextTradeNumber = System.currentTimeMillis();
-    long howManySent = 0;
+  @Override
+  public String name() {
+    return "trade";
+  }
 
+  @Override
+  public void sendUntilStopped() throws InterruptedException {
+    List<WhatToTrade> choices =
+        rows.loadOrComplain(
+            "SELECT account_id, product_id FROM position LIMIT " + HOW_MANY_TO_LOAD,
+            (row, number) -> new WhatToTrade(row.getInt(1), row.getInt(2)),
+            "no positions found - run db/3-generate.sql first");
+
+    long nextTradeNumber = System.currentTimeMillis();
     Pace pace = new Pace();
 
-    try (KafkaProducer<String, String> kafka = Kafka.connect()) {
-      while (true) {
-        WhatToTrade choice = choices.get(DICE.nextInt(choices.size()));
+    while (!Thread.currentThread().isInterrupted()) {
+      WhatToTrade choice = choices.get(DICE.nextInt(choices.size()));
 
-        Kafka.send(kafka, KAFKA_TOPIC, choice.messageKey(), choice.newTrade(nextTradeNumber));
+      kafka.send(KAFKA_TOPIC, choice.messageKey(), choice.newTrade(nextTradeNumber));
 
-        nextTradeNumber = nextTradeNumber + 1;
-        howManySent = howManySent + 1;
-        if (howManySent % 20 == 0) {
-          System.out.println("sent " + howManySent + " trades");
-        }
-
-        pace.waitYourTurn(HOW_MANY_PER_SECOND);
-      }
+      nextTradeNumber = nextTradeNumber + 1;
+      pace.waitYourTurn(HOW_MANY_PER_SECOND);
     }
   }
 }
