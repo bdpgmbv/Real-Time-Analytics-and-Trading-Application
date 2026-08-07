@@ -5,7 +5,7 @@ services:
     image: apache/kafka:4.3.1
     container_name: rtat-kafka
     ports:
-      - "9092:9092"
+      - "${RTAT_BIND:127.0.0.1}:9092:9092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -37,11 +37,11 @@ services:
     image: postgres:17.10
     container_name: rtat-postgres
     ports:
-      - "5432:5432"
+      - "${RTAT_BIND:127.0.0.1}:5432:5432"
     environment:
       POSTGRES_DB: rtat
       POSTGRES_USER: rtat
-      POSTGRES_PASSWORD: rtat_dev_only
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD, see deploy/.env.example}
     command:
       - postgres
       - -c
@@ -74,7 +74,7 @@ services:
     image: redis:8.10
     container_name: rtat-redis
     ports:
-      - "6379:6379"
+      - "${RTAT_BIND:127.0.0.1}:6379:6379"
     command:
       - redis-server
       - --appendonly

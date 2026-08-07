@@ -7,6 +7,8 @@ description = "Sends continuously-changing data to Kafka."
 dependencies {
     implementation(platform(libs.spring.boot.bom))
 
+    implementation(project(":platform"))
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-kafka")

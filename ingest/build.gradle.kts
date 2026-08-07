@@ -7,6 +7,8 @@ description = "Reads the Kafka topics and writes what arrives into Postgres."
 dependencies {
     implementation(platform(libs.spring.boot.bom))
 
+    implementation(project(":platform"))
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

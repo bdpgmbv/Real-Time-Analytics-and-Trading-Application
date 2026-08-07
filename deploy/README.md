@@ -90,7 +90,7 @@ One caveat for Kafka: the broker advertises `localhost:9092` on its external lis
 | Service | Host | Port | Credentials |
 |---|---|---|---|
 | Kafka | localhost | 9092 | none |
-| Postgres | localhost | 5432 | `rtat` / `rtat_dev_only`, database `rtat` |
+| Postgres | 127.0.0.1 | 5432 | `rtat` / whatever you put in `deploy/.env`, database `rtat` |
 | Redis | localhost | 6379 | none |
 
 No authentication, no TLS. Acceptable because nothing is exposed beyond SSH. Both get added when the gateway returns.
@@ -161,3 +161,59 @@ java -jar stream/build/libs/rtat-stream-0.1.0-SNAPSHOT.jar --rtat.send=position
 Raising threads above the partition count does nothing — Kafka gives a partition to
 one consumer. Ordering per account survives because messages are keyed on `accountId`,
 so an account always lands on the same partition and therefore the same thread.
+
+---
+
+## Secrets
+
+Nothing has a working default. A service with no database password stops with a message
+that names the variable to set:
+
+```
+spring.datasource.password is not set. Set SPRING_DATASOURCE_PASSWORD, or point
+SPRING_DATASOURCE_PASSWORD_FILE at a file holding it. To run against the throwaway
+local stack instead, start with --spring.profiles.active=local
+```
+
+Three ways to supply one, in the order you should prefer them:
+
+| | how | when |
+|---|---|---|
+| **a mounted file** | `SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/db` | production. Docker secrets and Kubernetes secrets both mount files. The value never appears in `docker inspect`, `ps`, or a crash dump of the environment |
+| an environment variable | `SPRING_DATASOURCE_PASSWORD=...` | acceptable, but visible to anything that can read the process environment |
+| the `local` profile | `--spring.profiles.active=local` | your own machine. It does not supply a password — it only permits a throwaway one and turns health detail back on |
+
+Any variable ending `_FILE` is read this way, not only the database password. The trailing
+newline your editor leaves is stripped.
+
+**Known development passwords are refused outside the `local` profile** — `rtat_dev_only`,
+`password`, `changeme`, `admin`, `postgres`, `secret`. The service will not start. This exists
+because a default that works is a default that ships.
+
+Before the first `docker compose up`:
+
+```bash
+cp deploy/.env.example deploy/.env
+```
+
+Then fill it in. `deploy/.env` is git-ignored.
+
+## What is reachable from outside
+
+| | port | listens on |
+|---|---|---|
+| upload endpoint | 8090 | all interfaces |
+| health, metrics, prometheus | 9191 | **127.0.0.1 only** |
+| stream metrics | 9192 | **127.0.0.1 only** |
+| Postgres, Kafka, Redis | 5432, 9092, 6379 | **127.0.0.1 only** |
+| Prometheus, Grafana | 9090, 3000 | **127.0.0.1 only** |
+
+Actuator is on its own port so that opening 8090 to clients does not also open health,
+metrics and environment details. `RTAT_ADMIN_ADDRESS` moves it if a metrics collector runs
+on another host; put it behind the network policy, not the internet.
+
+Health detail is **off** by default — the full response names the database product, disk
+paths and SSL chains, which is a map for anyone probing. `--spring.profiles.active=local`
+turns it back on, or set `RTAT_HEALTH_DETAIL=always`.
+
+Grafana anonymous viewing is **off**, and it will not start without `GRAFANA_PASSWORD`.

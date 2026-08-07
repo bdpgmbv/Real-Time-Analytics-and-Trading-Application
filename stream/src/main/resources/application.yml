@@ -25,9 +25,12 @@ management:
     web:
       exposure:
         include: health, metrics, prometheus, info
+  server:
+    port: ${RTAT_ADMIN_PORT:9192}
+    address: ${RTAT_ADMIN_ADDRESS:127.0.0.1}
   endpoint:
     health:
-      show-details: always
+      show-details: ${RTAT_HEALTH_DETAIL:never}
   metrics:
     tags:
       application: rtat-stream
@@ -39,3 +42,14 @@ logging:
   level:
     root: WARN
     vyshaliprabananthlal: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+management:
+  endpoint:
+    health:
+      show-details: always

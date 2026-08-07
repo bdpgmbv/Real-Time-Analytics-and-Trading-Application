@@ -9,14 +9,14 @@ scrape_configs:
   - job_name: rtat-ingest
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['host.docker.internal:8090']
+      - targets: ['host.docker.internal:9191']
         labels:
           service: ingest
 
   - job_name: rtat-stream
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['host.docker.internal:8091']
+      - targets: ['host.docker.internal:9192']
         labels:
           service: stream
 

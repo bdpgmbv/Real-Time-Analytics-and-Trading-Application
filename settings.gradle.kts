@@ -18,3 +18,4 @@ include("stream")
 
 include("ingest")
 include("calculate")
+include("platform")
