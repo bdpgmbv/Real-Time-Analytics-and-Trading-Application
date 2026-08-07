@@ -3,6 +3,7 @@ package vyshaliprabananthlal.stream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public final class Database {
 
@@ -20,6 +21,14 @@ public final class Database {
     String user = System.getenv().getOrDefault("RTAT_DB_USER", DEFAULT_USER);
     String password = System.getenv().getOrDefault("RTAT_DB_PASSWORD", DEFAULT_PASSWORD);
 
-    return DriverManager.getConnection(address(), user, password);
+    Connection connection = DriverManager.getConnection(address(), user, password);
+    makeTheDatabaseAgreeOnWhatDayItIs(connection);
+    return connection;
+  }
+
+  private static void makeTheDatabaseAgreeOnWhatDayItIs(Connection connection) throws SQLException {
+    try (Statement statement = connection.createStatement()) {
+      statement.execute("SET TIME ZONE 'UTC'");
+    }
   }
 }

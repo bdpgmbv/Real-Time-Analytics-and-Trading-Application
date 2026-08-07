@@ -14,9 +14,18 @@ application {
     mainClass = "vyshaliprabananthlal.ingest.PositionReceiver"
 }
 
-tasks.register<JavaExec>("receivePositions") {
-    group = "rtat ingest"
-    description = "Reads rtat.position and writes the changes into Postgres."
-    mainClass = "vyshaliprabananthlal.ingest.PositionReceiver"
-    classpath = sourceSets["main"].runtimeClasspath
+val receivers =
+    mapOf(
+        "receivePositions" to "PositionReceiver",
+        "receivePrices" to "PriceReceiver",
+        "receiveRates" to "RateReceiver",
+    )
+
+receivers.forEach { (taskName, className) ->
+    tasks.register<JavaExec>(taskName) {
+        group = "rtat ingest"
+        description = "Reads a Kafka topic and writes the changes into Postgres."
+        mainClass = "vyshaliprabananthlal.ingest.$className"
+        classpath = sourceSets["main"].runtimeClasspath
+    }
 }

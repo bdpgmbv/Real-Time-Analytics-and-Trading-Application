@@ -7,29 +7,29 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-public final class PositionReceiver {
+public final class PriceReceiver {
 
-  private static final String KAFKA_TOPIC = "rtat.position";
-  private static final String GROUP_NAME = "position-receiver";
+  private static final String KAFKA_TOPIC = "rtat.price";
+  private static final String GROUP_NAME = "price-receiver";
+  private static final int HOW_MANY_AT_A_TIME = 2000;
 
-  private static final String UPDATE_THE_POSITION =
-      "UPDATE position SET how_many = ? WHERE account_id = ? AND product_id = ?";
+  private static final String UPDATE_THE_PRICE =
+      "UPDATE price SET price = ?, arrived_at = now() WHERE product_id = ?";
 
   private static final ObjectMapper JSON = new ObjectMapper();
 
-  private PositionReceiver() {}
+  private PriceReceiver() {}
 
   public static void main(String[] args) throws Exception {
     System.out.println("reading " + KAFKA_TOPIC + " into " + Database.address());
 
     long howManyWritten = 0;
 
-    try (KafkaConsumer<String, String> kafka = connectToKafka();
+    try (KafkaConsumer<String, String> kafka = Consumer.connect(GROUP_NAME, HOW_MANY_AT_A_TIME);
         Connection database = Database.connect()) {
 
       database.setAutoCommit(false);
@@ -42,20 +42,10 @@ public final class PositionReceiver {
         }
 
         howManyWritten = howManyWritten + writeToDatabase(batch, database);
-
-        crashHereIfWeAreTestingWhatHappens();
-
         kafka.commitSync();
 
-        System.out.println("rows actually changed: " + howManyWritten + "   position changes");
+        System.out.println("rows actually changed: " + howManyWritten + "   price changes");
       }
-    }
-  }
-
-  private static void crashHereIfWeAreTestingWhatHappens() {
-    boolean weAreTesting = "true".equals(System.getenv("RTAT_CRASH_AFTER_COMMIT"));
-    if (weAreTesting) {
-      throw new IllegalStateException("pretending the process died right here");
     }
   }
 
@@ -64,17 +54,12 @@ public final class PositionReceiver {
 
     int howManyInThisBatch = 0;
 
-    try (PreparedStatement update = database.prepareStatement(UPDATE_THE_POSITION)) {
+    try (PreparedStatement update = database.prepareStatement(UPDATE_THE_PRICE)) {
       for (ConsumerRecord<String, String> message : batch) {
         JsonNode fields = readJson(message.value());
 
-        int account = fields.path("accountId").asInt();
-        int product = fields.path("productId").asInt();
-        double howMany = fields.path("howMany").asDouble();
-
-        update.setDouble(1, howMany);
-        update.setInt(2, account);
-        update.setInt(3, product);
+        update.setDouble(1, fields.path("price").asDouble());
+        update.setInt(2, fields.path("productId").asInt());
         update.addBatch();
       }
 
@@ -94,20 +79,5 @@ public final class PositionReceiver {
     } catch (Exception problem) {
       throw new IllegalStateException("could not read message: " + message, problem);
     }
-  }
-
-  private static KafkaConsumer<String, String> connectToKafka() {
-    String text = "org.apache.kafka.common.serialization.StringDeserializer";
-
-    Properties settings = new Properties();
-    settings.put("bootstrap.servers", System.getenv().getOrDefault("RTAT_KAFKA", "localhost:9092"));
-    settings.put("group.id", GROUP_NAME);
-    settings.put("key.deserializer", text);
-    settings.put("value.deserializer", text);
-    settings.put("auto.offset.reset", "earliest");
-    settings.put("enable.auto.commit", "false");
-    settings.put("max.poll.records", "1000");
-
-    return new KafkaConsumer<>(settings);
   }
 }
