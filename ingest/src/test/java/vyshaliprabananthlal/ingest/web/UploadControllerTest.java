@@ -15,8 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import vyshaliprabananthlal.ingest.custodian.BadLine;
-import vyshaliprabananthlal.ingest.custodian.FileLoader;
+import vyshaliprabananthlal.ingest.files.FileLoader;
+import vyshaliprabananthlal.ingest.files.LoadResult;
+import vyshaliprabananthlal.ingest.format.BadLine;
 import vyshaliprabananthlal.ingest.web.UploadController.UploadAnswer;
 
 class UploadControllerTest {
@@ -34,7 +35,7 @@ class UploadControllerTest {
   @DisplayName("a good file comes back with the counts and the custodian name")
   void aGoodUploadReportsWhatHappened() throws Exception {
     when(loader.load(any(), any(), eq("UI UPLOAD")))
-        .thenReturn(new FileLoader.LoadResult(7, "Northgate Trust", 50, 50, 0, false));
+        .thenReturn(new LoadResult(7, "Northgate Trust", 50, 50, 0, false));
     when(loader.problemsFrom(7)).thenReturn(List.of());
 
     ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("positions.csv"));
@@ -51,7 +52,7 @@ class UploadControllerTest {
   @DisplayName("the upload is marked as coming from the screen, not from SFTP")
   void uploadsAreMarkedAsComingFromTheScreen() throws Exception {
     when(loader.load(any(), any(), any()))
-        .thenReturn(new FileLoader.LoadResult(1, "Northgate Trust", 1, 1, 0, false));
+        .thenReturn(new LoadResult(1, "Northgate Trust", 1, 1, 0, false));
     when(loader.problemsFrom(1)).thenReturn(List.of());
 
     controller.uploadACustodianFile(aFile("positions.csv"));
@@ -63,7 +64,7 @@ class UploadControllerTest {
   @DisplayName("rejected rows are handed back so the person can see what to fix")
   void rejectedRowsComeBackToTheUser() throws Exception {
     when(loader.load(any(), any(), any()))
-        .thenReturn(new FileLoader.LoadResult(9, "Northgate Trust", 50, 47, 3, false));
+        .thenReturn(new LoadResult(9, "Northgate Trust", 50, 47, 3, false));
     when(loader.problemsFrom(9))
         .thenReturn(
             List.of(
@@ -84,8 +85,7 @@ class UploadControllerTest {
   @Test
   @DisplayName("uploading the same file twice says so plainly and changes nothing")
   void aRepeatUploadSaysSo() throws Exception {
-    when(loader.load(any(), any(), any()))
-        .thenReturn(new FileLoader.LoadResult(3, "", 0, 0, 0, true));
+    when(loader.load(any(), any(), any())).thenReturn(new LoadResult(3, "", 0, 0, 0, true));
 
     ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("again.csv"));
 
@@ -114,7 +114,7 @@ class UploadControllerTest {
   @DisplayName("a file uploaded with no name still works")
   void aFileWithNoNameStillWorks() throws Exception {
     when(loader.load(eq("unnamed"), any(), any()))
-        .thenReturn(new FileLoader.LoadResult(1, "Northgate Trust", 1, 1, 0, false));
+        .thenReturn(new LoadResult(1, "Northgate Trust", 1, 1, 0, false));
     when(loader.problemsFrom(1)).thenReturn(List.of());
 
     MockMultipartFile noName =

@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import vyshaliprabananthlal.ingest.custodian.BadLine;
-import vyshaliprabananthlal.ingest.custodian.FileLoader;
+import vyshaliprabananthlal.ingest.files.FileLoader;
+import vyshaliprabananthlal.ingest.files.LoadResult;
+import vyshaliprabananthlal.ingest.format.BadLine;
 
 @RestController
 public class UploadController {
@@ -30,7 +31,7 @@ public class UploadController {
     String contents = new String(file.getBytes(), StandardCharsets.UTF_8);
 
     try {
-      FileLoader.LoadResult result = loader.load(fileName, contents, "UI UPLOAD");
+      LoadResult result = loader.load(fileName, contents, "UI UPLOAD");
 
       if (result.wasAlreadySeen()) {
         return ResponseEntity.ok(
