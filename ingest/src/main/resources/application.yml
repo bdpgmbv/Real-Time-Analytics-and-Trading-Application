@@ -22,6 +22,12 @@ spring:
       type: batch
       ack-mode: manual_immediate
 
+rtat:
+  custodian-files:
+    incoming: ${RTAT_INCOMING:custodian-files/incoming}
+    finished: ${RTAT_FINISHED:custodian-files/finished}
+    look-every-milliseconds: 2000
+
 management:
   endpoints:
     web:

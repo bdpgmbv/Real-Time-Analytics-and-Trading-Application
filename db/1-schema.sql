@@ -1,5 +1,6 @@
-DROP TABLE IF EXISTS position_exposure, position, price, trade, hedge_fill, hedge,
-  entitlement, app_user, account, fund, client, product, fx_rate, exchange, currency CASCADE;
+DROP TABLE IF EXISTS file_row_problem, file_load, position_exposure, position, price, trade,
+  hedge_fill, hedge, entitlement, app_user, account, fund, client, product, fx_rate,
+  exchange, currency CASCADE;
 
 
 CREATE TABLE currency (
@@ -143,4 +144,27 @@ CREATE TABLE entitlement (
   fund_id       INTEGER NOT NULL REFERENCES fund,
   can_send_trades BOOLEAN NOT NULL,
   PRIMARY KEY (user_id, fund_id)
+);
+
+
+CREATE TABLE file_load (
+  file_load_id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  file_name      TEXT        NOT NULL,
+  fingerprint    TEXT        NOT NULL UNIQUE,
+  custodian      TEXT        NOT NULL,
+  arrived_how    TEXT        NOT NULL,
+  rows_in_file   INTEGER     NOT NULL,
+  rows_loaded    INTEGER     NOT NULL,
+  rows_rejected  INTEGER     NOT NULL,
+  started_at     TIMESTAMPTZ NOT NULL,
+  finished_at    TIMESTAMPTZ
+);
+
+
+CREATE TABLE file_row_problem (
+  file_load_id INTEGER NOT NULL REFERENCES file_load,
+  line_number  INTEGER NOT NULL,
+  the_line     TEXT    NOT NULL,
+  what_is_wrong TEXT   NOT NULL,
+  PRIMARY KEY (file_load_id, line_number)
 );
