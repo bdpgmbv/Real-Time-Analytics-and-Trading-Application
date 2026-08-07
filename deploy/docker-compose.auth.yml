@@ -1,0 +1,18 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.2
+    container_name: rtat-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD:?set KEYCLOAK_PASSWORD, see deploy/.env.example}
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "${RTAT_BIND:-127.0.0.1}:8180:8080"
+    volumes:
+      - ./auth/rtat-realm.json:/opt/keycloak/data/import/rtat-realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '\"status\": \"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30

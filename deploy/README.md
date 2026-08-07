@@ -217,3 +217,49 @@ paths and SSL chains, which is a map for anyone probing. `--spring.profiles.acti
 turns it back on, or set `RTAT_HEALTH_DETAIL=always`.
 
 Grafana anonymous viewing is **off**, and it will not start without `GRAFANA_PASSWORD`.
+
+---
+
+## Who may call what
+
+```bash
+docker compose --env-file deploy/.env -f deploy/docker-compose.auth.yml up -d
+```
+
+Keycloak on `127.0.0.1:8180`, realm `rtat`, imported from `deploy/auth/rtat-realm.json`.
+The API is a plain OAuth2 resource server: it validates the token against the realm's
+published keys and does not talk to Keycloak on the request path.
+
+Getting a token the way a UI would:
+
+```bash
+curl -s -X POST http://localhost:8180/realms/rtat/protocol/openid-connect/token \
+  -d client_id=rtat-ui -d grant_type=password -d username=user11 -d password=user11-password
+```
+
+`grant_type=password` is for testing only. The `rtat-ui` client is public with PKCE, so a
+real browser uses the authorization code flow and never sees a client secret.
+
+| endpoint | needs |
+|---|---|
+| `GET /api/funds` | a valid token |
+| `GET /api/funds/{id}/exposure` | an entitlement row for that fund |
+| `GET /api/funds/{id}/hedges/suggested` | an entitlement row for that fund |
+| `POST /api/funds/{id}/hedges` | that row with `can_send_trades` |
+| `GET /actuator/health` | nothing, so an operator can check it |
+
+**The token says who you are. The database says what you may see.** Entitlements are read
+from `entitlement` on every request and never from a claim, so revoking access takes effect
+on the next call rather than when the token expires 15 minutes later.
+
+`rtat.oidc.user-claim` picks which claim identifies the user, defaulting to
+`preferred_username` because `app_user.user_id` holds the client's own identifier. Where we
+control provisioning, `sub` is the better choice — it survives a rename.
+
+Two things the checks deliberately do:
+
+- **Another company's fund is refused, not quietly emptied.** An empty result would tell an
+  attacker the fund exists but is empty. A fund that does not exist is refused with the same
+  message as one that does, so probing learns nothing either way.
+- **Account lists are narrowed, not rejected.** Passing `?account=` values from another fund
+  drops them and answers with what you were allowed to see.

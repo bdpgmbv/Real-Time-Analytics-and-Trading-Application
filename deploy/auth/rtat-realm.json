@@ -1,0 +1,56 @@
+{
+  "realm": "rtat",
+  "enabled": true,
+  "accessTokenLifespan": 900,
+  "sslRequired": "external",
+  "clients": [
+    {
+      "clientId": "rtat-ui",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:*/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "user11",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user11@example.com",
+      "firstName": "A.",
+      "lastName": "Fischer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user11-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "user21",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user21@example.com",
+      "firstName": "R.",
+      "lastName": "Baumann",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user21-password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
