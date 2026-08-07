@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: rtat-gateway
+
+  data:
+    redis:
+      host: ${RTAT_REDIS_HOST:localhost}
+      port: ${RTAT_REDIS_PORT:6379}
+      timeout: 2s
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${RTAT_OIDC_ISSUER:http://localhost:8180/realms/rtat}
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: exposure-and-hedges
+              uri: ${RTAT_API:http://localhost:8095}
+              predicates:
+                - Path=/api/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@whoToCountAgainst}"
+                    redis-rate-limiter.replenishRate: ${RTAT_RATE:20}
+                    redis-rate-limiter.burstCapacity: ${RTAT_BURST:40}
+                    redis-rate-limiter.requestedTokens: 1
+
+            - id: custodian-uploads
+              uri: ${RTAT_INGEST:http://localhost:8090}
+              predicates:
+                - Path=/upload
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@whoToCountAgainst}"
+                    redis-rate-limiter.replenishRate: ${RTAT_UPLOAD_RATE:2}
+                    redis-rate-limiter.burstCapacity: ${RTAT_UPLOAD_BURST:4}
+                    redis-rate-limiter.requestedTokens: 1
+
+server:
+  port: ${RTAT_PORT:8088}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus, info, gateway
+  server:
+    port: ${RTAT_ADMIN_PORT:9194}
+    address: ${RTAT_ADMIN_ADDRESS:127.0.0.1}
+  endpoint:
+    health:
+      show-details: ${RTAT_HEALTH_DETAIL:never}
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: rtat-gateway
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+  level:
+    root: WARN
+    vyshaliprabananthlal: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+management:
+  endpoint:
+    health:
+      show-details: always
