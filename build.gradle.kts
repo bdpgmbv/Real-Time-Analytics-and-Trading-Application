@@ -145,10 +145,36 @@ subprojects {
     }
 }
 
+tasks.register("everyModuleHasTests") {
+    group = "verification"
+    description = "Fails a module that has code but no tests, which coverage alone lets through."
+
+    val modules =
+        subprojects
+            .filter { it.buildFile.exists() }
+            .associate { it.path to Pair(it.file("src/main/java"), it.file("src/test/java")) }
+
+    doLast {
+        val withoutTests =
+            modules.filter { (_, folders) ->
+                val (main, test) = folders
+                main.exists() && !(test.exists() && test.walkTopDown().any { it.name.endsWith("Test.java") })
+            }
+
+        if (withoutTests.isNotEmpty()) {
+            throw GradleException(
+                "these modules have code but no tests, so their coverage gate means nothing: " +
+                    withoutTests.keys.joinToString(", "),
+            )
+        }
+    }
+}
+
 tasks.register("checkAll") {
     group = "verification"
     description = "Builds and tests every module."
 
+    dependsOn("everyModuleHasTests")
     dependsOn(
         subprojects
             .filter { it.buildFile.exists() }

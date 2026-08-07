@@ -1,4 +1,4 @@
-package vyshaliprabananthlal.stream;
+package vyshaliprabananthlal.stream.plumbing;
 
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
