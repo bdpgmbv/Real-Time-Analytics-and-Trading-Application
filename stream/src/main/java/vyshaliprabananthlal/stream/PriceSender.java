@@ -18,6 +18,8 @@ public final class PriceSender {
   private static final int A_BUSY_SPELL_ARRIVES_EVERY_SECONDS = 1200;
   private static final int A_BUSY_SPELL_LASTS_SECONDS = 10;
 
+  private static final Random DICE = new Random();
+
   private PriceSender() {}
 
   public static void main(String[] args) throws Exception {
@@ -53,7 +55,6 @@ public final class PriceSender {
   }
 
   private static void sendPricesForever(List<Quote> quotes) throws InterruptedException {
-    Random dice = new Random();
     long startedAtSecond = System.currentTimeMillis() / 1000;
     long howManySent = 0;
 
@@ -62,8 +63,8 @@ public final class PriceSender {
         boolean busy = inABusySpell(startedAtSecond);
         int sendThisManyPerSecond = busy ? BUSY_PER_SECOND : NORMAL_PER_SECOND;
 
-        Quote quote = quotes.get(dice.nextInt(quotes.size()));
-        quote.moveALittle(dice);
+        Quote quote = quotes.get(DICE.nextInt(quotes.size()));
+        quote.moveALittle();
 
         Kafka.send(kafka, KAFKA_TOPIC, quote.messageKey(), quote.asMessage());
 
@@ -97,8 +98,8 @@ public final class PriceSender {
       this.rightNow = startedAt;
     }
 
-    void moveALittle(Random dice) {
-      double smallMove = (dice.nextDouble() - 0.5) * 0.01 * startedAt;
+    void moveALittle() {
+      double smallMove = (DICE.nextDouble() - 0.5) * 0.01 * startedAt;
       double pullBackTowardsStart = (startedAt - rightNow) * 0.005;
 
       rightNow = Math.max(0.01, rightNow + smallMove + pullBackTowardsStart);

@@ -47,3 +47,35 @@ Mention the general principle: when fan-out is large, look for an algebraic prop
 **Weak answer:** "Scale out the cluster." The naive path needs 54 million operations per second. No cluster fixes that.
 
 ---
+
+---
+
+## 4 — Losing or duplicating data at the Kafka-to-database boundary
+
+> A consumer reads position updates from Kafka and writes them to Postgres, then crashes
+> between the two operations. Committing the offset first loses data; committing after
+> reprocesses it. Which do you choose for a position feed, and what property must the
+> database write have for the second option to be safe?
+
+**Measured, not argued.** Same crash injected in the same place, twice:
+
+```
+commit then write     44,560 messages on the topic, 43,560 written, 1,000 lost silently
+write then commit     45,440 messages on the topic, 45,440 written, 0 lost
+```
+
+The lost batch is exactly one `max.poll.records`. Nothing logged an error.
+
+**Why write-then-commit is safe here, and when it stops being safe.** The write is
+
+```sql
+UPDATE position SET how_many = ? WHERE account_id = ? AND product_id = ?
+```
+
+Setting a value to 500 twice leaves it at 500, so replaying a batch changes nothing. Had it
+been `how_many = how_many + ?`, replaying would double the position — trading silent loss for
+silent corruption, which is worse because it looks like a real number.
+
+**The follow-up to expect:** what if the write is genuinely not idempotent, such as appending a
+trade? Then the offset and the write have to move together — either both in Postgres in one
+transaction, or a deduplication key carried on the message.

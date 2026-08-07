@@ -16,6 +16,8 @@ public final class TradeSender {
   private static final int HOW_MANY_PER_SECOND = 8;
   private static final int HOW_MANY_TO_LOAD = 100000;
 
+  private static final Random DICE = new Random();
+
   private TradeSender() {}
 
   public static void main(String[] args) throws Exception {
@@ -50,14 +52,13 @@ public final class TradeSender {
   }
 
   private static void sendTradesForever(List<WhatToTrade> choices) throws InterruptedException {
-    Random dice = new Random();
     long nextTradeNumber = 1;
     long howManySent = 0;
 
     try (KafkaProducer<String, String> kafka = Kafka.connect()) {
       while (true) {
-        WhatToTrade choice = choices.get(dice.nextInt(choices.size()));
-        String message = choice.newTrade(nextTradeNumber, dice);
+        WhatToTrade choice = choices.get(DICE.nextInt(choices.size()));
+        String message = choice.newTrade(nextTradeNumber);
 
         Kafka.send(kafka, KAFKA_TOPIC, choice.messageKey(), message);
 
@@ -86,15 +87,15 @@ public final class TradeSender {
       return Integer.toString(accountNumber);
     }
 
-    String newTrade(long tradeNumber, Random dice) {
-      long howMany = 1L + dice.nextInt(10000);
-      boolean itIsASale = dice.nextInt(2) == 0;
+    String newTrade(long tradeNumber) {
+      long howMany = 1L + DICE.nextInt(10000);
+      boolean itIsASale = DICE.nextInt(2) == 0;
       if (itIsASale) {
         howMany = -howMany;
       }
 
-      double price = Math.round((5 + dice.nextDouble() * 300) * 100) / 100.0;
-      boolean typedInByHand = dice.nextInt(10) == 0;
+      double price = Math.round((5 + DICE.nextDouble() * 300) * 100) / 100.0;
+      boolean typedInByHand = DICE.nextInt(10) == 0;
       String cameFrom = typedInByHand ? "SOMEONE UPLOADED IT" : "AUTOMATIC FEED";
 
       return String.format(

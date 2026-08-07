@@ -17,6 +17,8 @@ public final class PositionSender {
   private static final int REST_AFTER_THIS_MANY = 40;
   private static final int REST_FOR_MILLISECONDS = 5;
 
+  private static final Random DICE = new Random();
+
   private PositionSender() {}
 
   public static void main(String[] args) throws Exception {
@@ -53,13 +55,12 @@ public final class PositionSender {
   }
 
   private static void sendPositionsForever(List<Holding> holdings) throws InterruptedException {
-    Random dice = new Random();
     long howManySent = 0;
 
     try (KafkaProducer<String, String> kafka = Kafka.connect()) {
       while (true) {
-        Holding holding = holdings.get(dice.nextInt(holdings.size()));
-        holding.moveALittle(dice);
+        Holding holding = holdings.get(DICE.nextInt(holdings.size()));
+        holding.moveALittle();
 
         Kafka.send(kafka, KAFKA_TOPIC, holding.messageKey(), holding.asMessage());
 
@@ -91,8 +92,8 @@ public final class PositionSender {
       this.rightNow = startedAt;
     }
 
-    void moveALittle(Random dice) {
-      double smallMove = (dice.nextDouble() - 0.5) * 0.02 * startedAt;
+    void moveALittle() {
+      double smallMove = (DICE.nextDouble() - 0.5) * 0.02 * startedAt;
 
       rightNow = startedAt + smallMove;
     }

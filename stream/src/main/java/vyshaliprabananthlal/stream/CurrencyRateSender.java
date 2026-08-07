@@ -14,6 +14,8 @@ public final class CurrencyRateSender {
   private static final String KAFKA_TOPIC = "rtat.fx-rate";
   private static final int HOW_MANY_PER_SECOND = 100;
 
+  private static final Random DICE = new Random();
+
   private CurrencyRateSender() {}
 
   public static void main(String[] args) throws Exception {
@@ -49,13 +51,12 @@ public final class CurrencyRateSender {
   }
 
   private static void sendRatesForever(List<Rate> rates) throws InterruptedException {
-    Random dice = new Random();
     long howManySent = 0;
 
     try (KafkaProducer<String, String> kafka = Kafka.connect()) {
       while (true) {
-        Rate rate = rates.get(dice.nextInt(rates.size()));
-        rate.moveALittle(dice);
+        Rate rate = rates.get(DICE.nextInt(rates.size()));
+        rate.moveALittle();
 
         Kafka.send(kafka, KAFKA_TOPIC, rate.messageKey(), rate.asMessage());
 
@@ -84,13 +85,13 @@ public final class CurrencyRateSender {
       this.rightNow = startedAt;
     }
 
-    void moveALittle(Random dice) {
+    void moveALittle() {
       boolean sameCurrencyBothSides = fromCurrency.equals(toCurrency);
       if (sameCurrencyBothSides) {
         return;
       }
 
-      double tinyRandomPush = (dice.nextDouble() - 0.5) * 0.0004 * startedAt;
+      double tinyRandomPush = (DICE.nextDouble() - 0.5) * 0.0004 * startedAt;
       double pullBackTowardsStart = (startedAt - rightNow) * 0.01;
 
       rightNow = rightNow + tinyRandomPush + pullBackTowardsStart;
