@@ -106,6 +106,11 @@ Every position message is keyed by account. 10,440 accounts spread over 128 part
 
 Storage: 16.3M × 300 bytes = **4.9 GB** for one copy.
 
+> **This 300-byte figure predates the schema.** `position` ended up at 8 columns
+> (see [data-model.md](data-model.md)), nearer 56 bytes plus row overhead. The disk figures in
+> Number 10 depend on it. Both will be replaced with **measured** numbers after the first real
+> load rather than another estimate.
+
 ### The skew
 
 | | Share of clients | Share of positions |
@@ -312,20 +317,36 @@ Neither ever touches 16.3 million positions. The old system did. That is why it 
 ### Aggregate state
 
 ```
-1,320 funds × 30 currencies = 39,600 aggregates
+10,440 accounts × 30 currencies = 313,200 aggregates
 ```
 
-At 100 FX updates/sec, one EUR move touches at most 1,320 aggregates — one per fund:
+**Corrected from 39,600.** The grid filters by account — *"11 accounts are selected"* — so the
+total has to exist at account level. A fund total cannot answer a question about 3 of its 11
+accounts.
+
+At 100 FX updates/sec, one EUR move touches at most 10,440 aggregates — one per account:
 
 ```
-100 × 1,320 = 132,000 aggregate updates/sec
+100 × 10,440 = 1,044,000 aggregate updates/sec
 ```
 
 | Approach | Work per FX move |
 |---|---|
 | Revalue every position | 543,000 |
-| Update the aggregate | 1,320 |
-| **Difference** | **411× less** |
+| Update the aggregate | 10,440 |
+| **Difference** | **52× less** |
+
+### The cost this exposes
+
+1,044,000 updates/sec against 50,000 per core is **21 cores for FX alone** — more than the 14-core
+budget in Number 11. Moving to account level made the naive approach 8× more expensive.
+
+The way out is to hold each total **in its own currency**. `account 340, EUR = 12,000,000 EUR` does
+not change when EUR/USD moves — only its value in the base currency does, and that conversion
+happens when somebody looks. An FX tick then costs **zero** writes.
+
+Not yet decided. See [data-model.md](data-model.md) for why no computed value is stored in
+Postgres at all.
 
 ---
 
@@ -344,10 +365,10 @@ Three things need the numbers even when nobody is watching:
 And after the aggregate trick it costs almost nothing:
 
 ```
-39,600 aggregates × 200 bytes = 8 MB
+313,200 aggregates × 200 bytes = 63 MB
 ```
 
-8 MB of memory, for all 400 clients, always warm.
+63 MB of memory, for all 400 clients, always warm.
 
 | | FX updates/sec |
 |---|---|
@@ -420,9 +441,9 @@ State is what the system holds in memory to avoid recalculating.
 |---|---|---|---|
 | Position values | 16,308,000 | 300 bytes | **4.9 GB** |
 | Product reference data | 1,050,030 | 400 bytes | 420 MB |
-| Exposure aggregates | 39,600 | 200 bytes | 8 MB |
+| Exposure aggregates | 313,200 | 200 bytes | 63 MB |
 | FX rates | 240 | 100 bytes | 24 KB |
-| **Total** | | | **~5.3 GB** |
+| **Total** | | | **~5.4 GB** |
 
 Flink stores this in RocksDB, which spills to disk but keeps indexes and caches in memory — roughly **3× the raw size**.
 
@@ -607,7 +628,7 @@ Four slots sharing 4 GB gives each about 1 GB — enough for RocksDB caches with
 |---|---|---|
 | Valuation | 32 | the heavy one, 16.3M positions |
 | Position loader | 32 | must keep up with 7,733/sec |
-| Exposure | 16 | only 39,600 aggregates |
+| Exposure | 16 | 313,200 aggregates |
 | Hedge calc | 8 | small |
 | Forward maturity | 8 | timers, mostly idle |
 | Fill processor | 8 | 82 trades/sec peak |

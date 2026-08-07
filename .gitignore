@@ -4,6 +4,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
 
+# Kotlin build-logic scratch
+.kotlin/
+
 # IDE
 .idea/
 *.iml

@@ -9,14 +9,16 @@ flinkKafka = "5.0.0-2.2"
 springBoot = "4.0.7"
 springCloud = "2025.1.2"
 
-protobuf = "4.35.1"
-protobufPlugin = "0.10.0"
+kafka = "4.3.1"
 junit = "6.1.2"
 assertj = "3.27.7"
 testcontainers = "2.0.5"
 awaitility = "4.3.0"
 archunit = "1.4.2"
 jspecify = "1.0.1"
+jackson = "2.22.1"
+postgresql = "42.7.13"
+liquibase = "5.0.3"
 
 # Quality gates
 errorpronePlugin = "5.1.0"
@@ -39,9 +41,8 @@ flink-connector-kafka = { module = "org.apache.flink:flink-connector-kafka", ver
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }
 spring-cloud-bom = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "springCloud" }
 
-protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 
+kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
@@ -49,9 +50,13 @@ assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
 testcontainers-core = { module = "org.testcontainers:testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+liquibase-core = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
 
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
 nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
@@ -64,7 +69,6 @@ cyclonedx-gradle-plugin = { module = "org.cyclonedx:cyclonedx-gradle-plugin", ve
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
-protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotlessPlugin" }
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorpronePlugin" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugsPlugin" }

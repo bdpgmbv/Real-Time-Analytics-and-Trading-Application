@@ -1,5 +1,4 @@
 pluginManagement {
-    includeBuild("build-logic")
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -15,5 +14,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "realtimeanalyticsandtrading"
 
-include("sim:edgar")
-
+include("stream")
