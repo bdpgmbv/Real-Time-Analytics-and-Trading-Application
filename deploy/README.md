@@ -345,3 +345,58 @@ The limit is honest: every watched fund is recalculated each tick at roughly 14 
 funds per second before the sweep overruns its own interval. Past that, either raise
 `RTAT_LIVE_EVERY` or work out which funds a tick actually touched instead of recalculating
 all of them.
+
+---
+
+## The exposure job
+
+`jobs/exposure` is a Flink job. It exists because recalculating is the wrong shape of
+answer for this problem.
+
+```
+rtat.price ──► which funds hold it ──► the difference ──► running total ──► rtat.exposure
+               (loaded once from        not the whole      per fund and
+                Postgres)               new value          currency
+```
+
+Two rules, both from `docs/scale-numbers.md`:
+
+| event | what the job does | what it touches |
+|---|---|---|
+| a price moves | add the difference to the funds holding it | **2 fund totals** (worst case 3) |
+| an FX rate moves | nothing — the base-currency total did not change, only the number it is multiplied by when read | **0** |
+
+Measured on the laptop dataset:
+
+```
+  one price tick
+    recalculating touches   1,630,802 positions
+    the delta job touches           2 fund totals
+    ratio                     815,401 to 1
+```
+
+The FX row is the one that matters. An FX move is the event the old system could not
+survive — 543,000 positions at full scale — and the job does no work for it at all,
+because exposure is held in the security's own currency and converted at read time.
+
+Running it:
+
+```bash
+RTAT_DB_PASSWORD=... flink run jobs/exposure/build/libs/rtat-exposure-0.1.0-SNAPSHOT.jar
+```
+
+### What is proved and what is not
+
+The arithmetic is proved with Flink's own operator harness, including a checkpoint and
+restore: after a restart the job sends the difference, not the whole value again, so a
+restart cannot double-count. The rolled-up holdings query is proved against a real
+Postgres.
+
+**The job has not been run on a Flink cluster.** The operators are tested, the wiring is
+not. Two limits are honest and unfixed:
+
+- Holdings are loaded once at startup. A position that changes afterwards is not picked up
+  until the job restarts. A real deployment needs the position stream feeding the same job.
+- Every task manager holds the whole map — 248,402 rows on the laptop dataset. At full
+  scale that is ten times larger and belongs in keyed state fed by a stream, not a
+  HashMap in `open()`.
