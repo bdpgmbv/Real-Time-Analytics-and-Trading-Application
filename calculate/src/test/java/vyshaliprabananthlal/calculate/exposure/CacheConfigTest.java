@@ -18,9 +18,9 @@ class WhatWeCacheTest {
     void theRepeatedReadsAreKept() {
         assertThat(caches.getCacheNames())
                 .containsExactlyInAnyOrder(
-                        CacheConfig.EXCHANGE_RATES,
+                        CacheConfig.FX_RATES,
                         CacheConfig.FUND_REPORTING_CURRENCY,
-                        CacheConfig.ACCOUNTS_IN_FUND,
+                        CacheConfig.FUND_ACCOUNTS,
                         CacheConfig.USER_CLIENT);
     }
 
@@ -39,7 +39,7 @@ class WhatWeCacheTest {
     @Test
     @DisplayName("a rate put in comes back out")
     void aRatePutInComesBackOut() {
-        Cache rates = cacheCalled(caches, CacheConfig.EXCHANGE_RATES);
+        Cache rates = cacheCalled(caches, CacheConfig.FX_RATES);
         rates.put("USD", Map.of("EUR", 1.1));
 
         assertThat(whatIsIn(rates, "USD")).isEqualTo(Map.of("EUR", 1.1));
@@ -48,7 +48,7 @@ class WhatWeCacheTest {
     @Test
     @DisplayName("rates asked for in different currencies do not share an entry")
     void differentCurrenciesDoNotShareAnEntry() {
-        Cache rates = cacheCalled(caches, CacheConfig.EXCHANGE_RATES);
+        Cache rates = cacheCalled(caches, CacheConfig.FX_RATES);
 
         rates.put("USD", Map.of("EUR", 1.1));
         rates.put("GBP", Map.of("EUR", 0.85));
@@ -60,7 +60,7 @@ class WhatWeCacheTest {
     @Test
     @DisplayName("a rate stops being served once it is older than we allow")
     void aStaleRateIsNotServed() throws InterruptedException {
-        Cache rates = cacheCalled(new CacheConfig().caches(50, 300), CacheConfig.EXCHANGE_RATES);
+        Cache rates = cacheCalled(new CacheConfig().caches(50, 300), CacheConfig.FX_RATES);
 
         rates.put("USD", Map.of("EUR", 1.1));
         Thread.sleep(200);
@@ -72,8 +72,8 @@ class WhatWeCacheTest {
     @DisplayName("reference data is kept far longer than rates, because it barely moves")
     void referenceDataOutlivesRates() throws InterruptedException {
         CacheManager mixed = new CacheConfig().caches(50, 300);
-        Cache rates = cacheCalled(mixed, CacheConfig.EXCHANGE_RATES);
-        Cache accounts = cacheCalled(mixed, CacheConfig.ACCOUNTS_IN_FUND);
+        Cache rates = cacheCalled(mixed, CacheConfig.FX_RATES);
+        Cache accounts = cacheCalled(mixed, CacheConfig.FUND_ACCOUNTS);
 
         rates.put("USD", Map.of("EUR", 1.1));
         accounts.put(1, List.of(10, 11));

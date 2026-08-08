@@ -9,66 +9,81 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import vyshaliprabananthlal.platform.sql.SqlStatements;
 
+/**
+ * What a fund is exposed to, worked out from the positions it holds right now.
+ *
+ * <p>Nothing is stored. A position's value is its quantity times today's price, and the fund's
+ * exposure is those values added up per currency. Storing the answer would mean rewriting
+ * millions of rows every time a price moved; asking the question costs milliseconds.
+ *
+ * <p>Two rules live in the SQL rather than here. A security contributes to its own currency at
+ * 100%, and any {@code position_exposure} rows add further currencies on top rather than
+ * replacing it.
+ */
 @Service
 public class ExposureCalculator {
 
     private final JdbcTemplate database;
     private final ExchangeRates exchangeRates;
-    private final FundLookup fundFacts;
+    private final FundLookup funds;
     private final SqlStatements statements;
-    private final Timer howLongItTakes;
+    private final Timer calculationTimer;
 
     public ExposureCalculator(
             JdbcTemplate database,
             ExchangeRates exchangeRates,
-            FundLookup fundFacts,
+            FundLookup funds,
             SqlStatements statements,
             MeterRegistry meters) {
 
         this.database = database;
         this.exchangeRates = exchangeRates;
-        this.fundFacts = fundFacts;
+        this.funds = funds;
         this.statements = statements;
-        this.howLongItTakes = Timer.builder("rtat.exposure.calculated")
+        this.calculationTimer = Timer.builder("rtat.exposure.calculated")
                 .publishPercentileHistogram()
                 .register(meters);
     }
 
+    /** Every account in the fund. */
     public FundExposure forWholeFund(int fundId) {
-        return forAccounts(fundId, fundFacts.accountsIn(fundId));
+        return forAccounts(fundId, funds.accountsIn(fundId));
     }
 
+    /** Only the accounts given, for a screen where somebody has picked a few. */
     public FundExposure forAccounts(int fundId, List<Integer> accountIds) {
         Timer.Sample timing = Timer.start();
 
         try {
             return calculate(fundId, accountIds);
         } finally {
-            timing.stop(howLongItTakes);
+            timing.stop(calculationTimer);
         }
     }
 
     private FundExposure calculate(int fundId, List<Integer> accountIds) {
-        String reportingCurrency = fundFacts.reportingCurrencyOf(fundId);
+        String reportingCurrency = funds.reportingCurrencyOf(fundId);
 
         if (accountIds.isEmpty()) {
             return new FundExposure(fundId, reportingCurrency, List.of(), 0);
         }
 
         Map<String, Double> rates = exchangeRates.into(reportingCurrency);
-        List<FundExposure.CurrencyAmount> found = new ArrayList<>();
+        List<FundExposure.CurrencyAmount> exposures = new ArrayList<>();
 
         database.query(
                 statements.statement("select-exposure-by-currency"),
                 row -> {
                     String currency = row.getString(1).trim();
                     double amount = row.getDouble(2);
+
+                    // A currency with no rate today converts to zero rather than guessing.
                     double rate = rates.getOrDefault(currency, 0.0);
 
-                    found.add(new FundExposure.CurrencyAmount(currency, amount, amount * rate));
+                    exposures.add(new FundExposure.CurrencyAmount(currency, amount, amount * rate));
                 },
                 (Object) accountIds.toArray(new Integer[0]));
 
-        return new FundExposure(fundId, reportingCurrency, found, accountIds.size());
+        return new FundExposure(fundId, reportingCurrency, exposures, accountIds.size());
     }
 }

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import vyshaliprabananthlal.calculate.exposure.RealDatabase;
+import vyshaliprabananthlal.calculate.hedge.HedgeAdviser.Recommendation;
 import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 class HedgeBookTest {
@@ -104,12 +105,12 @@ class HedgeBookTest {
                 .isEqualTo("r.baumann");
     }
 
-    private HedgeAdviser.Recommendation euroAdvice() {
-        return new HedgeAdviser.Recommendation("EUR", 5000000, -5000000, "FORWARD", "because");
+    private Recommendation euroAdvice() {
+        return new Recommendation("EUR", 5000000, -5000000, "FORWARD", "because");
     }
 
-    private HedgeAdviser.Recommendation poundAdvice() {
-        return new HedgeAdviser.Recommendation("GBP", 2000000, -2000000, "FORWARD", "because");
+    private Recommendation poundAdvice() {
+        return new Recommendation("GBP", 2000000, -2000000, "FORWARD", "because");
     }
 
     private String statusOf(long hedgeId) {

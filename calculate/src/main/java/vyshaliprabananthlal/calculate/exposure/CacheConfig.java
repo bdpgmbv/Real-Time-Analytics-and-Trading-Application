@@ -11,39 +11,61 @@ import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * The few things every exposure calculation re-reads and that barely change.
+ *
+ * <p>Held in memory rather than in Redis because the data is small, the same on every instance,
+ * and a network hop would cost more than the query it replaces.
+ *
+ * <p>Two things are deliberately absent. The exposure itself, because that is the question being
+ * asked and the thing that moves. And entitlements, because the API promises that revoking access
+ * takes effect on the next call, and a cache would quietly turn that into "within five minutes".
+ */
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
-    public static final String EXCHANGE_RATES = "exchange rates";
-    public static final String FUND_REPORTING_CURRENCY = "what a fund reports in";
-    public static final String ACCOUNTS_IN_FUND = "the accounts in a fund";
-    public static final String USER_CLIENT = "which client a user belongs to";
+    /** Thirty rows, read on every calculation. A second of drift is invisible on a screen. */
+    public static final String FX_RATES = "fxRates";
+
+    /** Changes when somebody sets up a fund, which is close to never. */
+    public static final String FUND_REPORTING_CURRENCY = "fundReportingCurrency";
+
+    /** Changes when an account is opened or closed. */
+    public static final String FUND_ACCOUNTS = "fundAccounts";
+
+    /** Which client a signed-in user belongs to. Fixed for the life of the user. */
+    public static final String USER_CLIENT = "userClient";
+
+    private static final int ENOUGH_FOR_EVERY_CURRENCY_PAIR = 200;
+    private static final int ENOUGH_FOR_EVERY_FUND = 20_000;
+    private static final int ENOUGH_FOR_EVERY_USER = 50_000;
 
     @Bean
     CacheManager caches(
-            @Value("${rtat.cache.rates-for-milliseconds:1000}") long ratesFor,
-            @Value("${rtat.cache.reference-for-seconds:300}") long referenceFor) {
+            @Value("${rtat.cache.rates-for-milliseconds:1000}") long rateLifetimeMillis,
+            @Value("${rtat.cache.reference-for-seconds:300}") long referenceLifetimeSeconds) {
+
+        Duration rateLifetime = Duration.ofMillis(rateLifetimeMillis);
+        Duration referenceLifetime = Duration.ofSeconds(referenceLifetimeSeconds);
 
         SimpleCacheManager manager = new SimpleCacheManager();
-
         manager.setCaches(List.of(
-                expiringAfter(EXCHANGE_RATES, Duration.ofMillis(ratesFor), 200),
-                expiringAfter(FUND_REPORTING_CURRENCY, Duration.ofSeconds(referenceFor), 20000),
-                expiringAfter(ACCOUNTS_IN_FUND, Duration.ofSeconds(referenceFor), 20000),
-                expiringAfter(USER_CLIENT, Duration.ofSeconds(referenceFor), 50000)));
+                expiringAfter(FX_RATES, rateLifetime, ENOUGH_FOR_EVERY_CURRENCY_PAIR),
+                expiringAfter(FUND_REPORTING_CURRENCY, referenceLifetime, ENOUGH_FOR_EVERY_FUND),
+                expiringAfter(FUND_ACCOUNTS, referenceLifetime, ENOUGH_FOR_EVERY_FUND),
+                expiringAfter(USER_CLIENT, referenceLifetime, ENOUGH_FOR_EVERY_USER)));
 
         manager.initializeCaches();
-
         return manager;
     }
 
-    private static CaffeineCache expiringAfter(String name, Duration howLong, int howMany) {
+    private static CaffeineCache expiringAfter(String name, Duration lifetime, int maximumEntries) {
         return new CaffeineCache(
                 name,
                 Caffeine.newBuilder()
-                        .expireAfterWrite(howLong)
-                        .maximumSize(howMany)
+                        .expireAfterWrite(lifetime)
+                        .maximumSize(maximumEntries)
                         .recordStats()
                         .build());
     }

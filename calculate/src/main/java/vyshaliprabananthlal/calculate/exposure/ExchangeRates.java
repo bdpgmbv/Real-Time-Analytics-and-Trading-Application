@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.platform.sql.SqlStatements;
 
+/** Today's rate from every currency into one, ready to multiply by. */
 @Component
 public class ExchangeRates {
 
@@ -18,8 +19,14 @@ public class ExchangeRates {
         this.statements = statements;
     }
 
-    @Cacheable(CacheConfig.EXCHANGE_RATES)
-    public Map<String, Double> into(String reportingCurrency) {
+    /**
+     * Every rate that converts into {@code targetCurrency}, keyed by the currency it converts from.
+     *
+     * <p>The target converts to itself at exactly 1. That is added here rather than stored, so a
+     * stale row can never make a fund's own currency worth something other than itself.
+     */
+    @Cacheable(CacheConfig.FX_RATES)
+    public Map<String, Double> into(String targetCurrency) {
         Map<String, Double> rates = new HashMap<>();
 
         database.query(
@@ -27,9 +34,9 @@ public class ExchangeRates {
                 row -> {
                     rates.put(row.getString(1).trim(), row.getDouble(2));
                 },
-                reportingCurrency);
+                targetCurrency);
 
-        rates.putIfAbsent(reportingCurrency, 1.0);
+        rates.putIfAbsent(targetCurrency, 1.0);
         return rates;
     }
 }

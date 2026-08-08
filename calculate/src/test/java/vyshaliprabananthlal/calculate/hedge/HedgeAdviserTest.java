@@ -6,6 +6,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import vyshaliprabananthlal.calculate.exposure.FundExposure;
+import vyshaliprabananthlal.calculate.hedge.HedgeAdviser.Recommendation;
 
 class HedgeAdviserTest {
 
@@ -14,7 +15,7 @@ class HedgeAdviserTest {
     @Test
     @DisplayName("a foreign currency the fund is holding is suggested for selling")
     void aHoldingIsSuggestedForSelling() {
-        List<HedgeAdviser.Recommendation> advice =
+        List<Recommendation> advice =
                 adviser.recommendFor(usdFundHolding(new FundExposure.CurrencyAmount("EUR", 5000000, 5500000)));
 
         assertThat(advice).hasSize(1);
@@ -26,7 +27,7 @@ class HedgeAdviserTest {
     @Test
     @DisplayName("the currency the fund reports in is never hedged against itself")
     void theReportingCurrencyIsNeverHedged() {
-        List<HedgeAdviser.Recommendation> advice =
+        List<Recommendation> advice =
                 adviser.recommendFor(usdFundHolding(new FundExposure.CurrencyAmount("USD", 9000000, 9000000)));
 
         assertThat(advice).isEmpty();
@@ -35,7 +36,7 @@ class HedgeAdviserTest {
     @Test
     @DisplayName("an amount too small to be worth a trade is left alone")
     void aTinyExposureIsLeftAlone() {
-        List<HedgeAdviser.Recommendation> advice =
+        List<Recommendation> advice =
                 adviser.recommendFor(usdFundHolding(new FundExposure.CurrencyAmount("EUR", 50000, 55000)));
 
         assertThat(advice).isEmpty();
@@ -44,7 +45,7 @@ class HedgeAdviserTest {
     @Test
     @DisplayName("a short position is suggested for buying, the opposite way round")
     void aShortIsSuggestedForBuying() {
-        List<HedgeAdviser.Recommendation> advice =
+        List<Recommendation> advice =
                 adviser.recommendFor(usdFundHolding(new FundExposure.CurrencyAmount("JPY", -800000000, -5120000)));
 
         assertThat(advice.get(0).suggestedAmount()).isEqualTo(800000000.0);
@@ -54,7 +55,7 @@ class HedgeAdviserTest {
     @Test
     @DisplayName("the size test uses the reporting currency, not the raw foreign amount")
     void theSizeTestUsesTheReportingCurrency() {
-        List<HedgeAdviser.Recommendation> advice =
+        List<Recommendation> advice =
                 adviser.recommendFor(usdFundHolding(new FundExposure.CurrencyAmount("JPY", 10000000, 64000)));
 
         assertThat(advice).isEmpty();
@@ -72,16 +73,16 @@ class HedgeAdviserTest {
                         new FundExposure.CurrencyAmount("USD", 1000000, 1000000)),
                 4);
 
-        List<HedgeAdviser.Recommendation> advice = adviser.recommendFor(exposure);
+        List<Recommendation> advice = adviser.recommendFor(exposure);
 
         assertThat(advice).hasSize(2);
-        assertThat(advice.stream().map(HedgeAdviser.Recommendation::currency)).containsExactly("EUR", "GBP");
+        assertThat(advice.stream().map(Recommendation::currency)).containsExactly("EUR", "GBP");
     }
 
     @Test
     @DisplayName("the reason says which way round it is, so a person can check it")
     void theReasonExplainsItself() {
-        List<HedgeAdviser.Recommendation> advice =
+        List<Recommendation> advice =
                 adviser.recommendFor(usdFundHolding(new FundExposure.CurrencyAmount("EUR", 5000000, 5500000)));
 
         assertThat(advice.get(0).reason())
