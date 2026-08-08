@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 class EntitlementsTest {
@@ -30,7 +30,7 @@ class EntitlementsTest {
 
     @BeforeEach
     void twoCompaniesWithTheirOwnFunds() {
-        entitlements = new Entitlements(database, new Sql());
+        entitlements = new Entitlements(database, new SqlStatements());
 
         database.execute("TRUNCATE entitlement, app_user, account, fund, client, currency CASCADE");
         database.execute("INSERT INTO currency VALUES ('USD','US Dollar',2),('EUR','Euro',2)");

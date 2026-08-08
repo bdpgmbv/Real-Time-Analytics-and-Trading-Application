@@ -17,7 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.jdbc.core.JdbcTemplate;
 import vyshaliprabananthlal.ingest.format.CommaFormat;
 import vyshaliprabananthlal.ingest.format.PipeFormat;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 class FolderWatcherTest {
@@ -47,9 +47,9 @@ class FolderWatcherTest {
 
         FileLoader loader = new FileLoader(
                 database,
-                new FileLoadJournal(database, new Sql()),
+                new FileLoadJournal(database, new SqlStatements()),
                 List.of(new CommaFormat(), new PipeFormat()),
-                new Sql(),
+                new SqlStatements(),
                 new SimpleMeterRegistry());
         watcher = new FolderWatcher(loader, incoming.toString(), finished.toString());
 
@@ -125,9 +125,9 @@ class FolderWatcherTest {
     void aMissingFolderIsIgnored() {
         FileLoader loader = new FileLoader(
                 database,
-                new FileLoadJournal(database, new Sql()),
+                new FileLoadJournal(database, new SqlStatements()),
                 List.of(new CommaFormat()),
-                new Sql(),
+                new SqlStatements(),
                 new SimpleMeterRegistry());
         FolderWatcher lookingAtNothing =
                 new FolderWatcher(loader, workingArea.resolve("not-there").toString(), finished.toString());

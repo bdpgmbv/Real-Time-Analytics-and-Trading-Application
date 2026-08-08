@@ -7,6 +7,8 @@ description = "Works out currency exposure and what to hedge."
 dependencies {
     implementation(platform(libs.spring.boot.bom))
 
+    api(project(":platform"))
+
     api("org.springframework:spring-context")
     api("org.springframework:spring-jdbc")
     api("io.micrometer:micrometer-core")

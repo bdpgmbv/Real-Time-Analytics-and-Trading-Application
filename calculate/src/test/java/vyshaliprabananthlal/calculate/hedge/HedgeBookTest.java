@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import vyshaliprabananthlal.calculate.exposure.RealDatabase;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 class HedgeBookTest {
 
@@ -25,7 +25,7 @@ class HedgeBookTest {
 
     @BeforeEach
     void oneFundReportingInUsd() {
-        book = new HedgeBook(database, new Sql());
+        book = new HedgeBook(database, new SqlStatements());
 
         database.execute("TRUNCATE hedge_fill, hedge, fund, client, currency CASCADE");
         database.execute("INSERT INTO currency VALUES ('USD','US Dollar',2),('EUR','Euro',2),('GBP','Pound',2)");

@@ -3,22 +3,22 @@ package vyshaliprabananthlal.api.who;
 import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Service
 public class Entitlements {
 
     private final JdbcTemplate database;
-    private final Sql sql;
+    private final SqlStatements statements;
 
-    public Entitlements(JdbcTemplate database, Sql sql) {
+    public Entitlements(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.sql = sql;
+        this.statements = statements;
     }
 
     public List<Entitlements.VisibleFund> fundsVisibleTo(String userId) {
         return database.query(
-                sql.statement("select-visible-funds"),
+                statements.statement("select-visible-funds"),
                 (row, number) -> new Entitlements.VisibleFund(
                         row.getInt(1), row.getString(2), row.getString(3).trim(), row.getBoolean(4)),
                 userId);
@@ -47,11 +47,15 @@ public class Entitlements {
         }
 
         return database.queryForList(
-                sql.statement("select-visible-accounts"), Integer.class, userId, fundId, asked.toArray(new Integer[0]));
+                statements.statement("select-visible-accounts"),
+                Integer.class,
+                userId,
+                fundId,
+                asked.toArray(new Integer[0]));
     }
 
     private List<Boolean> findEntitlement(String userId, int fundId) {
-        return database.queryForList(sql.statement("select-entitlement"), Boolean.class, userId, fundId);
+        return database.queryForList(statements.statement("select-entitlement"), Boolean.class, userId, fundId);
     }
 
     /** A fund this user may open, and whether they may act on it. */

@@ -8,7 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.ingest.message.JsonReader;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 /**
  * The three feeds that only ever update a row that already exists.
@@ -34,10 +34,10 @@ public final class Listeners {
         private final String statement;
         private long rowsChangedSoFar;
 
-        public Positions(KafkaBatch batch, JsonReader json, Sql sql) {
+        public Positions(KafkaBatch batch, JsonReader json, SqlStatements statements) {
             this.batch = batch;
             this.json = json;
-            this.statement = sql.statement("update-position");
+            this.statement = statements.statement("update-position");
         }
 
         @KafkaListener(topics = "rtat.position", groupId = "position-receiver")
@@ -66,10 +66,10 @@ public final class Listeners {
         private final String statement;
         private long rowsChangedSoFar;
 
-        public Prices(KafkaBatch batch, JsonReader json, Sql sql) {
+        public Prices(KafkaBatch batch, JsonReader json, SqlStatements statements) {
             this.batch = batch;
             this.json = json;
-            this.statement = sql.statement("update-price");
+            this.statement = statements.statement("update-price");
         }
 
         @KafkaListener(topics = "rtat.price", groupId = "price-receiver")
@@ -94,10 +94,10 @@ public final class Listeners {
         private final String statement;
         private long rowsChangedSoFar;
 
-        public Rates(KafkaBatch batch, JsonReader json, Sql sql) {
+        public Rates(KafkaBatch batch, JsonReader json, SqlStatements statements) {
             this.batch = batch;
             this.json = json;
-            this.statement = sql.statement("update-fx-rate");
+            this.statement = statements.statement("update-fx-rate");
         }
 
         @KafkaListener(topics = "rtat.fx-rate", groupId = "rate-receiver")

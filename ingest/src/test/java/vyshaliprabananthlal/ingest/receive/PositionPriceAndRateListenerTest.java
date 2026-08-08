@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.support.Acknowledgment;
 import vyshaliprabananthlal.ingest.message.JsonReader;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 class PositionPriceAndRateListenerTest {
@@ -57,7 +57,7 @@ class PositionPriceAndRateListenerTest {
     @DisplayName("a position message sets the holding to exactly what it says")
     void positionIsSetNotAdded() {
         Listeners.Positions listener = new Listeners.Positions(
-                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
 
         listener.arrived(List.of(positionMessage(750)), kafka);
 
@@ -69,7 +69,7 @@ class PositionPriceAndRateListenerTest {
     @DisplayName("the same position message twice leaves the same answer, not double")
     void positionMessagesAreSafeToReplay() {
         Listeners.Positions listener = new Listeners.Positions(
-                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
 
         listener.arrived(List.of(positionMessage(750)), kafka);
         listener.arrived(List.of(positionMessage(750)), kafka);
@@ -80,8 +80,8 @@ class PositionPriceAndRateListenerTest {
     @Test
     @DisplayName("a price message updates the price and the arrival time")
     void priceIsUpdated() {
-        Listeners.Prices listener =
-                new Listeners.Prices(new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+        Listeners.Prices listener = new Listeners.Prices(
+                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
 
         listener.arrived(List.of(priceMessage(250.75)), kafka);
 
@@ -92,8 +92,8 @@ class PositionPriceAndRateListenerTest {
     @Test
     @DisplayName("a rate message updates the rate and marks it as a live tick")
     void rateIsUpdatedAndMarked() {
-        Listeners.Rates listener =
-                new Listeners.Rates(new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+        Listeners.Rates listener = new Listeners.Rates(
+                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
 
         listener.arrived(List.of(rateMessage("JPY", "USD", 0.0064)), kafka);
 
@@ -105,8 +105,8 @@ class PositionPriceAndRateListenerTest {
     @Test
     @DisplayName("a rate for a pair we do not hold changes nothing and does not fail")
     void unknownRatePairIsIgnored() {
-        Listeners.Rates listener =
-                new Listeners.Rates(new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+        Listeners.Rates listener = new Listeners.Rates(
+                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
 
         listener.arrived(List.of(rateMessage("ZZZ", "USD", 1.23)), kafka);
 

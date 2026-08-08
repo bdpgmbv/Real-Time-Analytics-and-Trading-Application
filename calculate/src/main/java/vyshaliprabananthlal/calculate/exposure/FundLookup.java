@@ -6,18 +6,18 @@ import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Service
 public class FundLookup {
 
     private final JdbcTemplate database;
-    private final Sql sql;
+    private final SqlStatements statements;
     private final Counter timesWeActuallyAsked;
 
-    public FundLookup(JdbcTemplate database, Sql sql, MeterRegistry meters) {
+    public FundLookup(JdbcTemplate database, SqlStatements statements, MeterRegistry meters) {
         this.database = database;
-        this.sql = sql;
+        this.statements = statements;
         this.timesWeActuallyAsked = meters.counter("rtat.reference.read.from.database");
     }
 
@@ -26,7 +26,7 @@ public class FundLookup {
         timesWeActuallyAsked.increment();
 
         List<String> found =
-                database.queryForList(sql.statement("select-fund-reporting-currency"), String.class, fundId);
+                database.queryForList(statements.statement("select-fund-reporting-currency"), String.class, fundId);
 
         if (found.isEmpty()) {
             throw new IllegalArgumentException("no fund with id " + fundId);
@@ -38,6 +38,6 @@ public class FundLookup {
     public List<Integer> accountsIn(int fundId) {
         timesWeActuallyAsked.increment();
 
-        return database.queryForList(sql.statement("select-accounts-by-fund"), Integer.class, fundId);
+        return database.queryForList(statements.statement("select-accounts-by-fund"), Integer.class, fundId);
     }
 }

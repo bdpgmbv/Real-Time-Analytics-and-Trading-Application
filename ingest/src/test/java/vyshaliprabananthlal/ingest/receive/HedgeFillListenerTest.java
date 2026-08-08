@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.support.Acknowledgment;
 import vyshaliprabananthlal.ingest.message.JsonReader;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 class HedgeFillListenerTest {
@@ -35,7 +35,7 @@ class HedgeFillListenerTest {
     @BeforeEach
     void startWithOneHedgeWaitingToBeFilled() {
         listener = new HedgeFillListener(
-                database, new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+                database, new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
         kafka = mock(Acknowledgment.class);
 
         database.execute("TRUNCATE hedge_fill, hedge, fund, client, currency CASCADE");

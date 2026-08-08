@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import vyshaliprabananthlal.ingest.format.CustodianFormat;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Service
 public class FileLoader {
@@ -30,12 +30,12 @@ public class FileLoader {
             JdbcTemplate database,
             FileLoadJournal journal,
             List<CustodianFormat> knownFormats,
-            Sql sql,
+            SqlStatements statements,
             MeterRegistry meters) {
         this.database = database;
         this.journal = journal;
         this.knownFormats = knownFormats;
-        this.savePositionSql = sql.statement("upsert-position-from-file");
+        this.savePositionSql = statements.statement("upsert-position-from-file");
         this.counters = new FileCounters(meters);
     }
 

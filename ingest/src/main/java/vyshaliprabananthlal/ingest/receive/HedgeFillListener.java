@@ -11,7 +11,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.ingest.message.JsonReader;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Component
 public class HedgeFillListener {
@@ -26,13 +26,13 @@ public class HedgeFillListener {
 
     private long howManyFillsRecorded;
 
-    public HedgeFillListener(JdbcTemplate database, KafkaBatch batch, JsonReader messages, Sql sql) {
+    public HedgeFillListener(JdbcTemplate database, KafkaBatch batch, JsonReader messages, SqlStatements statements) {
 
         this.database = database;
         this.batch = batch;
         this.messages = messages;
-        this.recordTheFill = sql.statement("insert-hedge-fill");
-        this.moveTheHedgeOn = sql.statement("update-hedge-status");
+        this.recordTheFill = statements.statement("insert-hedge-fill");
+        this.moveTheHedgeOn = statements.statement("update-hedge-status");
     }
 
     @KafkaListener(topics = "rtat.hedge-fill", groupId = "hedge-fill-receiver")

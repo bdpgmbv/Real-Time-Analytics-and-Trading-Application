@@ -16,7 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import vyshaliprabananthlal.ingest.format.CommaFormat;
 import vyshaliprabananthlal.ingest.format.CustodianFormat;
 import vyshaliprabananthlal.ingest.format.PipeFormat;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 class FileLoaderTest {
@@ -38,9 +38,9 @@ class FileLoaderTest {
     void startWithAnAccountAndTwoSecurities() {
         loader = new FileLoader(
                 database,
-                new FileLoadJournal(database, new Sql()),
+                new FileLoadJournal(database, new SqlStatements()),
                 List.of(new CommaFormat(), new PipeFormat()),
-                new Sql(),
+                new SqlStatements(),
                 new SimpleMeterRegistry());
 
         database.execute("TRUNCATE file_row_problem, file_load, position, account, fund, client, product,"

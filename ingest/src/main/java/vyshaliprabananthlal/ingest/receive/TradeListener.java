@@ -10,7 +10,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.ingest.message.JsonReader;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Component
 public class TradeListener {
@@ -23,10 +23,10 @@ public class TradeListener {
 
     private long howManyTradesRecorded;
 
-    public TradeListener(KafkaBatch batch, JsonReader messages, Sql sql) {
+    public TradeListener(KafkaBatch batch, JsonReader messages, SqlStatements statements) {
         this.batch = batch;
         this.messages = messages;
-        this.statement = sql.statement("insert-trade-and-update-position");
+        this.statement = statements.statement("insert-trade-and-update-position");
     }
 
     @KafkaListener(topics = "rtat.trade", groupId = "trade-receiver")

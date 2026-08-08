@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Service
 public class ExposureCalculator {
@@ -15,16 +15,20 @@ public class ExposureCalculator {
     private final JdbcTemplate database;
     private final ExchangeRates exchangeRates;
     private final FundLookup fundFacts;
-    private final Sql sql;
+    private final SqlStatements statements;
     private final Timer howLongItTakes;
 
     public ExposureCalculator(
-            JdbcTemplate database, ExchangeRates exchangeRates, FundLookup fundFacts, Sql sql, MeterRegistry meters) {
+            JdbcTemplate database,
+            ExchangeRates exchangeRates,
+            FundLookup fundFacts,
+            SqlStatements statements,
+            MeterRegistry meters) {
 
         this.database = database;
         this.exchangeRates = exchangeRates;
         this.fundFacts = fundFacts;
-        this.sql = sql;
+        this.statements = statements;
         this.howLongItTakes = Timer.builder("rtat.exposure.calculated")
                 .publishPercentileHistogram()
                 .register(meters);
@@ -55,7 +59,7 @@ public class ExposureCalculator {
         List<FundExposure.CurrencyAmount> found = new ArrayList<>();
 
         database.query(
-                sql.statement("select-exposure-by-currency"),
+                statements.statement("select-exposure-by-currency"),
                 row -> {
                     String currency = row.getString(1).trim();
                     double amount = row.getDouble(2);

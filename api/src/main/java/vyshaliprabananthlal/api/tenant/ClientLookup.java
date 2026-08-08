@@ -5,7 +5,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import vyshaliprabananthlal.api.who.Entitlements;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Service
 public class ClientLookup {
@@ -13,16 +13,16 @@ public class ClientLookup {
     public static final String THE_CACHE = "which client a user belongs to";
 
     private final JdbcTemplate database;
-    private final Sql sql;
+    private final SqlStatements statements;
 
-    public ClientLookup(JdbcTemplate database, Sql sql) {
+    public ClientLookup(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.sql = sql;
+        this.statements = statements;
     }
 
     @Cacheable(THE_CACHE)
     public int forUser(String userId) {
-        List<Integer> found = database.queryForList(sql.statement("select-user-client"), Integer.class, userId);
+        List<Integer> found = database.queryForList(statements.statement("select-user-client"), Integer.class, userId);
 
         if (found.isEmpty()) {
             throw new Entitlements.NotAllowed("we do not know who you are");

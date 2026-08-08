@@ -2,10 +2,20 @@ package vyshaliprabananthlal.ingest.format;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Halloway Bank: pipe separated, security first, and cost before units.
+ *
+ * <p>The column order is the opposite way round from Northgate. That is the whole reason two
+ * formats exist rather than one with a separator setting.
+ */
 @Component
 public class PipeFormat implements CustodianFormat {
 
     private static final String HEADING = "SECURITY|PORTFOLIO|BOOK_COST|UNITS";
+    private static final int SECURITY = 0;
+    private static final int PORTFOLIO = 1;
+    private static final int BOOK_COST = 2;
+    private static final int UNITS = 3;
 
     @Override
     public String custodianName() {
@@ -18,27 +28,21 @@ public class PipeFormat implements CustodianFormat {
     }
 
     @Override
-    public CustodianFormat.PositionRow readOneLine(String line) {
+    public PositionRow readOneLine(String line) {
         String[] cells = line.split("\\|", -1);
 
         if (cells.length != 4) {
-            throw new CustodianFormat.BadLine("expected 4 values separated by pipes, found " + cells.length);
+            throw new BadLine("expected 4 values separated by pipes, found " + cells.length);
         }
 
-        String identifier = cells[0].trim();
-        String accountName = cells[1].trim();
+        String identifier = cells[SECURITY].trim();
+        String accountName = cells[PORTFOLIO].trim();
+        CustodianFormat.checkAccountAndIdentifier(accountName, identifier, "portfolio name");
 
-        if (accountName.isEmpty()) {
-            throw new CustodianFormat.BadLine("the portfolio name is empty");
-        }
-        if (identifier.length() != 9) {
-            throw new CustodianFormat.BadLine("the security must be 9 characters, found " + identifier.length());
-        }
-
-        return new CustodianFormat.PositionRow(
+        return new PositionRow(
                 accountName,
                 identifier,
-                CommaFormat.readNumber(cells[3], "units"),
-                CommaFormat.readNumber(cells[2], "book cost"));
+                CustodianFormat.readNumber(cells[UNITS], "units"),
+                CustodianFormat.readNumber(cells[BOOK_COST], "book cost"));
     }
 }

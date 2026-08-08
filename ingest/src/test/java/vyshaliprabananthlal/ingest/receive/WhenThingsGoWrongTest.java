@@ -17,7 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.kafka.support.Acknowledgment;
 import vyshaliprabananthlal.ingest.message.JsonReader;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 class WhenThingsGoWrongTest {
@@ -141,7 +141,7 @@ class WhenThingsGoWrongTest {
     private Listeners.Positions positionListener() {
         database.execute("TRUNCATE position");
         return new Listeners.Positions(
-                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
+                new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new SqlStatements());
     }
 
     private int howManyPositions() {

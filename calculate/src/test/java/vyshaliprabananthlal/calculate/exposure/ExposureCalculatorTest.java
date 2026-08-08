@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 class ExposureCalculatorTest {
 
@@ -26,12 +26,12 @@ class ExposureCalculatorTest {
 
     @BeforeEach
     void oneFundReportingInUsdHoldingEuropeanShares() {
-        Sql sql = new Sql();
+        SqlStatements statements = new SqlStatements();
         calculator = new ExposureCalculator(
                 database,
-                new ExchangeRates(database, sql),
-                new FundLookup(database, sql, new SimpleMeterRegistry()),
-                sql,
+                new ExchangeRates(database, statements),
+                new FundLookup(database, statements, new SimpleMeterRegistry()),
+                statements,
                 new SimpleMeterRegistry());
 
         database.execute("TRUNCATE position_exposure, position, price, product, account, fund, client,"

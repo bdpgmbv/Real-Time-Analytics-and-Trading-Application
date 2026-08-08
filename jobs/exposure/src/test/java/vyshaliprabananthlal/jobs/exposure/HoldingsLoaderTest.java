@@ -70,11 +70,11 @@ class LoadWhoHoldsWhatTest {
         return HoldingsLoader.from(SharedPostgres.jdbcUrl(), SharedPostgres.user(), SharedPostgres.password());
     }
 
-    private static void run(String sql) throws SQLException {
+    private static void run(String statements) throws SQLException {
         try (Connection database = DriverManager.getConnection(
                         SharedPostgres.jdbcUrl(), SharedPostgres.user(), SharedPostgres.password());
                 Statement statement = database.createStatement()) {
-            statement.execute(sql);
+            statement.execute(statements);
         }
     }
 

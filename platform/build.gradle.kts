@@ -16,6 +16,7 @@ dependencies {
     testFixturesApi(libs.postgresql)
 
     api("org.springframework.boot:spring-boot")
+    api("org.springframework:spring-context")
 
     testImplementation(platform(libs.spring.boot.bom))
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -5,17 +5,17 @@ import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Service
 public class HedgeBook {
 
     private final JdbcTemplate database;
-    private final Sql sql;
+    private final SqlStatements statements;
 
-    public HedgeBook(JdbcTemplate database, Sql sql) {
+    public HedgeBook(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.sql = sql;
+        this.statements = statements;
     }
 
     @Transactional
@@ -41,7 +41,7 @@ public class HedgeBook {
             long hedgeNumber = nextNumber + sent.size();
 
             database.update(
-                    sql.statement("insert-hedge"),
+                    statements.statement("insert-hedge"),
                     hedgeNumber,
                     fundId,
                     thisOne.currency(),
@@ -58,7 +58,7 @@ public class HedgeBook {
     }
 
     private long nextHedgeId() {
-        Long next = database.queryForObject(sql.statement("select-next-hedge-id"), Long.class);
+        Long next = database.queryForObject(statements.statement("select-next-hedge-id"), Long.class);
 
         return next == null ? 1 : next;
     }

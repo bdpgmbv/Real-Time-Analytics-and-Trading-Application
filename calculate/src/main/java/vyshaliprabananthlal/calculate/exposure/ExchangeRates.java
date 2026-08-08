@@ -5,17 +5,17 @@ import java.util.Map;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import vyshaliprabananthlal.calculate.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Component
 public class ExchangeRates {
 
     private final JdbcTemplate database;
-    private final Sql sql;
+    private final SqlStatements statements;
 
-    public ExchangeRates(JdbcTemplate database, Sql sql) {
+    public ExchangeRates(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.sql = sql;
+        this.statements = statements;
     }
 
     @Cacheable(CacheConfig.EXCHANGE_RATES)
@@ -23,7 +23,7 @@ public class ExchangeRates {
         Map<String, Double> rates = new HashMap<>();
 
         database.query(
-                sql.statement("select-fx-rates-into-currency"),
+                statements.statement("select-fx-rates-into-currency"),
                 row -> {
                     rates.put(row.getString(1).trim(), row.getDouble(2));
                 },

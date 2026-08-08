@@ -6,22 +6,22 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.sql.SqlStatements;
 
 @Component
 public class FileLoadJournal {
 
     private final JdbcTemplate database;
-    private final Sql sql;
+    private final SqlStatements statements;
 
-    public FileLoadJournal(JdbcTemplate database, Sql sql) {
+    public FileLoadJournal(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.sql = sql;
+        this.statements = statements;
     }
 
     public Optional<Integer> findByFingerprint(String fingerprint) {
-        List<Integer> found =
-                database.query(sql.statement("find-load-by-fingerprint"), (row, number) -> row.getInt(1), fingerprint);
+        List<Integer> found = database.query(
+                statements.statement("find-load-by-fingerprint"), (row, number) -> row.getInt(1), fingerprint);
 
         return found.isEmpty() ? Optional.empty() : Optional.of(found.get(0));
     }
@@ -29,7 +29,7 @@ public class FileLoadJournal {
     public int startLoad(String fileName, String fingerprint, String custodian, String arrivedHow, int rowsInFile) {
 
         Integer loadId = database.queryForObject(
-                sql.statement("insert-file-load"),
+                statements.statement("insert-file-load"),
                 Integer.class,
                 fileName,
                 fingerprint,
@@ -45,16 +45,16 @@ public class FileLoadJournal {
     }
 
     public void finishLoad(int loadId, int rowsLoaded, int rowsRejected) {
-        database.update(sql.statement("update-file-load-totals"), rowsLoaded, rowsRejected, now(), loadId);
+        database.update(statements.statement("update-file-load-totals"), rowsLoaded, rowsRejected, now(), loadId);
     }
 
     public void recordBadLine(int loadId, int lineNumber, String line, String reason) {
-        database.update(sql.statement("insert-load-problem"), loadId, lineNumber, line, reason);
+        database.update(statements.statement("insert-load-problem"), loadId, lineNumber, line, reason);
     }
 
     public List<String> problemsFor(int loadId) {
         return database.query(
-                sql.statement("select-load-problems"),
+                statements.statement("select-load-problems"),
                 (row, number) -> "line " + row.getInt(1) + ": " + row.getString(2),
                 loadId);
     }
