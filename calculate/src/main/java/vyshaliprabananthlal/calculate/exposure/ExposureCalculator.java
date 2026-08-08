@@ -14,21 +14,27 @@ public class ExposureCalculator {
 
   private final JdbcTemplate database;
   private final ExchangeRates exchangeRates;
+  private final FundFacts fundFacts;
   private final Sql sql;
   private final Timer howLongItTakes;
 
   public ExposureCalculator(
-      JdbcTemplate database, ExchangeRates exchangeRates, Sql sql, MeterRegistry meters) {
+      JdbcTemplate database,
+      ExchangeRates exchangeRates,
+      FundFacts fundFacts,
+      Sql sql,
+      MeterRegistry meters) {
 
     this.database = database;
     this.exchangeRates = exchangeRates;
+    this.fundFacts = fundFacts;
     this.sql = sql;
     this.howLongItTakes =
         Timer.builder("rtat.exposure.calculated").publishPercentileHistogram().register(meters);
   }
 
   public FundExposure forWholeFund(int fundId) {
-    return forAccounts(fundId, accountsIn(fundId));
+    return forAccounts(fundId, fundFacts.accountsIn(fundId));
   }
 
   public FundExposure forAccounts(int fundId, List<Integer> accountIds) {
@@ -42,7 +48,7 @@ public class ExposureCalculator {
   }
 
   private FundExposure workItOut(int fundId, List<Integer> accountIds) {
-    String reportingCurrency = reportingCurrencyOf(fundId);
+    String reportingCurrency = fundFacts.reportingCurrencyOf(fundId);
 
     if (accountIds.isEmpty()) {
       return new FundExposure(fundId, reportingCurrency, List.of(), 0);
@@ -63,19 +69,5 @@ public class ExposureCalculator {
         (Object) accountIds.toArray(new Integer[0]));
 
     return new FundExposure(fundId, reportingCurrency, found, accountIds.size());
-  }
-
-  public List<Integer> accountsIn(int fundId) {
-    return database.queryForList(sql.statement("accounts-in-fund"), Integer.class, fundId);
-  }
-
-  private String reportingCurrencyOf(int fundId) {
-    List<String> found =
-        database.queryForList(sql.statement("reporting-currency-of-fund"), String.class, fundId);
-
-    if (found.isEmpty()) {
-      throw new IllegalArgumentException("no fund with id " + fundId);
-    }
-    return found.get(0).trim();
   }
 }

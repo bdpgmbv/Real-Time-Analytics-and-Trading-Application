@@ -29,7 +29,11 @@ class ExposureCalculatorTest {
     Sql sql = new Sql();
     calculator =
         new ExposureCalculator(
-            database, new ExchangeRates(database, sql), sql, new SimpleMeterRegistry());
+            database,
+            new ExchangeRates(database, sql),
+            new FundFacts(database, sql, new SimpleMeterRegistry()),
+            sql,
+            new SimpleMeterRegistry());
 
     database.execute(
         "TRUNCATE position_exposure, position, price, product, account, fund, client,"

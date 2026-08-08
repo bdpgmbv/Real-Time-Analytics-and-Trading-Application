@@ -468,3 +468,52 @@ Without it nothing breaks; containers simply go back to being thrown away each r
 The EC2 instance has 30 GB of memory and 188 GB of disk and is mostly idle. Postgres and
 Kafka can live there while you work on the laptop — the SSH tunnel above already does
 exactly this, and nothing new is exposed.
+
+---
+
+## Caching
+
+Three things were read from the database on every single exposure calculation and almost
+never changed: what currency a fund reports in, which accounts are in it, and the thirty
+exchange rates. They are held in memory now.
+
+| kept | for | why that long |
+|---|---|---|
+| exchange rates | 1 second | they move constantly; a second of drift on a screen that refreshes once a second costs nothing |
+| what a fund reports in | 5 minutes | it changes when somebody sets up a fund, which is roughly never |
+| the accounts in a fund | 5 minutes | same |
+
+**Not cached, deliberately:**
+
+- **The exposure answer itself.** That is the thing the client asked for and the thing that
+  moves. Caching it would be caching the question.
+- **Entitlements.** The API promises that revoking access takes effect on the next call.
+  A cache would quietly turn that into "within thirty seconds", and nobody would notice
+  until it mattered.
+
+### What it actually bought
+
+Measured on this machine, honestly:
+
+```
+  50 exposure calls
+    reference reads reaching the database, cached      2
+    reference reads reaching the database, uncached  100
+
+  200 calls, 20 at a time
+    cached     243 calls/sec
+    uncached   250 calls/sec
+```
+
+**The cache works and it did not make anything faster here.** Fifty reference reads became
+one, and the throughput is the same within noise. The three queries it removes are a
+single-row lookup, a four-row list and a thirty-row table against a Postgres container on
+the same machine — they cost microseconds, and the exposure query dominates.
+
+It is kept because a client's database will not be a container on the same laptop. Three
+round trips saved is three network round trips saved, and at 5 ms each that is 15 ms a call
+rather than the 0.8 ms it is worth here. **That case is reasoned, not measured** — nothing
+has run against a remote database yet.
+
+In-process rather than Redis, on purpose: the data is small, identical on every instance,
+and a Redis hop would cost more than the query it replaces.

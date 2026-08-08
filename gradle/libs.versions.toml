@@ -30,6 +30,7 @@ spotbugsPlugin = "6.5.9"
 cyclonedxPlugin = "3.3.0"
 
 [libraries]
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
 micrometer-tracing-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel" }
 otel-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
