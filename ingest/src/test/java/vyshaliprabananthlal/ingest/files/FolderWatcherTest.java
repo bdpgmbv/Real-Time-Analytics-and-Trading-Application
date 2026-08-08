@@ -51,7 +51,17 @@ class FolderWatcherTest {
                 List.of(new CommaFormat(), new PipeFormat()),
                 new SqlStatements(),
                 new SimpleMeterRegistry());
-        watcher = new FolderWatcher(loader, incoming.toString(), finished.toString());
+        watcher = new FolderWatcher(
+                new vyshaliprabananthlal.platform.lock.AdvisoryLock(database) {
+                    @Override
+                    public boolean runExclusively(String name, Runnable work) {
+                        work.run();
+                        return true;
+                    }
+                },
+                loader,
+                incoming.toString(),
+                finished.toString());
 
         database.execute("TRUNCATE file_row_problem, file_load, position, account, fund, client, product,"
                 + " currency CASCADE");
@@ -129,8 +139,17 @@ class FolderWatcherTest {
                 List.of(new CommaFormat()),
                 new SqlStatements(),
                 new SimpleMeterRegistry());
-        FolderWatcher lookingAtNothing =
-                new FolderWatcher(loader, workingArea.resolve("not-there").toString(), finished.toString());
+        FolderWatcher lookingAtNothing = new FolderWatcher(
+                new vyshaliprabananthlal.platform.lock.AdvisoryLock(database) {
+                    @Override
+                    public boolean runExclusively(String name, Runnable work) {
+                        work.run();
+                        return true;
+                    }
+                },
+                loader,
+                workingArea.resolve("not-there").toString(),
+                finished.toString());
 
         lookingAtNothing.lookForNewFiles();
 

@@ -153,6 +153,7 @@ org.springframework:spring-context-support:7.0.8=compileClasspath,productionRunt
 org.springframework:spring-context:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-core:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-expression:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+org.springframework:spring-jdbc:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-oxm:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-test:7.0.8=testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-tx:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath

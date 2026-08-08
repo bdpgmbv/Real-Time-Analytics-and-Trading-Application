@@ -36,6 +36,16 @@ public class ExposurePublisher {
         this.skippedBecauseNothingChanged = meters.counter("rtat.live.unchanged");
     }
 
+    /**
+     * Deliberately not locked between instances, unlike the folder sweep.
+     *
+     * <p>Every instance holds its own open connections, and a browser is connected to exactly one
+     * of them. An instance that skipped its turn because another held a lock would leave its own
+     * screens frozen while somebody else's updated.
+     *
+     * <p>The rule is which resource is shared. A folder on disk is shared and needs one sweeper.
+     * A set of open connections belongs to the instance holding them.
+     */
     @Scheduled(fixedDelayString = "${rtat.live.push-every-milliseconds:1000}")
     public void publishWhatMoved() {
         if (screens.watchedFunds().isEmpty()) {

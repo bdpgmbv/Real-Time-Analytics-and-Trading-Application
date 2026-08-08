@@ -651,3 +651,37 @@ GRANT rtat_reader TO rtat_api;
 | user21, client 2 | only ever saw funds 3 and 4 |
 | overlap | **none** |
 | user11 asking for fund 3 | 403 |
+
+---
+
+## Running more than one instance
+
+Two copies of a service each have their own scheduler. Whether that is a problem depends
+entirely on whether the thing they touch is shared.
+
+| scheduled work | shared? | locked? |
+|---|---|---|
+| sweeping the custodian folder | one folder, both instances see it | **yes** |
+| pushing exposure to open screens | each instance holds its own connections | **no, deliberately** |
+
+The folder needs one sweeper. Two instances would both read and parse the same file and both
+try to move it; the fingerprint would reject the second load, but only after all that work.
+
+The screens must not be locked. A browser is connected to exactly one instance. An instance
+that skipped its turn because another held a lock would leave its own screens frozen while
+somebody else's updated.
+
+### How the lock works
+
+```sql
+SELECT pg_try_advisory_xact_lock(?)
+```
+
+A Postgres advisory lock, keyed on a checksum of the job name. No schema, no library, no lease.
+
+The transaction-scoped form releases itself at commit or rollback — **and when the instance
+holding it dies**, because the connection dies with it. A lock table would need a lease, a
+clock, and a decision about what to do with a row whose owner never came back.
+
+Proved with two real threads racing for the same lock: one did the work, one skipped, and work
+that throws still releases the lock rather than holding it forever.
