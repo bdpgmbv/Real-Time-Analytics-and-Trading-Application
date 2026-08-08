@@ -16,6 +16,7 @@ dependencies {
     testImplementation(libs.flink.streaming.java)
     testImplementation(libs.flink.clients)
     testImplementation(libs.flink.test.utils)
+    testImplementation(testFixtures(project(":platform")))
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers.core)
     testImplementation(libs.testcontainers.junit)

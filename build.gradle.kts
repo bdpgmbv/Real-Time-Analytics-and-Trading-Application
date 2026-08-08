@@ -65,6 +65,7 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+        systemProperty("rtat.module", project.name)
         testLogging {
             events("passed", "skipped", "failed")
             showStandardStreams = false

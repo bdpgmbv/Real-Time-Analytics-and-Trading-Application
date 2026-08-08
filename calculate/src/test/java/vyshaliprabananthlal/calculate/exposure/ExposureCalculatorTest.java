@@ -11,17 +11,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import vyshaliprabananthlal.calculate.sql.Sql;
 
-@Testcontainers
 class ExposureCalculatorTest {
-
-  @Container
-  private static final PostgreSQLContainer POSTGRES =
-      new PostgreSQLContainer("postgres:17.10").withDatabaseName("rtat");
 
   private static JdbcTemplate database;
 
@@ -29,7 +21,7 @@ class ExposureCalculatorTest {
 
   @BeforeAll
   static void buildTheSchema() {
-    database = RealDatabase.startedFrom(POSTGRES);
+    database = RealDatabase.readyToUse();
   }
 
   @BeforeEach

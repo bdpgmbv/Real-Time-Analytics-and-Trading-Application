@@ -4,25 +4,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
 public final class RealDatabase {
 
   private RealDatabase() {}
 
-  public static JdbcTemplate startedFrom(PostgreSQLContainer container) {
-    DriverManagerDataSource source = new DriverManagerDataSource();
-    source.setUrl(container.getJdbcUrl());
-    source.setUsername(container.getUsername());
-    source.setPassword(container.getPassword());
+  public static JdbcTemplate readyToUse() {
+    SharedPostgres.freshSchema(readFile("db/1-schema.sql"));
+    SharedPostgres.applyOnce(
+        "position-pk", "ALTER TABLE position ADD PRIMARY KEY (account_id, product_id)");
+    SharedPostgres.applyOnce(
+        "price-pk", "ALTER TABLE price ADD PRIMARY KEY (product_id, price_date)");
 
-    JdbcTemplate database = new JdbcTemplate(source);
-    database.execute(readFile("db/1-schema.sql"));
-    database.execute("ALTER TABLE position ADD PRIMARY KEY (account_id, product_id)");
-    database.execute("ALTER TABLE price ADD PRIMARY KEY (product_id, price_date)");
-
-    return database;
+    return SharedPostgres.database();
   }
 
   public static String readFile(String path) {

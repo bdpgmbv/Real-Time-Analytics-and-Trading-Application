@@ -14,20 +14,13 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
-@Testcontainers
 class LoadWhoHoldsWhatTest {
-
-  @Container
-  private static final PostgreSQLContainer POSTGRES =
-      new PostgreSQLContainer("postgres:17.10").withDatabaseName("rtat");
 
   @BeforeAll
   static void twoFundsHoldingTheSameSecurity() throws SQLException {
-    run(readFile("db/1-schema.sql"));
+    SharedPostgres.freshSchema(readFile("db/1-schema.sql"));
     run(
         "INSERT INTO currency VALUES ('USD','US Dollar',2),('EUR','Euro',2);"
             + "INSERT INTO client (client_id,name,size,region) OVERRIDING SYSTEM VALUE"
@@ -74,13 +67,13 @@ class LoadWhoHoldsWhatTest {
 
   private Map<Integer, List<WhoHoldsIt>> load() throws SQLException {
     return LoadWhoHoldsWhat.from(
-        POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
+        SharedPostgres.jdbcUrl(), SharedPostgres.user(), SharedPostgres.password());
   }
 
   private static void run(String sql) throws SQLException {
     try (Connection database =
             DriverManager.getConnection(
-                POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
+                SharedPostgres.jdbcUrl(), SharedPostgres.user(), SharedPostgres.password());
         Statement statement = database.createStatement()) {
       statement.execute(sql);
     }

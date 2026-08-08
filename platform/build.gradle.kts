@@ -12,6 +12,8 @@ dependencies {
     testFixturesApi(platform(libs.testcontainers.bom))
     testFixturesApi(libs.testcontainers.postgresql)
     testFixturesApi(libs.testcontainers.core)
+    testFixturesApi("org.springframework:spring-jdbc")
+    testFixturesApi(libs.postgresql)
 
     api("org.springframework.boot:spring-boot")
 

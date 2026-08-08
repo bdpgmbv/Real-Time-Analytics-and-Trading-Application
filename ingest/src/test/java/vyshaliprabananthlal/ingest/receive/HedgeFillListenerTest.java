@@ -14,20 +14,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.kafka.support.Acknowledgment;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import vyshaliprabananthlal.ingest.message.Messages;
 import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
-@Testcontainers
 class HedgeFillListenerTest {
-
-  @Container
-  private static final PostgreSQLContainer POSTGRES =
-      new PostgreSQLContainer("postgres:17.10").withDatabaseName("rtat");
 
   private static JdbcTemplate database;
 
@@ -36,13 +28,8 @@ class HedgeFillListenerTest {
 
   @BeforeAll
   static void buildTheSchema() {
-    DriverManagerDataSource source = new DriverManagerDataSource();
-    source.setUrl(POSTGRES.getJdbcUrl());
-    source.setUsername(POSTGRES.getUsername());
-    source.setPassword(POSTGRES.getPassword());
-
-    database = new JdbcTemplate(source);
-    database.execute(readFile("db/1-schema.sql"));
+    database = SharedPostgres.database();
+    SharedPostgres.freshSchema(readFile("db/1-schema.sql"));
   }
 
   @BeforeEach

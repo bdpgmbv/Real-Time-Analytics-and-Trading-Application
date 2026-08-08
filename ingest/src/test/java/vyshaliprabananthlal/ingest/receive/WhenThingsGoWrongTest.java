@@ -16,18 +16,11 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.kafka.support.Acknowledgment;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import vyshaliprabananthlal.ingest.message.Messages;
 import vyshaliprabananthlal.ingest.sql.Sql;
+import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
-@Testcontainers
 class WhenThingsGoWrongTest {
-
-  @Container
-  private static final PostgreSQLContainer POSTGRES =
-      new PostgreSQLContainer("postgres:17.10").withDatabaseName("rtat");
 
   private static JdbcTemplate database;
 
@@ -35,15 +28,8 @@ class WhenThingsGoWrongTest {
 
   @BeforeAll
   static void buildTheSchema() {
-    DriverManagerDataSource source = new DriverManagerDataSource();
-    source.setUrl(POSTGRES.getJdbcUrl());
-    source.setUsername(POSTGRES.getUsername());
-    source.setPassword(POSTGRES.getPassword());
-
-    database = new JdbcTemplate(source);
-    database.execute(
-        "CREATE TABLE IF NOT EXISTS position ("
-            + " account_id INTEGER, product_id INTEGER, how_many NUMERIC(20,4))");
+    database = SharedPostgres.database();
+    SharedPostgres.freshSchema(readFile("db/1-schema.sql"));
   }
 
   @BeforeEach
@@ -165,5 +151,17 @@ class WhenThingsGoWrongTest {
     Integer counted =
         database.queryForObject("SELECT count(*) FROM position WHERE how_many <> 0", Integer.class);
     return counted == null ? 0 : counted;
+  }
+
+  private static String readFile(String path) {
+    try (java.io.InputStream stream =
+        WhenThingsGoWrongTest.class.getClassLoader().getResourceAsStream(path)) {
+      if (stream == null) {
+        throw new IllegalStateException("not found on the classpath: " + path);
+      }
+      return new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+    } catch (java.io.IOException problem) {
+      throw new IllegalStateException("could not read " + path, problem);
+    }
   }
 }

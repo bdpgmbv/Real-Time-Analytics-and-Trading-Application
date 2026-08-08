@@ -21,6 +21,7 @@ dependencies {
 
     testImplementation(platform(libs.spring.boot.bom))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation(testFixtures(project(":platform")))
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers.core)
     testImplementation(libs.testcontainers.junit)
