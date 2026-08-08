@@ -621,8 +621,33 @@ Index Only Scan using position_client_id_idx
 
 The policy is an index condition, not a filter applied afterwards.
 
-### Still to do
+### The api runs inside one client's context
 
-The api does not yet connect as `rtat_reader` or set `rtat.client_id` per request. The
-enforcement exists and is proved at the database; wiring the service to use it is the next step.
-Until then the api still connects as the owner and the policies do not apply to it.
+The api connects as a login user granted `rtat_reader`, so the policies apply to it. Every
+request resolves the caller's client from `app_user` and runs the work inside a transaction
+that has said who is asking:
+
+```sql
+SELECT set_config('rtat.client_id', ?, true)
+```
+
+The `true` is the important argument. It makes the setting **local to the transaction**, so it
+is gone when the transaction ends and the connection goes back to the pool clean. Without it,
+the next request on that connection would inherit the previous client's identity — which is the
+failure mode a pooled connection invites, and the one worth testing for.
+
+Create the login user once per deployment; the role itself comes from the changelog:
+
+```sql
+CREATE USER rtat_api WITH PASSWORD '...';
+GRANT rtat_reader TO rtat_api;
+```
+
+**Measured through the running API**, alternating two clients 40 times over a pool of 16:
+
+| | |
+|---|---|
+| user11, client 1 | only ever saw funds 1 and 2 |
+| user21, client 2 | only ever saw funds 3 and 4 |
+| overlap | **none** |
+| user11 asking for fund 3 | 403 |

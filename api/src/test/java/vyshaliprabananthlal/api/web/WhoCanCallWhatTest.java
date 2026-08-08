@@ -45,10 +45,19 @@ class WhoCanCallWhatTest {
   @MockitoBean private org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
   @MockitoBean private org.springframework.jdbc.core.JdbcTemplate database;
   @MockitoBean private io.micrometer.core.instrument.MeterRegistry meters;
+  @MockitoBean private vyshaliprabananthlal.api.tenant.WhichClient whichClient;
+  @MockitoBean private vyshaliprabananthlal.api.tenant.RunsAsOneClient asOneClient;
   @MockitoBean private Entitlements entitlements;
   @MockitoBean private ExposureCalculator calculator;
   @MockitoBean private HedgeAdviser adviser;
   @MockitoBean private HedgeBook book;
+
+  @org.junit.jupiter.api.BeforeEach
+  void theTenantWrapperJustRunsTheWork() {
+    when(asOneClient.reading(
+            org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any()))
+        .thenAnswer(call -> ((java.util.function.Supplier<?>) call.getArgument(1)).get());
+  }
 
   @Test
   @DisplayName("no token at all is refused before anything is looked up")

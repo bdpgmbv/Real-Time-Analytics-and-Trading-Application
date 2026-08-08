@@ -14,13 +14,14 @@ class WhatWeCacheTest {
   private final CacheManager caches = new CacheConfig().whatWeKeep(1000, 300);
 
   @Test
-  @DisplayName("the three things every calculation re-reads are kept")
-  void theThreeRepeatedReadsAreKept() {
+  @DisplayName("the things every request re-reads and that barely change are kept")
+  void theRepeatedReadsAreKept() {
     assertThat(caches.getCacheNames())
         .containsExactlyInAnyOrder(
             CacheConfig.EXCHANGE_RATES,
             CacheConfig.FUND_REPORTING_CURRENCY,
-            CacheConfig.ACCOUNTS_IN_FUND);
+            CacheConfig.ACCOUNTS_IN_FUND,
+            CacheConfig.USER_CLIENT);
   }
 
   @Test

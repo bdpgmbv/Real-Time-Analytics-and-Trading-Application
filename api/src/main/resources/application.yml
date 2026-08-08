@@ -4,7 +4,7 @@ spring:
 
   datasource:
     url: ${RTAT_DB_URL:jdbc:postgresql://localhost:5432/rtat}
-    username: ${RTAT_DB_USER:rtat}
+    username: ${RTAT_DB_USER:rtat_api}
     password: ${RTAT_DB_PASSWORD:}
     hikari:
       maximum-pool-size: ${RTAT_DB_POOL:16}
