@@ -25,14 +25,14 @@ public class ScreenRegistry {
         screen.onTimeout(() -> remove(fundId, screen));
         screen.onError(whatWentWrong -> remove(fundId, screen));
 
-        LOG.info("a screen opened on fund {}, now {} watching", fundId, howMany(fundId));
+        LOG.info("a screen opened on fund {}, now {} watching", fundId, watcherCount(fundId));
     }
 
     public Set<Integer> watchedFunds() {
         return watchers.keySet();
     }
 
-    public int howMany(int fundId) {
+    public int watcherCount(int fundId) {
         return watchers.getOrDefault(fundId, List.of()).size();
     }
 

@@ -22,7 +22,7 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> notThere(IllegalArgumentException why) {
+    public ResponseEntity<Map<String, String>> notFound(IllegalArgumentException why) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", why.getMessage()));
     }
 }

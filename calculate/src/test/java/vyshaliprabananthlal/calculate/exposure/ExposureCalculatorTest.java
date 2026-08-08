@@ -30,7 +30,7 @@ class ExposureCalculatorTest {
         calculator = new ExposureCalculator(
                 database,
                 new ExchangeRates(database, sql),
-                new FundReference(database, sql, new SimpleMeterRegistry()),
+                new FundLookup(database, sql, new SimpleMeterRegistry()),
                 sql,
                 new SimpleMeterRegistry());
 

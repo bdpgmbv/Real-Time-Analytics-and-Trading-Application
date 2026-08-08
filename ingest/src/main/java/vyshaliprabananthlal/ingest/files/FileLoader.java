@@ -35,7 +35,7 @@ public class FileLoader {
         this.database = database;
         this.journal = journal;
         this.knownFormats = knownFormats;
-        this.savePositionSql = sql.statement("save-position-from-file");
+        this.savePositionSql = sql.statement("upsert-position-from-file");
         this.counters = new FileCounters(meters);
     }
 

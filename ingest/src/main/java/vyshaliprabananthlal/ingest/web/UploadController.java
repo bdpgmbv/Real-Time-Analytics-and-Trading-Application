@@ -23,10 +23,9 @@ public class UploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<UploadAnswer> uploadACustodianFile(@RequestParam("file") MultipartFile file)
-            throws IOException {
+    public ResponseEntity<UploadAnswer> upload(@RequestParam("file") MultipartFile file) throws IOException {
 
-        String fileName = fileNameOr(file.getOriginalFilename());
+        String fileName = fileNameOrDefault(file.getOriginalFilename());
         String contents = new String(file.getBytes(), StandardCharsets.UTF_8);
 
         try {
@@ -50,7 +49,7 @@ public class UploadController {
         }
     }
 
-    private static String fileNameOr(@Nullable String givenName) {
+    private static String fileNameOrDefault(@Nullable String givenName) {
         if (givenName == null || givenName.isBlank()) {
             return "unnamed";
         }

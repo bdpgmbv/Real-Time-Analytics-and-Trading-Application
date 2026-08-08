@@ -20,9 +20,9 @@ public final class ExposureJob {
     private ExposureJob() {}
 
     public static void main(String[] args) throws Exception {
-        String kafka = setting("RTAT_KAFKA", "localhost:9092");
-        String databaseUrl = setting("RTAT_DB_URL", "jdbc:postgresql://localhost:5432/rtat");
-        String user = setting("RTAT_DB_USER", "rtat");
+        String kafka = envOrDefault("RTAT_KAFKA", "localhost:9092");
+        String databaseUrl = envOrDefault("RTAT_DB_URL", "jdbc:postgresql://localhost:5432/rtat");
+        String user = envOrDefault("RTAT_DB_USER", "rtat");
         String password = System.getenv("RTAT_DB_PASSWORD");
 
         if (password == null || password.isBlank()) {
@@ -70,7 +70,7 @@ public final class ExposureJob {
         flink.execute("exposure from prices");
     }
 
-    private static String setting(String name, String whenNotSet) {
+    private static String envOrDefault(String name, String whenNotSet) {
         return System.getenv().getOrDefault(name, whenNotSet);
     }
 }

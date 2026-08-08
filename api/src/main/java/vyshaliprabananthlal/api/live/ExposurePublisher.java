@@ -18,7 +18,7 @@ public class ExposurePublisher {
 
     static final String THE_EVENT_NAME = "exposure";
 
-    private final ScreenRegistry watching;
+    private final ScreenRegistry screens;
     private final MarketChangeFlag changes;
     private final ExposureCalculator calculator;
     private final Counter pushed;
@@ -27,9 +27,9 @@ public class ExposurePublisher {
     private final Map<Integer, String> whatWeLastSent = new ConcurrentHashMap<>();
 
     public ExposurePublisher(
-            ScreenRegistry watching, MarketChangeFlag changes, ExposureCalculator calculator, MeterRegistry meters) {
+            ScreenRegistry screens, MarketChangeFlag changes, ExposureCalculator calculator, MeterRegistry meters) {
 
-        this.watching = watching;
+        this.screens = screens;
         this.changes = changes;
         this.calculator = calculator;
         this.pushed = meters.counter("rtat.live.pushed");
@@ -37,20 +37,20 @@ public class ExposurePublisher {
     }
 
     @Scheduled(fixedDelayString = "${rtat.live.push-every-milliseconds:1000}")
-    public void publishChanges() {
-        if (watching.watchedFunds().isEmpty()) {
+    public void publishWhatMoved() {
+        if (screens.watchedFunds().isEmpty()) {
             return;
         }
         if (!changes.hasChanged()) {
             return;
         }
 
-        for (int fundId : watching.watchedFunds()) {
-            publish(fundId);
+        for (int fundId : screens.watchedFunds()) {
+            publishFund(fundId);
         }
     }
 
-    public void publish(int fundId) {
+    public void publishFund(int fundId) {
         try {
             FundExposure now = calculator.forWholeFund(fundId);
             String asText = signatureOf(now);
@@ -61,7 +61,7 @@ public class ExposurePublisher {
             }
 
             whatWeLastSent.put(fundId, asText);
-            watching.sendTo(fundId, THE_EVENT_NAME, now);
+            screens.sendTo(fundId, THE_EVENT_NAME, now);
             pushed.increment();
 
         } catch (RuntimeException couldNotWorkItOut) {
@@ -72,10 +72,10 @@ public class ExposurePublisher {
     static String signatureOf(FundExposure exposure) {
         StringBuilder builder = new StringBuilder();
 
-        for (var one : exposure.byCurrency()) {
-            builder.append(one.currency())
+        for (var currencyAmount : exposure.byCurrency()) {
+            builder.append(currencyAmount.currency())
                     .append('=')
-                    .append(Math.round(one.amount()))
+                    .append(Math.round(currencyAmount.amount()))
                     .append(';');
         }
         return builder.toString();

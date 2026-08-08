@@ -51,7 +51,7 @@ class WhoCanCallWhatTest {
     private io.micrometer.core.instrument.MeterRegistry meters;
 
     @MockitoBean
-    private vyshaliprabananthlal.api.tenant.WhichClient whichClient;
+    private vyshaliprabananthlal.api.tenant.ClientLookup whichClient;
 
     @MockitoBean
     private vyshaliprabananthlal.api.tenant.ClientScope clientScope;

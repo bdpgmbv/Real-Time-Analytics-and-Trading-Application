@@ -12,9 +12,9 @@ public record FundExposure(int fundId, String reportingCurrency, List<CurrencyAm
 
     /** Zero rather than null for a currency the fund does not hold. */
     public CurrencyAmount forCurrency(String currency) {
-        for (CurrencyAmount one : byCurrency) {
-            if (one.currency().equals(currency)) {
-                return one;
+        for (CurrencyAmount held : byCurrency) {
+            if (held.currency().equals(currency)) {
+                return held;
             }
         }
         return new CurrencyAmount(currency, 0, 0);
@@ -23,8 +23,8 @@ public record FundExposure(int fundId, String reportingCurrency, List<CurrencyAm
     /** Everything added up, in the currency the fund reports in. */
     public double total() {
         double total = 0;
-        for (CurrencyAmount one : byCurrency) {
-            total += one.inReportingCurrency();
+        for (CurrencyAmount held : byCurrency) {
+            total += held.inReportingCurrency();
         }
         return total;
     }

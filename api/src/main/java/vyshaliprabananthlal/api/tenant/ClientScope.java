@@ -19,19 +19,19 @@ public class ClientScope {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public <T> T reading(int clientId, Supplier<T> work) {
-        setTheClient(clientId);
+        setClientOnConnection(clientId);
 
         return work.get();
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public <T> T writing(int clientId, Supplier<T> work) {
-        setTheClient(clientId);
+        setClientOnConnection(clientId);
 
         return work.get();
     }
 
-    private void setTheClient(int clientId) {
+    private void setClientOnConnection(int clientId) {
         database.queryForObject(TELL_POSTGRES_WHO_IS_ASKING, String.class, String.valueOf(clientId));
     }
 }

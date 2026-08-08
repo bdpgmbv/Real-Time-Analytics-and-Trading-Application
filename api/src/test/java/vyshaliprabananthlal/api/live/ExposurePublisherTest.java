@@ -44,7 +44,7 @@ class PushToTheScreensTest {
         when(watching.watchedFunds()).thenReturn(Set.of());
         changes.markChanged();
 
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(calculator, never()).forWholeFund(anyInt());
     }
@@ -54,7 +54,7 @@ class PushToTheScreensTest {
     void nothingMovingMeansNoWork() {
         when(watching.watchedFunds()).thenReturn(Set.of(1));
 
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(calculator, never()).forWholeFund(anyInt());
     }
@@ -67,10 +67,10 @@ class PushToTheScreensTest {
 
         Acknowledgment kafka = mock(Acknowledgment.class);
         for (int message = 0; message < 4167; message++) {
-            changes.arrived(List.of("{}"), kafka);
+            changes.onMessages(List.of("{}"), kafka);
         }
 
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(calculator, times(1)).forWholeFund(1);
         verify(watching, times(1)).sendTo(eq(1), anyString(), any());
@@ -83,8 +83,8 @@ class PushToTheScreensTest {
         when(calculator.forWholeFund(1)).thenReturn(exposureOf("EUR", 5000000));
         changes.markChanged();
 
-        pushing.publishChanges();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
+        pushing.publishWhatMoved();
 
         verify(calculator, times(1)).forWholeFund(1);
     }
@@ -96,10 +96,10 @@ class PushToTheScreensTest {
         when(calculator.forWholeFund(1)).thenReturn(exposureOf("EUR", 5000000));
 
         changes.markChanged();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         changes.markChanged();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(calculator, times(2)).forWholeFund(1);
         verify(watching, times(1)).sendTo(eq(1), anyString(), any());
@@ -113,9 +113,9 @@ class PushToTheScreensTest {
         when(calculator.forWholeFund(1)).thenReturn(exposureOf("EUR", 5000000)).thenReturn(exposureOf("EUR", 5100000));
 
         changes.markChanged();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
         changes.markChanged();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(watching, times(2)).sendTo(eq(1), anyString(), any());
         assertThat(meters.get("rtat.live.pushed").counter().count()).isEqualTo(2.0);
@@ -130,9 +130,9 @@ class PushToTheScreensTest {
                 .thenReturn(exposureOf("EUR", 5000000.3));
 
         changes.markChanged();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
         changes.markChanged();
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(watching, times(1)).sendTo(eq(1), anyString(), any());
     }
@@ -145,7 +145,7 @@ class PushToTheScreensTest {
         when(calculator.forWholeFund(2)).thenReturn(exposureOf("EUR", 1000000));
         changes.markChanged();
 
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(watching, times(1)).sendTo(eq(2), anyString(), any());
     }
@@ -157,7 +157,7 @@ class PushToTheScreensTest {
         when(calculator.forWholeFund(anyInt())).thenReturn(exposureOf("EUR", 1000000));
         changes.markChanged();
 
-        pushing.publishChanges();
+        pushing.publishWhatMoved();
 
         verify(calculator, times(3)).forWholeFund(anyInt());
     }
@@ -167,7 +167,7 @@ class PushToTheScreensTest {
     void anEmptyPollIsNotAChange() {
         Acknowledgment kafka = mock(Acknowledgment.class);
 
-        changes.arrived(List.of(), kafka);
+        changes.onMessages(List.of(), kafka);
 
         assertThat(changes.hasChanged()).isFalse();
         verify(kafka).acknowledge();

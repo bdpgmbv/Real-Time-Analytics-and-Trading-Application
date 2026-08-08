@@ -54,7 +54,7 @@ class WhoToCountAgainstTest {
     void aBlankNameDoesNotBecomeAnEmptyKey() {
         Principal blank = () -> "   ";
 
-        assertThat(RateLimitKeyResolver.nameOf(blank)).isEqualTo(RateLimitKeyResolver.NOBODY_IN_PARTICULAR);
+        assertThat(RateLimitKeyResolver.nameFrom(blank)).isEqualTo(RateLimitKeyResolver.NOBODY_IN_PARTICULAR);
     }
 
     @Test
@@ -62,7 +62,7 @@ class WhoToCountAgainstTest {
     void aRealNameIsUsedAsItStands() {
         Principal named = () -> "user11";
 
-        assertThat(RateLimitKeyResolver.nameOf(named)).isEqualTo("user11");
+        assertThat(RateLimitKeyResolver.nameFrom(named)).isEqualTo("user11");
     }
 
     private MockServerWebExchange anExchangeFrom(String address) {

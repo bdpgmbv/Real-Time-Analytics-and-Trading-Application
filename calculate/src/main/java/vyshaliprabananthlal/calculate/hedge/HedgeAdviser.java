@@ -17,38 +17,38 @@ public class HedgeAdviser {
         this.tooSmallToBother = tooSmallToBother;
     }
 
-    public List<HedgeAdviser.Recommendation> recommendFor(FundExposure exposure) {
-        List<HedgeAdviser.Recommendation> advice = new ArrayList<>();
+    public List<Recommendation> recommendFor(FundExposure exposure) {
+        List<Recommendation> advice = new ArrayList<>();
 
-        for (FundExposure.CurrencyAmount one : exposure.byCurrency()) {
-            if (one.currency().equals(exposure.reportingCurrency())) {
+        for (FundExposure.CurrencyAmount held : exposure.byCurrency()) {
+            if (held.currency().equals(exposure.reportingCurrency())) {
                 continue;
             }
-            if (Math.abs(one.inReportingCurrency()) < tooSmallToBother) {
+            if (Math.abs(held.inReportingCurrency()) < tooSmallToBother) {
                 continue;
             }
 
-            advice.add(new HedgeAdviser.Recommendation(
-                    one.currency(),
-                    one.amount(),
-                    -one.amount(),
+            advice.add(new Recommendation(
+                    held.currency(),
+                    held.amount(),
+                    -held.amount(),
                     FORWARD,
-                    reasonFor(one, exposure.reportingCurrency())));
+                    reasonFor(held, exposure.reportingCurrency())));
         }
         return advice;
     }
 
-    private String reasonFor(FundExposure.CurrencyAmount one, String reportingCurrency) {
-        String direction = one.amount() > 0 ? "holding" : "short";
+    private String reasonFor(FundExposure.CurrencyAmount held, String reportingCurrency) {
+        String direction = held.amount() > 0 ? "holding" : "short";
 
         return "the fund reports in "
                 + reportingCurrency
                 + " and is "
                 + direction
                 + " "
-                + Math.abs(Math.round(one.amount()))
+                + Math.abs(Math.round(held.amount()))
                 + " "
-                + one.currency();
+                + held.currency();
     }
 
     /** One currency worth hedging, what we suggest doing about it, and why. */

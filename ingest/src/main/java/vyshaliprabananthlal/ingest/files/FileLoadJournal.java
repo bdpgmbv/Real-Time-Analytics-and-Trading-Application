@@ -28,38 +28,38 @@ public class FileLoadJournal {
 
     public int startLoad(String fileName, String fingerprint, String custodian, String arrivedHow, int rowsInFile) {
 
-        Integer fileLoadId = database.queryForObject(
-                sql.statement("start-file-load"),
+        Integer loadId = database.queryForObject(
+                sql.statement("insert-file-load"),
                 Integer.class,
                 fileName,
                 fingerprint,
                 custodian,
                 arrivedHow,
                 rowsInFile,
-                currentPrice());
+                now());
 
-        if (fileLoadId == null) {
+        if (loadId == null) {
             throw new IllegalStateException("the database did not give back a file load id");
         }
-        return fileLoadId;
+        return loadId;
     }
 
-    public void finishLoad(int fileLoadId, int rowsLoaded, int rowsRejected) {
-        database.update(sql.statement("finish-file-load"), rowsLoaded, rowsRejected, currentPrice(), fileLoadId);
+    public void finishLoad(int loadId, int rowsLoaded, int rowsRejected) {
+        database.update(sql.statement("update-file-load-totals"), rowsLoaded, rowsRejected, now(), loadId);
     }
 
-    public void recordBadLine(int fileLoadId, int lineNumber, String line, String reason) {
-        database.update(sql.statement("record-bad-line"), fileLoadId, lineNumber, line, reason);
+    public void recordBadLine(int loadId, int lineNumber, String line, String reason) {
+        database.update(sql.statement("insert-load-problem"), loadId, lineNumber, line, reason);
     }
 
-    public List<String> problemsFor(int fileLoadId) {
+    public List<String> problemsFor(int loadId) {
         return database.query(
-                sql.statement("list-load-problems"),
+                sql.statement("select-load-problems"),
                 (row, number) -> "line " + row.getInt(1) + ": " + row.getString(2),
-                fileLoadId);
+                loadId);
     }
 
-    private static Timestamp currentPrice() {
+    private static Timestamp now() {
         return Timestamp.from(Instant.now());
     }
 }

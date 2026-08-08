@@ -31,8 +31,8 @@ public class HedgeFillListener {
         this.database = database;
         this.batch = batch;
         this.messages = messages;
-        this.recordTheFill = sql.statement("record-hedge-fill");
-        this.moveTheHedgeOn = sql.statement("move-hedge-on");
+        this.recordTheFill = sql.statement("insert-hedge-fill");
+        this.moveTheHedgeOn = sql.statement("update-hedge-status");
     }
 
     @KafkaListener(topics = "rtat.hedge-fill", groupId = "hedge-fill-receiver")

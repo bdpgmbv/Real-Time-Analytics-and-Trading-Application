@@ -9,13 +9,13 @@ import org.springframework.stereotype.Service;
 import vyshaliprabananthlal.calculate.sql.Sql;
 
 @Service
-public class FundReference {
+public class FundLookup {
 
     private final JdbcTemplate database;
     private final Sql sql;
     private final Counter timesWeActuallyAsked;
 
-    public FundReference(JdbcTemplate database, Sql sql, MeterRegistry meters) {
+    public FundLookup(JdbcTemplate database, Sql sql, MeterRegistry meters) {
         this.database = database;
         this.sql = sql;
         this.timesWeActuallyAsked = meters.counter("rtat.reference.read.from.database");
@@ -25,7 +25,8 @@ public class FundReference {
     public String reportingCurrencyOf(int fundId) {
         timesWeActuallyAsked.increment();
 
-        List<String> found = database.queryForList(sql.statement("reporting-currency-of-fund"), String.class, fundId);
+        List<String> found =
+                database.queryForList(sql.statement("select-fund-reporting-currency"), String.class, fundId);
 
         if (found.isEmpty()) {
             throw new IllegalArgumentException("no fund with id " + fundId);
@@ -37,6 +38,6 @@ public class FundReference {
     public List<Integer> accountsIn(int fundId) {
         timesWeActuallyAsked.increment();
 
-        return database.queryForList(sql.statement("accounts-in-fund"), Integer.class, fundId);
+        return database.queryForList(sql.statement("select-accounts-by-fund"), Integer.class, fundId);
     }
 }

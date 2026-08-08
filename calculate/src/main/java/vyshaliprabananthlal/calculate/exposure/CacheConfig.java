@@ -28,17 +28,17 @@ public class CacheConfig {
         SimpleCacheManager manager = new SimpleCacheManager();
 
         manager.setCaches(List.of(
-                heldFor(EXCHANGE_RATES, Duration.ofMillis(ratesFor), 200),
-                heldFor(FUND_REPORTING_CURRENCY, Duration.ofSeconds(referenceFor), 20000),
-                heldFor(ACCOUNTS_IN_FUND, Duration.ofSeconds(referenceFor), 20000),
-                heldFor(USER_CLIENT, Duration.ofSeconds(referenceFor), 50000)));
+                expiringAfter(EXCHANGE_RATES, Duration.ofMillis(ratesFor), 200),
+                expiringAfter(FUND_REPORTING_CURRENCY, Duration.ofSeconds(referenceFor), 20000),
+                expiringAfter(ACCOUNTS_IN_FUND, Duration.ofSeconds(referenceFor), 20000),
+                expiringAfter(USER_CLIENT, Duration.ofSeconds(referenceFor), 50000)));
 
         manager.initializeCaches();
 
         return manager;
     }
 
-    private static CaffeineCache heldFor(String name, Duration howLong, int howMany) {
+    private static CaffeineCache expiringAfter(String name, Duration howLong, int howMany) {
         return new CaffeineCache(
                 name,
                 Caffeine.newBuilder()

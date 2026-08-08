@@ -23,7 +23,7 @@ public class ExchangeRates {
         Map<String, Double> rates = new HashMap<>();
 
         database.query(
-                sql.statement("rates-into"),
+                sql.statement("select-fx-rates-into-currency"),
                 row -> {
                     rates.put(row.getString(1).trim(), row.getDouble(2));
                 },

@@ -26,7 +26,7 @@ public class TradeListener {
     public TradeListener(KafkaBatch batch, JsonReader messages, Sql sql) {
         this.batch = batch;
         this.messages = messages;
-        this.statement = sql.statement("record-trade-and-move-position");
+        this.statement = sql.statement("insert-trade-and-update-position");
     }
 
     @KafkaListener(topics = "rtat.trade", groupId = "trade-receiver")

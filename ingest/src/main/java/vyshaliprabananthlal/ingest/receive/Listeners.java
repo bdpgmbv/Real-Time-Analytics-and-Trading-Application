@@ -97,7 +97,7 @@ public final class Listeners {
         public Rates(KafkaBatch batch, JsonReader json, Sql sql) {
             this.batch = batch;
             this.json = json;
-            this.statement = sql.statement("update-rate");
+            this.statement = sql.statement("update-fx-rate");
         }
 
         @KafkaListener(topics = "rtat.fx-rate", groupId = "rate-receiver")

@@ -12,10 +12,10 @@ public class RateLimitKeyResolver implements KeyResolver {
 
     @Override
     public Mono<String> resolve(ServerWebExchange exchange) {
-        return exchange.getPrincipal().map(RateLimitKeyResolver::nameOf).defaultIfEmpty(callerAddress(exchange));
+        return exchange.getPrincipal().map(RateLimitKeyResolver::nameFrom).defaultIfEmpty(callerAddress(exchange));
     }
 
-    static String nameOf(java.security.Principal principal) {
+    static String nameFrom(java.security.Principal principal) {
         String name = principal.getName();
 
         return name == null || name.isBlank() ? NOBODY_IN_PARTICULAR : name;

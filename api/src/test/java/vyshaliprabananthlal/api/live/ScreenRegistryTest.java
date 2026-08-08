@@ -20,7 +20,7 @@ class WhoIsWatchingTest {
     void aScreenIsCounted() {
         watching.add(1, new SseEmitter());
 
-        assertThat(watching.howMany(1)).isEqualTo(1);
+        assertThat(watching.watcherCount(1)).isEqualTo(1);
         assertThat(watching.watchedFunds()).containsExactly(1);
     }
 
@@ -30,7 +30,7 @@ class WhoIsWatchingTest {
         watching.add(1, new SseEmitter());
         watching.add(1, new SseEmitter());
 
-        assertThat(watching.howMany(1)).isEqualTo(2);
+        assertThat(watching.watcherCount(1)).isEqualTo(2);
         assertThat(watching.watchedFunds()).containsExactly(1);
     }
 
@@ -46,7 +46,7 @@ class WhoIsWatchingTest {
     @Test
     @DisplayName("a fund nobody is watching reports nobody")
     void anUnwatchedFundReportsNobody() {
-        assertThat(watching.howMany(99)).isZero();
+        assertThat(watching.watcherCount(99)).isZero();
         assertThat(watching.watchedFunds()).isEmpty();
     }
 
@@ -84,7 +84,7 @@ class WhoIsWatchingTest {
 
         watching.sendTo(1, "exposure", "the numbers");
 
-        assertThat(watching.howMany(1)).isEqualTo(1);
+        assertThat(watching.watcherCount(1)).isEqualTo(1);
         verify(stillThere).send(any(SseEmitter.SseEventBuilder.class));
     }
 
@@ -99,7 +99,7 @@ class WhoIsWatchingTest {
         watching.add(1, finished);
         watching.sendTo(1, "exposure", "the numbers");
 
-        assertThat(watching.howMany(1)).isZero();
+        assertThat(watching.watcherCount(1)).isZero();
     }
 
     @Test

@@ -54,7 +54,7 @@ public class FolderWatcher {
     void loadOneFile(Path file) {
         try {
             String contents = Files.readString(file, StandardCharsets.UTF_8);
-            String name = nameOf(file);
+            String name = fileNameOf(file);
             FileLoader.LoadResult result = loader.load(name, contents, "SFTP");
 
             if (result.wasAlreadySeen()) {
@@ -67,12 +67,12 @@ public class FolderWatcher {
         } catch (IOException couldNotRead) {
             LOG.error("could not read {}: {}", file, couldNotRead.getMessage());
         } catch (CustodianFormat.BadLine wholeFileIsWrong) {
-            LOG.error("{} was refused: {}", nameOf(file), wholeFileIsWrong.reason());
+            LOG.error("{} was refused: {}", fileNameOf(file), wholeFileIsWrong.reason());
             moveToFinished(file);
         }
     }
 
-    static String nameOf(Path file) {
+    static String fileNameOf(Path file) {
         Path justTheName = file.getFileName();
         return justTheName == null ? file.toString() : justTheName.toString();
     }
@@ -80,7 +80,7 @@ public class FolderWatcher {
     private void moveToFinished(Path file) {
         try {
             Files.createDirectories(folderForFinishedFiles);
-            Files.move(file, folderForFinishedFiles.resolve(nameOf(file)));
+            Files.move(file, folderForFinishedFiles.resolve(fileNameOf(file)));
         } catch (IOException couldNotMove) {
             LOG.error("could not move {} aside: {}", file, couldNotMove.getMessage());
         }

@@ -18,7 +18,7 @@ public class Entitlements {
 
     public List<Entitlements.VisibleFund> fundsVisibleTo(String userId) {
         return database.query(
-                sql.statement("funds-this-user-may-see"),
+                sql.statement("select-visible-funds"),
                 (row, number) -> new Entitlements.VisibleFund(
                         row.getInt(1), row.getString(2), row.getString(3).trim(), row.getBoolean(4)),
                 userId);
@@ -47,15 +47,11 @@ public class Entitlements {
         }
 
         return database.queryForList(
-                sql.statement("accounts-this-user-may-see"),
-                Integer.class,
-                userId,
-                fundId,
-                asked.toArray(new Integer[0]));
+                sql.statement("select-visible-accounts"), Integer.class, userId, fundId, asked.toArray(new Integer[0]));
     }
 
     private List<Boolean> findEntitlement(String userId, int fundId) {
-        return database.queryForList(sql.statement("may-this-user-see-this-fund"), Boolean.class, userId, fundId);
+        return database.queryForList(sql.statement("select-entitlement"), Boolean.class, userId, fundId);
     }
 
     /** A fund this user may open, and whether they may act on it. */

@@ -21,31 +21,31 @@ public class LiveController {
     private final Entitlements entitlements;
     private final ScreenRegistry watching;
     private final ExposurePublisher pushing;
-    private final CallerIdentity whoIsAsking;
+    private final CallerIdentity caller;
     private final Duration howLongAScreenMayStayOpen;
 
     public LiveController(
             Entitlements entitlements,
             ScreenRegistry watching,
             ExposurePublisher pushing,
-            CallerIdentity whoIsAsking,
+            CallerIdentity caller,
             @Value("${rtat.live.screen-timeout-minutes:30}") long timeoutMinutes) {
 
         this.entitlements = entitlements;
         this.watching = watching;
         this.pushing = pushing;
-        this.whoIsAsking = whoIsAsking;
+        this.caller = caller;
         this.howLongAScreenMayStayOpen = Duration.ofMinutes(timeoutMinutes);
     }
 
     @GetMapping(value = "/live", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter watchThisFund(@PathVariable int fundId, Authentication token) {
-        entitlements.requireVisible(whoIsAsking.userId(token), fundId);
+    public SseEmitter watch(@PathVariable int fundId, Authentication token) {
+        entitlements.requireVisible(caller.userId(token), fundId);
 
         SseEmitter screen = new SseEmitter(howLongAScreenMayStayOpen.toMillis());
         watching.add(fundId, screen);
 
-        pushing.publish(fundId);
+        pushing.publishFund(fundId);
 
         return screen;
     }

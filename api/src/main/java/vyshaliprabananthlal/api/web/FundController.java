@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vyshaliprabananthlal.api.security.CallerIdentity;
+import vyshaliprabananthlal.api.tenant.ClientLookup;
 import vyshaliprabananthlal.api.tenant.ClientScope;
-import vyshaliprabananthlal.api.tenant.WhichClient;
 import vyshaliprabananthlal.api.who.Entitlements;
 import vyshaliprabananthlal.calculate.exposure.ExposureCalculator;
 import vyshaliprabananthlal.calculate.exposure.FundExposure;
@@ -20,27 +20,27 @@ public class FundController {
 
     private final Entitlements entitlements;
     private final ExposureCalculator calculator;
-    private final CallerIdentity whoIsAsking;
-    private final WhichClient whichClient;
+    private final CallerIdentity caller;
+    private final ClientLookup whichClient;
     private final ClientScope clientScope;
 
     public FundController(
             Entitlements entitlements,
             ExposureCalculator calculator,
-            CallerIdentity whoIsAsking,
-            WhichClient whichClient,
+            CallerIdentity caller,
+            ClientLookup whichClient,
             ClientScope clientScope) {
 
         this.entitlements = entitlements;
         this.calculator = calculator;
-        this.whoIsAsking = whoIsAsking;
+        this.caller = caller;
         this.whichClient = whichClient;
         this.clientScope = clientScope;
     }
 
     @GetMapping
     public List<Entitlements.VisibleFund> visibleFunds(Authentication token) {
-        String userId = whoIsAsking.userId(token);
+        String userId = caller.userId(token);
 
         return clientScope.reading(whichClient.forUser(userId), () -> entitlements.fundsVisibleTo(userId));
     }
@@ -51,7 +51,7 @@ public class FundController {
             @RequestParam(name = "account", required = false) List<Integer> accounts,
             Authentication token) {
 
-        String userId = whoIsAsking.userId(token);
+        String userId = caller.userId(token);
 
         return clientScope.reading(whichClient.forUser(userId), () -> {
             entitlements.requireVisible(userId, fundId);

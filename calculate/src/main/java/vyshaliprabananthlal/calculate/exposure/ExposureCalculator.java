@@ -14,16 +14,12 @@ public class ExposureCalculator {
 
     private final JdbcTemplate database;
     private final ExchangeRates exchangeRates;
-    private final FundReference fundFacts;
+    private final FundLookup fundFacts;
     private final Sql sql;
     private final Timer howLongItTakes;
 
     public ExposureCalculator(
-            JdbcTemplate database,
-            ExchangeRates exchangeRates,
-            FundReference fundFacts,
-            Sql sql,
-            MeterRegistry meters) {
+            JdbcTemplate database, ExchangeRates exchangeRates, FundLookup fundFacts, Sql sql, MeterRegistry meters) {
 
         this.database = database;
         this.exchangeRates = exchangeRates;
@@ -42,13 +38,13 @@ public class ExposureCalculator {
         Timer.Sample timing = Timer.start();
 
         try {
-            return workItOut(fundId, accountIds);
+            return calculate(fundId, accountIds);
         } finally {
             timing.stop(howLongItTakes);
         }
     }
 
-    private FundExposure workItOut(int fundId, List<Integer> accountIds) {
+    private FundExposure calculate(int fundId, List<Integer> accountIds) {
         String reportingCurrency = fundFacts.reportingCurrencyOf(fundId);
 
         if (accountIds.isEmpty()) {
@@ -59,7 +55,7 @@ public class ExposureCalculator {
         List<FundExposure.CurrencyAmount> found = new ArrayList<>();
 
         database.query(
-                sql.statement("exposure-by-currency"),
+                sql.statement("select-exposure-by-currency"),
                 row -> {
                     String currency = row.getString(1).trim();
                     double amount = row.getDouble(2);

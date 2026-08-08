@@ -22,25 +22,25 @@ public class HedgeController {
     private final ExposureCalculator calculator;
     private final HedgeAdviser adviser;
     private final HedgeBook book;
-    private final CallerIdentity whoIsAsking;
+    private final CallerIdentity caller;
 
     public HedgeController(
             Entitlements entitlements,
             ExposureCalculator calculator,
             HedgeAdviser adviser,
             HedgeBook book,
-            CallerIdentity whoIsAsking) {
+            CallerIdentity caller) {
 
         this.entitlements = entitlements;
         this.calculator = calculator;
         this.adviser = adviser;
         this.book = book;
-        this.whoIsAsking = whoIsAsking;
+        this.caller = caller;
     }
 
     @GetMapping("/suggested")
     public List<HedgeAdviser.Recommendation> suggestions(@PathVariable int fundId, Authentication token) {
-        entitlements.requireVisible(whoIsAsking.userId(token), fundId);
+        entitlements.requireVisible(caller.userId(token), fundId);
 
         return adviser.recommendFor(calculator.forWholeFund(fundId));
     }
@@ -48,7 +48,7 @@ public class HedgeController {
     @PostMapping
     public SentHedges send(@PathVariable int fundId, @RequestBody WhatTheClientChose chose, Authentication token) {
 
-        String userId = whoIsAsking.userId(token);
+        String userId = caller.userId(token);
         entitlements.requireTradePermission(userId, fundId);
 
         List<HedgeAdviser.Recommendation> advice = adviser.recommendFor(calculator.forWholeFund(fundId));

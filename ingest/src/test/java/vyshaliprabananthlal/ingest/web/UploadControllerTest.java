@@ -37,7 +37,7 @@ class UploadControllerTest {
                 .thenReturn(new FileLoader.LoadResult(7, "Northgate Trust", 50, 50, 0, false));
         when(loader.problemsFor(7)).thenReturn(List.of());
 
-        ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("positions.csv"));
+        ResponseEntity<UploadAnswer> answer = controller.upload(aFile("positions.csv"));
 
         UploadAnswer body = bodyOf(answer);
 
@@ -54,7 +54,7 @@ class UploadControllerTest {
                 .thenReturn(new FileLoader.LoadResult(1, "Northgate Trust", 1, 1, 0, false));
         when(loader.problemsFor(1)).thenReturn(List.of());
 
-        controller.uploadACustodianFile(aFile("positions.csv"));
+        controller.upload(aFile("positions.csv"));
 
         verify(loader).load(eq("positions.csv"), any(), eq("UI UPLOAD"));
     }
@@ -70,7 +70,7 @@ class UploadControllerTest {
                         "line 30: the identifier must be 9 characters, found 5",
                         "line 44: no such account or security"));
 
-        ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("messy.csv"));
+        ResponseEntity<UploadAnswer> answer = controller.upload(aFile("messy.csv"));
 
         UploadAnswer body = bodyOf(answer);
 
@@ -85,7 +85,7 @@ class UploadControllerTest {
     void aRepeatUploadSaysSo() throws Exception {
         when(loader.load(any(), any(), any())).thenReturn(new FileLoader.LoadResult(3, "", 0, 0, 0, true));
 
-        ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("again.csv"));
+        ResponseEntity<UploadAnswer> answer = controller.upload(aFile("again.csv"));
 
         UploadAnswer body = bodyOf(answer);
 
@@ -100,7 +100,7 @@ class UploadControllerTest {
         when(loader.load(any(), any(), any()))
                 .thenThrow(new CustodianFormat.BadLine("no custodian format matches this heading: who,knows,what"));
 
-        ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("odd.csv"));
+        ResponseEntity<UploadAnswer> answer = controller.upload(aFile("odd.csv"));
 
         UploadAnswer body = bodyOf(answer);
 
@@ -118,7 +118,7 @@ class UploadControllerTest {
         MockMultipartFile noName =
                 new MockMultipartFile("file", null, "text/csv", "a,b\n1,2\n".getBytes(StandardCharsets.UTF_8));
 
-        ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(noName);
+        ResponseEntity<UploadAnswer> answer = controller.upload(noName);
 
         assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(loader).load(eq("unnamed"), any(), eq("UI UPLOAD"));

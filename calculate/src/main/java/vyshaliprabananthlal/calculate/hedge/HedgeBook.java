@@ -31,7 +31,7 @@ public class HedgeBook {
         List<Long> sent = new ArrayList<>();
 
         for (int which = 0; which < advice.size(); which++) {
-            HedgeAdviser.Recommendation one = advice.get(which);
+            HedgeAdviser.Recommendation thisOne = advice.get(which);
             double chosen = whatTheClientChose.get(which);
 
             if (chosen == 0) {
@@ -41,14 +41,14 @@ public class HedgeBook {
             long hedgeNumber = nextNumber + sent.size();
 
             database.update(
-                    sql.statement("record-hedge"),
+                    sql.statement("insert-hedge"),
                     hedgeNumber,
                     fundId,
-                    one.currency(),
-                    one.exposure(),
-                    one.suggestedAmount(),
+                    thisOne.currency(),
+                    thisOne.exposure(),
+                    thisOne.suggestedAmount(),
                     chosen,
-                    one.instrument(),
+                    thisOne.instrument(),
                     whoSentIt,
                     "FXM-" + hedgeNumber);
 
@@ -58,7 +58,7 @@ public class HedgeBook {
     }
 
     private long nextHedgeId() {
-        Long next = database.queryForObject(sql.statement("next-hedge-number"), Long.class);
+        Long next = database.queryForObject(sql.statement("select-next-hedge-id"), Long.class);
 
         return next == null ? 1 : next;
     }
