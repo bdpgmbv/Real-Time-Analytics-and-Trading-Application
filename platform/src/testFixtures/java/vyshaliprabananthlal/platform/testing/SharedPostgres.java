@@ -13,10 +13,6 @@ public final class SharedPostgres {
 
   private SharedPostgres() {}
 
-  public static PostgreSQLContainer get() {
-    return THE_ONLY_ONE;
-  }
-
   public static String jdbcUrl() {
     return THE_ONLY_ONE.getJdbcUrl();
   }
