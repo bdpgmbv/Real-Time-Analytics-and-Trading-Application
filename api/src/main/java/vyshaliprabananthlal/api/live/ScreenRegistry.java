@@ -11,6 +11,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+/**
+ * Who currently has a screen open, and on which fund.
+ *
+ * <p>The cost of pushing updates follows the number of open screens, not the amount the
+ * market moves. Nobody watching means no work at all.
+ *
+ * <p>A browser that closes its tab is dropped on the next send rather than announced, so
+ * the registry cleans itself up without anyone having to tell it.
+ */
 @Component
 public class ScreenRegistry {
 
@@ -19,7 +28,8 @@ public class ScreenRegistry {
     private final Map<Integer, List<SseEmitter>> watchers = new ConcurrentHashMap<>();
 
     public void add(int fundId, SseEmitter screen) {
-        watchers.computeIfAbsent(fundId, which -> new CopyOnWriteArrayList<>()).add(screen);
+        watchers.computeIfAbsent(fundId, ignored -> new CopyOnWriteArrayList<>())
+                .add(screen);
 
         screen.onCompletion(() -> remove(fundId, screen));
         screen.onTimeout(() -> remove(fundId, screen));
@@ -36,10 +46,10 @@ public class ScreenRegistry {
         return watchers.getOrDefault(fundId, List.of()).size();
     }
 
-    public void sendTo(int fundId, String eventName, Object what) {
+    public void sendTo(int fundId, String eventName, Object payload) {
         for (SseEmitter screen : watchers.getOrDefault(fundId, List.of())) {
             try {
-                screen.send(SseEmitter.event().name(eventName).data(what));
+                screen.send(SseEmitter.event().name(eventName).data(payload));
             } catch (IOException theScreenWentAway) {
                 remove(fundId, screen);
             } catch (IllegalStateException alreadyFinished) {

@@ -45,7 +45,7 @@ class WhoToCountAgainstTest {
         var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/funds"));
 
         StepVerifier.create(counting.resolve(exchange))
-                .expectNext(RateLimitKeyResolver.NOBODY_IN_PARTICULAR)
+                .expectNext(RateLimitKeyResolver.ANONYMOUS)
                 .verifyComplete();
     }
 
@@ -54,7 +54,7 @@ class WhoToCountAgainstTest {
     void aBlankNameDoesNotBecomeAnEmptyKey() {
         Principal blank = () -> "   ";
 
-        assertThat(RateLimitKeyResolver.nameFrom(blank)).isEqualTo(RateLimitKeyResolver.NOBODY_IN_PARTICULAR);
+        assertThat(RateLimitKeyResolver.nameFrom(blank)).isEqualTo(RateLimitKeyResolver.ANONYMOUS);
     }
 
     @Test
