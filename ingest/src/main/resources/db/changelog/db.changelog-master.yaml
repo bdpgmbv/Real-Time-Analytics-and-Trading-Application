@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changes/001-baseline.sql
   - include:
       file: db/changelog/changes/002-hedge-reason-shown.sql
+  - include:
+      file: db/changelog/changes/003-client-id-on-owned-tables.sql
+  - include:
+      file: db/changelog/changes/004-row-level-security.sql

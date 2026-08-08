@@ -569,3 +569,60 @@ it now says so on the first line. Nothing ships it.
 
 `api` and `gateway` have `spring.liquibase.enabled: false`. One service owns the schema.
 Three services racing to migrate the same database is a problem you only get to have once.
+
+---
+
+## One client cannot see another
+
+Until now the only thing between two clients was a `WHERE` clause in one SQL file. Forget it
+in a new query and `SELECT count(*) FROM position` returns **every client's** 1,630,800 rows.
+That is a breach, not a bug, and it is one careless afternoon away.
+
+Postgres enforces it now.
+
+```sql
+CREATE POLICY one_client_only ON position
+  USING (client_id = current_setting('rtat.client_id', true)::int);
+```
+
+Every table a client owns carries `client_id` — denormalised on purpose, because a policy that
+joins three tables is a policy nobody can afford to run — and every one has that policy.
+
+### Two roles, because the owner bypasses policies
+
+| role | who | sees |
+|---|---|---|
+| `rtat` (owner) | ingest, writing for every client from a shared topic | everything, by design |
+| `rtat_reader` | the api, reading for one client | only what the policy allows |
+
+A table owner is exempt from row level security in Postgres. If the api connected as the owner
+the policies would be decoration, so it does not.
+
+### Measured
+
+| | |
+|---|---|
+| owner | 1,630,800 positions |
+| reader, no client set | **0** |
+| reader as client 1 | 3,200, one distinct `client_id` |
+| reader as client 1 asking for `WHERE client_id = 2` | **0 rows** |
+| a query with no filter at all | 3,200, not 1,630,800 |
+
+**It fails closed.** Forget to say who is asking and you get nothing. That is the opposite of
+what a forgotten `WHERE` clause does, and it is the whole reason for doing it this way.
+
+### It costs nothing
+
+```
+Index Only Scan using position_client_id_idx
+  Index Cond: (client_id = current_setting('rtat.client_id')::integer)
+  Execution Time: 0.262 ms
+```
+
+The policy is an index condition, not a filter applied afterwards.
+
+### Still to do
+
+The api does not yet connect as `rtat_reader` or set `rtat.client_id` per request. The
+enforcement exists and is proved at the database; wiring the service to use it is the next step.
+Until then the api still connects as the owner and the policies do not apply to it.
