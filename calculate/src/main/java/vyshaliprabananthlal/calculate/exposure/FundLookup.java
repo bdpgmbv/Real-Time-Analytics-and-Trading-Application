@@ -19,12 +19,14 @@ import vyshaliprabananthlal.platform.sql.SqlStatements;
 public class FundLookup {
 
     private final JdbcTemplate database;
-    private final SqlStatements statements;
+    private final String reportingCurrencyOfFund;
+    private final String accountsInFund;
     private final Counter databaseReads;
 
     public FundLookup(JdbcTemplate database, SqlStatements statements, MeterRegistry meters) {
         this.database = database;
-        this.statements = statements;
+        this.reportingCurrencyOfFund = statements.statement("select-fund-reporting-currency");
+        this.accountsInFund = statements.statement("select-accounts-by-fund");
 
         // Counts the reads that got past the cache, so the hit rate is visible in Grafana.
         this.databaseReads = meters.counter("rtat.reference.read.from.database");
@@ -34,8 +36,7 @@ public class FundLookup {
     public String reportingCurrencyOf(int fundId) {
         databaseReads.increment();
 
-        List<String> found =
-                database.queryForList(statements.statement("select-fund-reporting-currency"), String.class, fundId);
+        List<String> found = database.queryForList(reportingCurrencyOfFund, String.class, fundId);
 
         if (found.isEmpty()) {
             throw new IllegalArgumentException("no fund with id " + fundId);
@@ -47,6 +48,6 @@ public class FundLookup {
     public List<Integer> accountsIn(int fundId) {
         databaseReads.increment();
 
-        return database.queryForList(statements.statement("select-accounts-by-fund"), Integer.class, fundId);
+        return database.queryForList(accountsInFund, Integer.class, fundId);
     }
 }

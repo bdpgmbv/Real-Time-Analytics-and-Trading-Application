@@ -12,11 +12,11 @@ import vyshaliprabananthlal.platform.sql.SqlStatements;
 public class ExchangeRates {
 
     private final JdbcTemplate database;
-    private final SqlStatements statements;
+    private final String ratesIntoCurrency;
 
     public ExchangeRates(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.statements = statements;
+        this.ratesIntoCurrency = statements.statement("select-fx-rates-into-currency");
     }
 
     /**
@@ -30,7 +30,7 @@ public class ExchangeRates {
         Map<String, Double> rates = new HashMap<>();
 
         database.query(
-                statements.statement("select-fx-rates-into-currency"),
+                ratesIntoCurrency,
                 row -> {
                     rates.put(row.getString(1).trim(), row.getDouble(2));
                 },

@@ -12,16 +12,23 @@ import vyshaliprabananthlal.platform.sql.SqlStatements;
 public class FileLoadJournal {
 
     private final JdbcTemplate database;
-    private final SqlStatements statements;
+    private final String findByFingerprintSql;
+    private final String insertFileLoad;
+    private final String updateFileLoadTotals;
+    private final String insertLoadProblem;
+    private final String selectLoadProblems;
 
     public FileLoadJournal(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.statements = statements;
+        this.findByFingerprintSql = statements.statement("find-load-by-fingerprint");
+        this.insertFileLoad = statements.statement("insert-file-load");
+        this.updateFileLoadTotals = statements.statement("update-file-load-totals");
+        this.insertLoadProblem = statements.statement("insert-load-problem");
+        this.selectLoadProblems = statements.statement("select-load-problems");
     }
 
     public Optional<Integer> findByFingerprint(String fingerprint) {
-        List<Integer> found = database.query(
-                statements.statement("find-load-by-fingerprint"), (row, number) -> row.getInt(1), fingerprint);
+        List<Integer> found = database.query(findByFingerprintSql, (row, number) -> row.getInt(1), fingerprint);
 
         return found.isEmpty() ? Optional.empty() : Optional.of(found.get(0));
     }
@@ -29,14 +36,7 @@ public class FileLoadJournal {
     public int startLoad(String fileName, String fingerprint, String custodian, String arrivedHow, int rowsInFile) {
 
         Integer loadId = database.queryForObject(
-                statements.statement("insert-file-load"),
-                Integer.class,
-                fileName,
-                fingerprint,
-                custodian,
-                arrivedHow,
-                rowsInFile,
-                now());
+                insertFileLoad, Integer.class, fileName, fingerprint, custodian, arrivedHow, rowsInFile, now());
 
         if (loadId == null) {
             throw new IllegalStateException("the database did not give back a file load id");
@@ -45,18 +45,16 @@ public class FileLoadJournal {
     }
 
     public void finishLoad(int loadId, int rowsLoaded, int rowsRejected) {
-        database.update(statements.statement("update-file-load-totals"), rowsLoaded, rowsRejected, now(), loadId);
+        database.update(updateFileLoadTotals, rowsLoaded, rowsRejected, now(), loadId);
     }
 
     public void recordBadLine(int loadId, int lineNumber, String line, String reason) {
-        database.update(statements.statement("insert-load-problem"), loadId, lineNumber, line, reason);
+        database.update(insertLoadProblem, loadId, lineNumber, line, reason);
     }
 
     public List<String> problemsFor(int loadId) {
         return database.query(
-                statements.statement("select-load-problems"),
-                (row, number) -> "line " + row.getInt(1) + ": " + row.getString(2),
-                loadId);
+                selectLoadProblems, (row, number) -> "line " + row.getInt(1) + ": " + row.getString(2), loadId);
     }
 
     private static Timestamp now() {

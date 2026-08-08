@@ -21,11 +21,13 @@ import vyshaliprabananthlal.platform.sql.SqlStatements;
 public class HedgeBook {
 
     private final JdbcTemplate database;
-    private final SqlStatements statements;
+    private final String insertHedge;
+    private final String nextHedgeIdSql;
 
     public HedgeBook(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.statements = statements;
+        this.insertHedge = statements.statement("insert-hedge");
+        this.nextHedgeIdSql = statements.statement("select-next-hedge-id");
     }
 
     /**
@@ -58,7 +60,7 @@ public class HedgeBook {
             long hedgeId = firstHedgeId + sent.size();
 
             database.update(
-                    statements.statement("insert-hedge"),
+                    insertHedge,
                     hedgeId,
                     fundId,
                     recommendation.currency(),
@@ -75,7 +77,7 @@ public class HedgeBook {
     }
 
     private long nextHedgeId() {
-        Long next = database.queryForObject(statements.statement("select-next-hedge-id"), Long.class);
+        Long next = database.queryForObject(nextHedgeIdSql, Long.class);
 
         return next == null ? 1 : next;
     }

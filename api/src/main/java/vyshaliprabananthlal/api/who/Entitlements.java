@@ -9,16 +9,20 @@ import vyshaliprabananthlal.platform.sql.SqlStatements;
 public class Entitlements {
 
     private final JdbcTemplate database;
-    private final SqlStatements statements;
+    private final String visibleFundsSql;
+    private final String visibleAccountsSql;
+    private final String entitlementSql;
 
     public Entitlements(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.statements = statements;
+        this.visibleFundsSql = statements.statement("select-visible-funds");
+        this.visibleAccountsSql = statements.statement("select-visible-accounts");
+        this.entitlementSql = statements.statement("select-entitlement");
     }
 
     public List<Entitlements.VisibleFund> fundsVisibleTo(String userId) {
         return database.query(
-                statements.statement("select-visible-funds"),
+                visibleFundsSql,
                 (row, number) -> new Entitlements.VisibleFund(
                         row.getInt(1), row.getString(2), row.getString(3).trim(), row.getBoolean(4)),
                 userId);
@@ -46,16 +50,11 @@ public class Entitlements {
             return List.of();
         }
 
-        return database.queryForList(
-                statements.statement("select-visible-accounts"),
-                Integer.class,
-                userId,
-                fundId,
-                asked.toArray(new Integer[0]));
+        return database.queryForList(visibleAccountsSql, Integer.class, userId, fundId, asked.toArray(new Integer[0]));
     }
 
     private List<Boolean> findEntitlement(String userId, int fundId) {
-        return database.queryForList(statements.statement("select-entitlement"), Boolean.class, userId, fundId);
+        return database.queryForList(entitlementSql, Boolean.class, userId, fundId);
     }
 
     /** A fund this user may open, and whether they may act on it. */

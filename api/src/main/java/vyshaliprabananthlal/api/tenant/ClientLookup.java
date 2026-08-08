@@ -19,16 +19,16 @@ import vyshaliprabananthlal.platform.sql.SqlStatements;
 public class ClientLookup {
 
     private final JdbcTemplate database;
-    private final SqlStatements statements;
+    private final String selectUserClient;
 
     public ClientLookup(JdbcTemplate database, SqlStatements statements) {
         this.database = database;
-        this.statements = statements;
+        this.selectUserClient = statements.statement("select-user-client");
     }
 
     @Cacheable(CacheConfig.USER_CLIENT)
     public int forUser(String userId) {
-        List<Integer> found = database.queryForList(statements.statement("select-user-client"), Integer.class, userId);
+        List<Integer> found = database.queryForList(selectUserClient, Integer.class, userId);
 
         if (found.isEmpty()) {
             throw new Entitlements.NotAllowed("we do not know who you are");

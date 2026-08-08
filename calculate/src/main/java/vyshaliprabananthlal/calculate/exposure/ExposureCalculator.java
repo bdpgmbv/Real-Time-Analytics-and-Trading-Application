@@ -26,7 +26,7 @@ public class ExposureCalculator {
     private final JdbcTemplate database;
     private final ExchangeRates exchangeRates;
     private final FundLookup funds;
-    private final SqlStatements statements;
+    private final String exposureByCurrency;
     private final Timer calculationTimer;
 
     public ExposureCalculator(
@@ -39,7 +39,7 @@ public class ExposureCalculator {
         this.database = database;
         this.exchangeRates = exchangeRates;
         this.funds = funds;
-        this.statements = statements;
+        this.exposureByCurrency = statements.statement("select-exposure-by-currency");
         this.calculationTimer = Timer.builder("rtat.exposure.calculated")
                 .publishPercentileHistogram()
                 .register(meters);
@@ -72,7 +72,7 @@ public class ExposureCalculator {
         List<FundExposure.CurrencyAmount> exposures = new ArrayList<>();
 
         database.query(
-                statements.statement("select-exposure-by-currency"),
+                exposureByCurrency,
                 row -> {
                     String currency = row.getString(1).trim();
                     double amount = row.getDouble(2);
