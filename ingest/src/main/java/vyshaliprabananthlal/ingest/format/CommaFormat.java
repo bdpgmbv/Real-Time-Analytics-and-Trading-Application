@@ -5,46 +5,45 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommaFormat implements CustodianFormat {
 
-  private static final String HEADING = "account,identifier,quantity,cost";
+    private static final String HEADING = "account,identifier,quantity,cost";
 
-  @Override
-  public String custodianName() {
-    return "Northgate Trust";
-  }
-
-  @Override
-  public boolean matches(String headingLine) {
-    return HEADING.equalsIgnoreCase(headingLine.trim());
-  }
-
-  @Override
-  public PositionRow readOneLine(String line) {
-    String[] cells = line.split(",", -1);
-
-    if (cells.length != 4) {
-      throw new BadLineException("expected 4 values separated by commas, found " + cells.length);
+    @Override
+    public String custodianName() {
+        return "Northgate Trust";
     }
 
-    String accountName = cells[0].trim();
-    String identifier = cells[1].trim();
-
-    if (accountName.isEmpty()) {
-      throw new BadLineException("the account name is empty");
-    }
-    if (identifier.length() != 9) {
-      throw new BadLineException(
-          "the identifier must be 9 characters, found " + identifier.length());
+    @Override
+    public boolean matches(String headingLine) {
+        return HEADING.equalsIgnoreCase(headingLine.trim());
     }
 
-    return new PositionRow(
-        accountName, identifier, readNumber(cells[2], "quantity"), readNumber(cells[3], "cost"));
-  }
+    @Override
+    public CustodianFormat.PositionRow readOneLine(String line) {
+        String[] cells = line.split(",", -1);
 
-  static double readNumber(String cell, String whatItIs) {
-    try {
-      return Double.parseDouble(cell.trim());
-    } catch (NumberFormatException notANumber) {
-      throw new BadLineException("the " + whatItIs + " is not a number: " + cell.trim());
+        if (cells.length != 4) {
+            throw new CustodianFormat.BadLine("expected 4 values separated by commas, found " + cells.length);
+        }
+
+        String accountName = cells[0].trim();
+        String identifier = cells[1].trim();
+
+        if (accountName.isEmpty()) {
+            throw new CustodianFormat.BadLine("the account name is empty");
+        }
+        if (identifier.length() != 9) {
+            throw new CustodianFormat.BadLine("the identifier must be 9 characters, found " + identifier.length());
+        }
+
+        return new CustodianFormat.PositionRow(
+                accountName, identifier, readNumber(cells[2], "quantity"), readNumber(cells[3], "cost"));
     }
-  }
+
+    static double readNumber(String cell, String whatItIs) {
+        try {
+            return Double.parseDouble(cell.trim());
+        } catch (NumberFormatException notANumber) {
+            throw new CustodianFormat.BadLine("the " + whatItIs + " is not a number: " + cell.trim());
+        }
+    }
 }

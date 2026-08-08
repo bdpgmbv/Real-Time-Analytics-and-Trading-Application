@@ -8,10 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vyshaliprabananthlal.api.security.CallerIdentity;
-import vyshaliprabananthlal.api.tenant.RunsAsOneClient;
+import vyshaliprabananthlal.api.tenant.ClientScope;
 import vyshaliprabananthlal.api.tenant.WhichClient;
 import vyshaliprabananthlal.api.who.Entitlements;
-import vyshaliprabananthlal.api.who.VisibleFund;
 import vyshaliprabananthlal.calculate.exposure.ExposureCalculator;
 import vyshaliprabananthlal.calculate.exposure.FundExposure;
 
@@ -19,53 +18,50 @@ import vyshaliprabananthlal.calculate.exposure.FundExposure;
 @RequestMapping("/api/funds")
 public class FundController {
 
-  private final Entitlements entitlements;
-  private final ExposureCalculator calculator;
-  private final CallerIdentity whoIsAsking;
-  private final WhichClient whichClient;
-  private final RunsAsOneClient asOneClient;
+    private final Entitlements entitlements;
+    private final ExposureCalculator calculator;
+    private final CallerIdentity whoIsAsking;
+    private final WhichClient whichClient;
+    private final ClientScope clientScope;
 
-  public FundController(
-      Entitlements entitlements,
-      ExposureCalculator calculator,
-      CallerIdentity whoIsAsking,
-      WhichClient whichClient,
-      RunsAsOneClient asOneClient) {
+    public FundController(
+            Entitlements entitlements,
+            ExposureCalculator calculator,
+            CallerIdentity whoIsAsking,
+            WhichClient whichClient,
+            ClientScope clientScope) {
 
-    this.entitlements = entitlements;
-    this.calculator = calculator;
-    this.whoIsAsking = whoIsAsking;
-    this.whichClient = whichClient;
-    this.asOneClient = asOneClient;
-  }
+        this.entitlements = entitlements;
+        this.calculator = calculator;
+        this.whoIsAsking = whoIsAsking;
+        this.whichClient = whichClient;
+        this.clientScope = clientScope;
+    }
 
-  @GetMapping
-  public List<VisibleFund> visibleFunds(Authentication token) {
-    String userId = whoIsAsking.userId(token);
+    @GetMapping
+    public List<Entitlements.VisibleFund> visibleFunds(Authentication token) {
+        String userId = whoIsAsking.userId(token);
 
-    return asOneClient.reading(
-        whichClient.forUser(userId), () -> entitlements.fundsVisibleTo(userId));
-  }
+        return clientScope.reading(whichClient.forUser(userId), () -> entitlements.fundsVisibleTo(userId));
+    }
 
-  @GetMapping("/{fundId}/exposure")
-  public FundExposure exposureOf(
-      @PathVariable int fundId,
-      @RequestParam(name = "account", required = false) List<Integer> accounts,
-      Authentication token) {
+    @GetMapping("/{fundId}/exposure")
+    public FundExposure exposureOf(
+            @PathVariable int fundId,
+            @RequestParam(name = "account", required = false) List<Integer> accounts,
+            Authentication token) {
 
-    String userId = whoIsAsking.userId(token);
+        String userId = whoIsAsking.userId(token);
 
-    return asOneClient.reading(
-        whichClient.forUser(userId),
-        () -> {
-          entitlements.requireVisible(userId, fundId);
+        return clientScope.reading(whichClient.forUser(userId), () -> {
+            entitlements.requireVisible(userId, fundId);
 
-          if (accounts == null || accounts.isEmpty()) {
-            return calculator.forWholeFund(fundId);
-          }
+            if (accounts == null || accounts.isEmpty()) {
+                return calculator.forWholeFund(fundId);
+            }
 
-          List<Integer> allowed = entitlements.filterVisible(userId, fundId, accounts);
-          return calculator.forAccounts(fundId, allowed);
+            List<Integer> allowed = entitlements.filterVisible(userId, fundId, accounts);
+            return calculator.forAccounts(fundId, allowed);
         });
-  }
+    }
 }

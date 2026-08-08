@@ -15,43 +15,43 @@ import vyshaliprabananthlal.ingest.sql.Sql;
 @Component
 public class TradeListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TradeListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TradeListener.class);
 
-  private final KafkaBatch batch;
-  private final JsonReader messages;
-  private final String statement;
+    private final KafkaBatch batch;
+    private final JsonReader messages;
+    private final String statement;
 
-  private long howManyTradesRecorded;
+    private long howManyTradesRecorded;
 
-  public TradeListener(KafkaBatch batch, JsonReader messages, Sql sql) {
-    this.batch = batch;
-    this.messages = messages;
-    this.statement = sql.statement("record-trade-and-move-position");
-  }
+    public TradeListener(KafkaBatch batch, JsonReader messages, Sql sql) {
+        this.batch = batch;
+        this.messages = messages;
+        this.statement = sql.statement("record-trade-and-move-position");
+    }
 
-  @KafkaListener(topics = "rtat.trade", groupId = "trade-receiver")
-  public void whenTradesArrive(List<String> arrived, Acknowledgment kafka) {
-    List<Object[]> rows = arrived.stream().map(this::asRow).toList();
+    @KafkaListener(topics = "rtat.trade", groupId = "trade-receiver")
+    public void arrived(List<String> arrived, Acknowledgment kafka) {
+        List<Object[]> rows = arrived.stream().map(this::asRow).toList();
 
-    howManyTradesRecorded =
-        howManyTradesRecorded + batch.writeThenAcknowledge("trade", statement, rows, kafka);
+        howManyTradesRecorded = howManyTradesRecorded + batch.writeThenAcknowledge("trade", statement, rows, kafka);
 
-    LOG.info("trades recorded so far: {}", howManyTradesRecorded);
-  }
+        LOG.info("trades recorded so far: {}", howManyTradesRecorded);
+    }
 
-  private Object[] asRow(String message) {
-    JsonNode fields = messages.read(message);
-    Timestamp happenedAt = Timestamp.from(Instant.parse(fields.path("happenedAt").asText()));
+    private Object[] asRow(String message) {
+        JsonNode fields = messages.read(message);
+        Timestamp happenedAt =
+                Timestamp.from(Instant.parse(fields.path("happenedAt").asText()));
 
-    return new Object[] {
-      fields.path("tradeId").asLong(),
-      fields.path("accountId").asInt(),
-      fields.path("productId").asInt(),
-      fields.path("howMany").asDouble(),
-      fields.path("price").asDouble(),
-      happenedAt,
-      happenedAt,
-      fields.path("cameFrom").asText()
-    };
-  }
+        return new Object[] {
+            fields.path("tradeId").asLong(),
+            fields.path("accountId").asInt(),
+            fields.path("productId").asInt(),
+            fields.path("howMany").asDouble(),
+            fields.path("price").asDouble(),
+            happenedAt,
+            happenedAt,
+            fields.path("cameFrom").asText()
+        };
+    }
 }

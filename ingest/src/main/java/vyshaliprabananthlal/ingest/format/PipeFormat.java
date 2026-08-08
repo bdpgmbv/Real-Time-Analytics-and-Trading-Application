@@ -5,40 +5,40 @@ import org.springframework.stereotype.Component;
 @Component
 public class PipeFormat implements CustodianFormat {
 
-  private static final String HEADING = "SECURITY|PORTFOLIO|BOOK_COST|UNITS";
+    private static final String HEADING = "SECURITY|PORTFOLIO|BOOK_COST|UNITS";
 
-  @Override
-  public String custodianName() {
-    return "Halloway Bank";
-  }
-
-  @Override
-  public boolean matches(String headingLine) {
-    return HEADING.equalsIgnoreCase(headingLine.trim());
-  }
-
-  @Override
-  public PositionRow readOneLine(String line) {
-    String[] cells = line.split("\\|", -1);
-
-    if (cells.length != 4) {
-      throw new BadLineException("expected 4 values separated by pipes, found " + cells.length);
+    @Override
+    public String custodianName() {
+        return "Halloway Bank";
     }
 
-    String identifier = cells[0].trim();
-    String accountName = cells[1].trim();
-
-    if (accountName.isEmpty()) {
-      throw new BadLineException("the portfolio name is empty");
-    }
-    if (identifier.length() != 9) {
-      throw new BadLineException("the security must be 9 characters, found " + identifier.length());
+    @Override
+    public boolean matches(String headingLine) {
+        return HEADING.equalsIgnoreCase(headingLine.trim());
     }
 
-    return new PositionRow(
-        accountName,
-        identifier,
-        CommaFormat.readNumber(cells[3], "units"),
-        CommaFormat.readNumber(cells[2], "book cost"));
-  }
+    @Override
+    public CustodianFormat.PositionRow readOneLine(String line) {
+        String[] cells = line.split("\\|", -1);
+
+        if (cells.length != 4) {
+            throw new CustodianFormat.BadLine("expected 4 values separated by pipes, found " + cells.length);
+        }
+
+        String identifier = cells[0].trim();
+        String accountName = cells[1].trim();
+
+        if (accountName.isEmpty()) {
+            throw new CustodianFormat.BadLine("the portfolio name is empty");
+        }
+        if (identifier.length() != 9) {
+            throw new CustodianFormat.BadLine("the security must be 9 characters, found " + identifier.length());
+        }
+
+        return new CustodianFormat.PositionRow(
+                accountName,
+                identifier,
+                CommaFormat.readNumber(cells[3], "units"),
+                CommaFormat.readNumber(cells[2], "book cost"));
+    }
 }

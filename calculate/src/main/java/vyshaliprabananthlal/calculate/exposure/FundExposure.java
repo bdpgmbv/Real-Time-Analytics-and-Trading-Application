@@ -2,23 +2,33 @@ package vyshaliprabananthlal.calculate.exposure;
 
 import java.util.List;
 
-public record FundExposure(
-    int fundId, String reportingCurrency, List<Exposure> byCurrency, int howManyAccounts) {
+/**
+ * What a fund is exposed to, one line per currency.
+ *
+ * <p>Amounts are held in the currency itself and converted when read. An FX rate moving
+ * therefore changes what this reports without changing what was stored.
+ */
+public record FundExposure(int fundId, String reportingCurrency, List<CurrencyAmount> byCurrency, int accountCount) {
 
-  public Exposure forCurrency(String currency) {
-    for (Exposure one : byCurrency) {
-      if (one.currency().equals(currency)) {
-        return one;
-      }
+    /** Zero rather than null for a currency the fund does not hold. */
+    public CurrencyAmount forCurrency(String currency) {
+        for (CurrencyAmount one : byCurrency) {
+            if (one.currency().equals(currency)) {
+                return one;
+            }
+        }
+        return new CurrencyAmount(currency, 0, 0);
     }
-    return new Exposure(currency, 0, 0);
-  }
 
-  public double total() {
-    double total = 0;
-    for (Exposure one : byCurrency) {
-      total = total + one.amountInReportingCurrency();
+    /** Everything added up, in the currency the fund reports in. */
+    public double total() {
+        double total = 0;
+        for (CurrencyAmount one : byCurrency) {
+            total += one.inReportingCurrency();
+        }
+        return total;
     }
-    return total;
-  }
+
+    /** How much of one currency, both as held and as the fund reports it. */
+    public record CurrencyAmount(String currency, double amount, double inReportingCurrency) {}
 }

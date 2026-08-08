@@ -13,19 +13,18 @@ import org.springframework.security.web.server.authentication.HttpStatusServerEn
 @EnableWebFluxSecurity
 public class EdgeSecurityConfig {
 
-  @Bean
-  SecurityWebFilterChain everyRouteNeedsAToken(ServerHttpSecurity http) {
-    return http.authorizeExchange(
-            what ->
-                what.pathMatchers("/actuator/health/**").permitAll().anyExchange().authenticated())
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-        .csrf(ServerHttpSecurity.CsrfSpec::disable)
-        .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-        .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-        .exceptionHandling(
-            when ->
-                when.authenticationEntryPoint(
-                    new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)))
-        .build();
-  }
+    @Bean
+    SecurityWebFilterChain allRoutes(ServerHttpSecurity http) {
+        return http.authorizeExchange(what -> what.pathMatchers("/actuator/health/**")
+                        .permitAll()
+                        .anyExchange()
+                        .authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .exceptionHandling(
+                        when -> when.authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .build();
+    }
 }

@@ -10,60 +10,56 @@ import vyshaliprabananthlal.calculate.sql.Sql;
 @Service
 public class HedgeBook {
 
-  private final JdbcTemplate database;
-  private final Sql sql;
+    private final JdbcTemplate database;
+    private final Sql sql;
 
-  public HedgeBook(JdbcTemplate database, Sql sql) {
-    this.database = database;
-    this.sql = sql;
-  }
-
-  @Transactional
-  public List<Long> submit(
-      int fundId, List<Recommendation> advice, List<Double> whatTheClientChose, String whoSentIt) {
-
-    if (advice.size() != whatTheClientChose.size()) {
-      throw new IllegalArgumentException(
-          "got "
-              + advice.size()
-              + " recommendations but "
-              + whatTheClientChose.size()
-              + " answers");
+    public HedgeBook(JdbcTemplate database, Sql sql) {
+        this.database = database;
+        this.sql = sql;
     }
 
-    long nextNumber = nextHedgeId();
-    List<Long> sent = new ArrayList<>();
+    @Transactional
+    public List<Long> submit(
+            int fundId, List<HedgeAdviser.Recommendation> advice, List<Double> whatTheClientChose, String whoSentIt) {
 
-    for (int which = 0; which < advice.size(); which++) {
-      Recommendation one = advice.get(which);
-      double chosen = whatTheClientChose.get(which);
+        if (advice.size() != whatTheClientChose.size()) {
+            throw new IllegalArgumentException(
+                    "got " + advice.size() + " recommendations but " + whatTheClientChose.size() + " answers");
+        }
 
-      if (chosen == 0) {
-        continue;
-      }
+        long nextNumber = nextHedgeId();
+        List<Long> sent = new ArrayList<>();
 
-      long hedgeNumber = nextNumber + sent.size();
+        for (int which = 0; which < advice.size(); which++) {
+            HedgeAdviser.Recommendation one = advice.get(which);
+            double chosen = whatTheClientChose.get(which);
 
-      database.update(
-          sql.statement("record-hedge"),
-          hedgeNumber,
-          fundId,
-          one.currency(),
-          one.exposure(),
-          one.weSuggest(),
-          chosen,
-          one.instrument(),
-          whoSentIt,
-          "FXM-" + hedgeNumber);
+            if (chosen == 0) {
+                continue;
+            }
 
-      sent.add(hedgeNumber);
+            long hedgeNumber = nextNumber + sent.size();
+
+            database.update(
+                    sql.statement("record-hedge"),
+                    hedgeNumber,
+                    fundId,
+                    one.currency(),
+                    one.exposure(),
+                    one.suggestedAmount(),
+                    chosen,
+                    one.instrument(),
+                    whoSentIt,
+                    "FXM-" + hedgeNumber);
+
+            sent.add(hedgeNumber);
+        }
+        return sent;
     }
-    return sent;
-  }
 
-  private long nextHedgeId() {
-    Long next = database.queryForObject(sql.statement("next-hedge-number"), Long.class);
+    private long nextHedgeId() {
+        Long next = database.queryForObject(sql.statement("next-hedge-number"), Long.class);
 
-    return next == null ? 1 : next;
-  }
+        return next == null ? 1 : next;
+    }
 }

@@ -16,52 +16,52 @@ import vyshaliprabananthlal.ingest.sql.Sql;
 @Component
 public class HedgeFillListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HedgeFillListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HedgeFillListener.class);
 
-  private final JdbcTemplate database;
-  private final KafkaBatch batch;
-  private final JsonReader messages;
-  private final String recordTheFill;
-  private final String moveTheHedgeOn;
+    private final JdbcTemplate database;
+    private final KafkaBatch batch;
+    private final JsonReader messages;
+    private final String recordTheFill;
+    private final String moveTheHedgeOn;
 
-  private long howManyFillsRecorded;
+    private long howManyFillsRecorded;
 
-  public HedgeFillListener(JdbcTemplate database, KafkaBatch batch, JsonReader messages, Sql sql) {
+    public HedgeFillListener(JdbcTemplate database, KafkaBatch batch, JsonReader messages, Sql sql) {
 
-    this.database = database;
-    this.batch = batch;
-    this.messages = messages;
-    this.recordTheFill = sql.statement("record-hedge-fill");
-    this.moveTheHedgeOn = sql.statement("move-hedge-on");
-  }
-
-  @KafkaListener(topics = "rtat.hedge-fill", groupId = "hedge-fill-receiver")
-  public void whenFillsArrive(List<String> arrived, Acknowledgment kafka) {
-    List<Object[]> fills = arrived.stream().map(this::asRow).toList();
-
-    int recorded = batch.write("hedge-fill", recordTheFill, fills);
-
-    for (Object[] fill : fills) {
-      database.update(moveTheHedgeOn, fill[1]);
+        this.database = database;
+        this.batch = batch;
+        this.messages = messages;
+        this.recordTheFill = sql.statement("record-hedge-fill");
+        this.moveTheHedgeOn = sql.statement("move-hedge-on");
     }
 
-    batch.acknowledge(kafka);
+    @KafkaListener(topics = "rtat.hedge-fill", groupId = "hedge-fill-receiver")
+    public void arrived(List<String> arrived, Acknowledgment kafka) {
+        List<Object[]> fills = arrived.stream().map(this::asRow).toList();
 
-    howManyFillsRecorded = howManyFillsRecorded + recorded;
+        int recorded = batch.write("hedge-fill", recordTheFill, fills);
 
-    LOG.info("fills recorded so far: {}", howManyFillsRecorded);
-  }
+        for (Object[] fill : fills) {
+            database.update(moveTheHedgeOn, fill[1]);
+        }
 
-  private Object[] asRow(String message) {
-    JsonNode fields = messages.read(message);
+        batch.acknowledge(kafka);
 
-    return new Object[] {
-      fields.path("fillId").asLong(),
-      fields.path("hedgeId").asLong(),
-      fields.path("amountFilled").asDouble(),
-      fields.path("rate").asDouble(),
-      Timestamp.from(Instant.parse(fields.path("filledAt").asText())),
-      fields.path("theirReference").asText()
-    };
-  }
+        howManyFillsRecorded = howManyFillsRecorded + recorded;
+
+        LOG.info("fills recorded so far: {}", howManyFillsRecorded);
+    }
+
+    private Object[] asRow(String message) {
+        JsonNode fields = messages.read(message);
+
+        return new Object[] {
+            fields.path("fillId").asLong(),
+            fields.path("hedgeId").asLong(),
+            fields.path("amountFilled").asDouble(),
+            fields.path("rate").asDouble(),
+            Timestamp.from(Instant.parse(fields.path("filledAt").asText())),
+            fields.path("theirReference").asText()
+        };
+    }
 }

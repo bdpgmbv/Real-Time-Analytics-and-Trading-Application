@@ -8,23 +8,23 @@ import org.springframework.stereotype.Component;
 @Component
 public class MarketChangeFlag {
 
-  private final AtomicBoolean anythingMovedSinceWeLastLooked = new AtomicBoolean(false);
+    private final AtomicBoolean anythingMovedSinceWeLastLooked = new AtomicBoolean(false);
 
-  @KafkaListener(
-      topics = {"rtat.price", "rtat.fx-rate", "rtat.position", "rtat.trade"},
-      groupId = "live-screens")
-  public void whenAnythingArrives(java.util.List<String> arrived, Acknowledgment kafka) {
-    if (!arrived.isEmpty()) {
-      anythingMovedSinceWeLastLooked.set(true);
+    @KafkaListener(
+            topics = {"rtat.price", "rtat.fx-rate", "rtat.position", "rtat.trade"},
+            groupId = "live-screens")
+    public void arrived(java.util.List<String> arrived, Acknowledgment kafka) {
+        if (!arrived.isEmpty()) {
+            anythingMovedSinceWeLastLooked.set(true);
+        }
+        kafka.acknowledge();
     }
-    kafka.acknowledge();
-  }
 
-  public boolean hasChanged() {
-    return anythingMovedSinceWeLastLooked.getAndSet(false);
-  }
+    public boolean hasChanged() {
+        return anythingMovedSinceWeLastLooked.getAndSet(false);
+    }
 
-  void markChanged() {
-    anythingMovedSinceWeLastLooked.set(true);
-  }
+    void markChanged() {
+        anythingMovedSinceWeLastLooked.set(true);
+    }
 }

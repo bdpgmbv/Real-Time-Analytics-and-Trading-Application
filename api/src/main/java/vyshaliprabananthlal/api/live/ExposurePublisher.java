@@ -14,74 +14,74 @@ import vyshaliprabananthlal.calculate.exposure.FundExposure;
 @Component
 public class ExposurePublisher {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ExposurePublisher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExposurePublisher.class);
 
-  static final String THE_EVENT_NAME = "exposure";
+    static final String THE_EVENT_NAME = "exposure";
 
-  private final ScreenRegistry watching;
-  private final MarketChangeFlag changes;
-  private final ExposureCalculator calculator;
-  private final Counter pushed;
-  private final Counter skippedBecauseNothingChanged;
+    private final ScreenRegistry watching;
+    private final MarketChangeFlag changes;
+    private final ExposureCalculator calculator;
+    private final Counter pushed;
+    private final Counter skippedBecauseNothingChanged;
 
-  private final Map<Integer, String> whatWeLastSent = new ConcurrentHashMap<>();
+    private final Map<Integer, String> whatWeLastSent = new ConcurrentHashMap<>();
 
-  public ExposurePublisher(
-      ScreenRegistry watching,
-      MarketChangeFlag changes,
-      ExposureCalculator calculator,
-      MeterRegistry meters) {
+    public ExposurePublisher(
+            ScreenRegistry watching, MarketChangeFlag changes, ExposureCalculator calculator, MeterRegistry meters) {
 
-    this.watching = watching;
-    this.changes = changes;
-    this.calculator = calculator;
-    this.pushed = meters.counter("rtat.live.pushed");
-    this.skippedBecauseNothingChanged = meters.counter("rtat.live.unchanged");
-  }
-
-  @Scheduled(fixedDelayString = "${rtat.live.push-every-milliseconds:1000}")
-  public void publishChanges() {
-    if (watching.fundsBeingWatched().isEmpty()) {
-      return;
-    }
-    if (!changes.hasChanged()) {
-      return;
+        this.watching = watching;
+        this.changes = changes;
+        this.calculator = calculator;
+        this.pushed = meters.counter("rtat.live.pushed");
+        this.skippedBecauseNothingChanged = meters.counter("rtat.live.unchanged");
     }
 
-    for (int fundId : watching.fundsBeingWatched()) {
-      publish(fundId);
+    @Scheduled(fixedDelayString = "${rtat.live.push-every-milliseconds:1000}")
+    public void publishChanges() {
+        if (watching.watchedFunds().isEmpty()) {
+            return;
+        }
+        if (!changes.hasChanged()) {
+            return;
+        }
+
+        for (int fundId : watching.watchedFunds()) {
+            publish(fundId);
+        }
     }
-  }
 
-  public void publish(int fundId) {
-    try {
-      FundExposure now = calculator.forWholeFund(fundId);
-      String asText = signatureOf(now);
+    public void publish(int fundId) {
+        try {
+            FundExposure now = calculator.forWholeFund(fundId);
+            String asText = signatureOf(now);
 
-      if (asText.equals(whatWeLastSent.get(fundId))) {
-        skippedBecauseNothingChanged.increment();
-        return;
-      }
+            if (asText.equals(whatWeLastSent.get(fundId))) {
+                skippedBecauseNothingChanged.increment();
+                return;
+            }
 
-      whatWeLastSent.put(fundId, asText);
-      watching.sendTo(fundId, THE_EVENT_NAME, now);
-      pushed.increment();
+            whatWeLastSent.put(fundId, asText);
+            watching.sendTo(fundId, THE_EVENT_NAME, now);
+            pushed.increment();
 
-    } catch (RuntimeException couldNotWorkItOut) {
-      LOG.warn("could not push fund {}: {}", fundId, couldNotWorkItOut.getMessage());
+        } catch (RuntimeException couldNotWorkItOut) {
+            LOG.warn("could not push fund {}: {}", fundId, couldNotWorkItOut.getMessage());
+        }
     }
-  }
 
-  static String signatureOf(FundExposure exposure) {
-    StringBuilder builder = new StringBuilder();
+    static String signatureOf(FundExposure exposure) {
+        StringBuilder builder = new StringBuilder();
 
-    for (var one : exposure.byCurrency()) {
-      builder.append(one.currency()).append('=').append(Math.round(one.amount())).append(';');
+        for (var one : exposure.byCurrency()) {
+            builder.append(one.currency())
+                    .append('=')
+                    .append(Math.round(one.amount()))
+                    .append(';');
+        }
+        return builder.toString();
     }
-    return builder.toString();
-  }
 
-  void clear() {
-    whatWeLastSent.clear();
-  }
+    void clear() {
+        whatWeLastSent.clear();
+    }
 }

@@ -7,27 +7,27 @@ import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
 public class RunningTotalFunction
-    extends KeyedProcessFunction<String, ExposureDelta, RunningTotal> {
+        extends KeyedProcessFunction<String, ExposureMessages.ExposureDelta, ExposureMessages.RunningTotal> {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  private transient ValueState<Double> total;
+    private transient ValueState<Double> total;
 
-  @Override
-  public void open(OpenContext context) {
-    total =
-        getRuntimeContext().getState(new ValueStateDescriptor<>("exposure so far", Double.class));
-  }
+    @Override
+    public void open(OpenContext context) {
+        total = getRuntimeContext().getState(new ValueStateDescriptor<>("exposure so far", Double.class));
+    }
 
-  @Override
-  public void processElement(ExposureDelta delta, Context context, Collector<RunningTotal> out)
-      throws Exception {
+    @Override
+    public void processElement(
+            ExposureMessages.ExposureDelta delta, Context context, Collector<ExposureMessages.RunningTotal> out)
+            throws Exception {
 
-    double soFar = total.value() == null ? 0.0 : total.value();
-    double now = soFar + delta.changeBy();
+        double soFar = total.value() == null ? 0.0 : total.value();
+        double now = soFar + delta.changeBy();
 
-    total.update(now);
+        total.update(now);
 
-    out.collect(new RunningTotal(delta.fundId(), delta.currency(), now));
-  }
+        out.collect(new ExposureMessages.RunningTotal(delta.fundId(), delta.currency(), now));
+    }
 }

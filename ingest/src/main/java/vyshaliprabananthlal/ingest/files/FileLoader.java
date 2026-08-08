@@ -2,126 +2,145 @@ package vyshaliprabananthlal.ingest.files;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import vyshaliprabananthlal.ingest.format.BadLineException;
 import vyshaliprabananthlal.ingest.format.CustodianFormat;
-import vyshaliprabananthlal.ingest.format.PositionRow;
 import vyshaliprabananthlal.ingest.sql.Sql;
 
 @Service
 public class FileLoader {
 
-  private static final Logger LOG = LoggerFactory.getLogger(FileLoader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FileLoader.class);
 
-  private final JdbcTemplate database;
-  private final FileLoadJournal book;
-  private final List<CustodianFormat> knownFormats;
-  private final String savePosition;
-  private final Counter rowsLoadedCounter;
-  private final Counter rowsRejectedCounter;
-  private final Counter filesSkippedCounter;
+    private final JdbcTemplate database;
+    private final FileLoadJournal journal;
+    private final List<CustodianFormat> knownFormats;
+    private final String savePositionSql;
+    private final FileCounters counters;
 
-  public FileLoader(
-      JdbcTemplate database,
-      FileLoadJournal book,
-      List<CustodianFormat> knownFormats,
-      Sql sql,
-      MeterRegistry meters) {
-
-    this.database = database;
-    this.book = book;
-    this.knownFormats = knownFormats;
-    this.savePosition = sql.statement("save-position-from-file");
-    this.rowsLoadedCounter = meters.counter("rtat.file.rows.loaded");
-    this.rowsRejectedCounter = meters.counter("rtat.file.rows.rejected");
-    this.filesSkippedCounter = meters.counter("rtat.file.skipped");
-  }
-
-  public LoadResult load(String fileName, String contents, String arrivedHow) {
-    String fingerprint = Fingerprint.of(contents);
-
-    Optional<Integer> alreadyLoaded = book.findByFingerprint(fingerprint);
-    if (alreadyLoaded.isPresent()) {
-      LOG.info("{} has been loaded before, skipping it", fileName);
-      filesSkippedCounter.increment();
-      return LoadResult.alreadySeen(alreadyLoaded.get());
+    public FileLoader(
+            JdbcTemplate database,
+            FileLoadJournal journal,
+            List<CustodianFormat> knownFormats,
+            Sql sql,
+            MeterRegistry meters) {
+        this.database = database;
+        this.journal = journal;
+        this.knownFormats = knownFormats;
+        this.savePositionSql = sql.statement("save-position-from-file");
+        this.counters = new FileCounters(meters);
     }
 
-    List<String> lines = contents.lines().toList();
-    if (lines.isEmpty()) {
-      throw new BadLineException("the file is empty");
+    /** Loads one custodian file. Good rows land, bad rows are recorded and reported back. */
+    public LoadResult load(String fileName, String contents, String howItArrived) {
+        String fingerprint = fingerprintOf(contents);
+
+        Optional<Integer> loadedBefore = journal.findByFingerprint(fingerprint);
+        if (loadedBefore.isPresent()) {
+            LOG.info("{} has been loaded before, skipping it", fileName);
+            counters.filesSkipped.increment();
+            return LoadResult.alreadySeen(loadedBefore.get());
+        }
+
+        List<String> lines = contents.lines().toList();
+        if (lines.isEmpty()) {
+            throw new CustodianFormat.BadLine("the file is empty");
+        }
+
+        CustodianFormat format = formatFor(lines.get(0));
+        int rowsInFile = lines.size() - 1;
+        int loadId = journal.startLoad(fileName, fingerprint, format.custodianName(), howItArrived, rowsInFile);
+
+        int loaded = 0;
+        int rejected = 0;
+
+        for (int lineNumber = 1; lineNumber < lines.size(); lineNumber++) {
+            String line = lines.get(lineNumber);
+            if (line.isBlank()) {
+                continue;
+            }
+
+            Optional<String> whatWasWrong = savePositionFrom(line, format);
+
+            if (whatWasWrong.isEmpty()) {
+                loaded++;
+            } else {
+                journal.recordBadLine(loadId, lineNumber + 1, line, whatWasWrong.get());
+                rejected++;
+            }
+        }
+
+        journal.finishLoad(loadId, loaded, rejected);
+        counters.rowsLoaded.increment(loaded);
+        counters.rowsRejected.increment(rejected);
+        LOG.info("{}: {} rows loaded, {} rejected", fileName, loaded, rejected);
+
+        return new LoadResult(loadId, format.custodianName(), rowsInFile, loaded, rejected, false);
     }
 
-    CustodianFormat format = formatFor(lines.get(0));
-    int rowsInFile = lines.size() - 1;
-    int fileLoadId =
-        book.startLoad(fileName, fingerprint, format.custodianName(), arrivedHow, rowsInFile);
-
-    Tally tally = loadRows(lines, format, fileLoadId);
-
-    book.finishLoad(fileLoadId, tally.loaded(), tally.rejected());
-    rowsLoadedCounter.increment(tally.loaded());
-    rowsRejectedCounter.increment(tally.rejected());
-    LOG.info("{}: {} rows loaded, {} rejected", fileName, tally.loaded(), tally.rejected());
-
-    return new LoadResult(
-        fileLoadId, format.custodianName(), rowsInFile, tally.loaded(), tally.rejected(), false);
-  }
-
-  public List<String> problemsFor(int fileLoadId) {
-    return book.problemsFor(fileLoadId);
-  }
-
-  private Tally loadRows(List<String> lines, CustodianFormat format, int fileLoadId) {
-    int loaded = 0;
-    int rejected = 0;
-
-    for (int lineNumber = 1; lineNumber < lines.size(); lineNumber++) {
-      String line = lines.get(lineNumber);
-      if (line.isBlank()) {
-        continue;
-      }
-
-      Optional<String> reason = savePositionRow(line, format);
-
-      if (reason.isEmpty()) {
-        loaded = loaded + 1;
-      } else {
-        book.recordBadLine(fileLoadId, lineNumber + 1, line, reason.get());
-        rejected = rejected + 1;
-      }
+    public List<String> problemsFor(int loadId) {
+        return journal.problemsFor(loadId);
     }
-    return new Tally(loaded, rejected);
-  }
 
-  private Optional<String> savePositionRow(String line, CustodianFormat format) {
-    try {
-      PositionRow row = format.readOneLine(line);
+    /** Empty means the row saved. Otherwise it says what was wrong with it. */
+    private Optional<String> savePositionFrom(String line, CustodianFormat format) {
+        try {
+            CustodianFormat.PositionRow row = format.readOneLine(line);
 
-      int rowsChanged =
-          database.update(
-              savePosition, row.howMany(), row.whatWePaid(), row.accountName(), row.identifier());
+            int rowsChanged =
+                    database.update(savePositionSql, row.quantity(), row.cost(), row.accountName(), row.identifier());
 
-      return rowsChanged == 0 ? Optional.of("no such account or security") : Optional.empty();
+            return rowsChanged == 0 ? Optional.of("no such account or security") : Optional.empty();
 
-    } catch (BadLineException reason) {
-      return Optional.of(reason.reason());
+        } catch (CustodianFormat.BadLine whatWasWrong) {
+            return Optional.of(whatWasWrong.reason());
+        }
     }
-  }
 
-  private CustodianFormat formatFor(String headingLine) {
-    for (CustodianFormat format : knownFormats) {
-      if (format.matches(headingLine)) {
-        return format;
-      }
+    private CustodianFormat formatFor(String headingLine) {
+        for (CustodianFormat format : knownFormats) {
+            if (format.matches(headingLine)) {
+                return format;
+            }
+        }
+        throw new CustodianFormat.BadLine("no custodian format matches this heading: " + headingLine);
     }
-    throw new BadLineException("no custodian format matches this heading: " + headingLine);
-  }
 
-  private record Tally(int loaded, int rejected) {}
+    /** A file is known by what is in it, not by what it is called. */
+    private static String fingerprintOf(String contents) {
+        try {
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(sha256.digest(contents.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("this machine has no SHA-256", impossible);
+        }
+    }
+
+    public record LoadResult(
+            int loadId, String custodian, int rowsInFile, int rowsLoaded, int rowsRejected, boolean wasAlreadySeen) {
+
+        static LoadResult alreadySeen(int loadId) {
+            return new LoadResult(loadId, "", 0, 0, 0, true);
+        }
+    }
+
+    private static final class FileCounters {
+        final Counter rowsLoaded;
+        final Counter rowsRejected;
+        final Counter filesSkipped;
+
+        FileCounters(MeterRegistry meters) {
+            this.rowsLoaded = meters.counter("rtat.file.rows.loaded");
+            this.rowsRejected = meters.counter("rtat.file.rows.rejected");
+            this.filesSkipped = meters.counter("rtat.file.skipped");
+        }
+    }
 }

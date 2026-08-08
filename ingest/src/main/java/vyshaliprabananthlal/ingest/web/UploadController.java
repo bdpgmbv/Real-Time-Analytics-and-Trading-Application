@@ -11,55 +11,52 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import vyshaliprabananthlal.ingest.files.FileLoader;
-import vyshaliprabananthlal.ingest.files.LoadResult;
-import vyshaliprabananthlal.ingest.format.BadLineException;
+import vyshaliprabananthlal.ingest.format.CustodianFormat;
 
 @RestController
 public class UploadController {
 
-  private final FileLoader loader;
+    private final FileLoader loader;
 
-  public UploadController(FileLoader loader) {
-    this.loader = loader;
-  }
-
-  @PostMapping("/upload")
-  public ResponseEntity<UploadAnswer> uploadACustodianFile(@RequestParam("file") MultipartFile file)
-      throws IOException {
-
-    String fileName = fileNameOr(file.getOriginalFilename());
-    String contents = new String(file.getBytes(), StandardCharsets.UTF_8);
-
-    try {
-      LoadResult result = loader.load(fileName, contents, "UI UPLOAD");
-
-      if (result.wasAlreadySeen()) {
-        return ResponseEntity.ok(
-            new UploadAnswer(
-                fileName, "This file has been uploaded before. Nothing changed.", 0, 0, List.of()));
-      }
-
-      return ResponseEntity.ok(
-          new UploadAnswer(
-              fileName,
-              "Loaded from " + result.custodian() + ".",
-              result.rowsLoaded(),
-              result.rowsRejected(),
-              loader.problemsFor(result.fileLoadId())));
-
-    } catch (BadLineException wholeFileIsWrong) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(new UploadAnswer(fileName, wholeFileIsWrong.reason(), 0, 0, List.of()));
+    public UploadController(FileLoader loader) {
+        this.loader = loader;
     }
-  }
 
-  private static String fileNameOr(@Nullable String givenName) {
-    if (givenName == null || givenName.isBlank()) {
-      return "unnamed";
+    @PostMapping("/upload")
+    public ResponseEntity<UploadAnswer> uploadACustodianFile(@RequestParam("file") MultipartFile file)
+            throws IOException {
+
+        String fileName = fileNameOr(file.getOriginalFilename());
+        String contents = new String(file.getBytes(), StandardCharsets.UTF_8);
+
+        try {
+            FileLoader.LoadResult result = loader.load(fileName, contents, "UI UPLOAD");
+
+            if (result.wasAlreadySeen()) {
+                return ResponseEntity.ok(new UploadAnswer(
+                        fileName, "This file has been uploaded before. Nothing changed.", 0, 0, List.of()));
+            }
+
+            return ResponseEntity.ok(new UploadAnswer(
+                    fileName,
+                    "Loaded from " + result.custodian() + ".",
+                    result.rowsLoaded(),
+                    result.rowsRejected(),
+                    loader.problemsFor(result.loadId())));
+
+        } catch (CustodianFormat.BadLine wholeFileIsWrong) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new UploadAnswer(fileName, wholeFileIsWrong.reason(), 0, 0, List.of()));
+        }
     }
-    return givenName;
-  }
 
-  public record UploadAnswer(
-      String fileName, String message, int rowsLoaded, int rowsRejected, List<String> problems) {}
+    private static String fileNameOr(@Nullable String givenName) {
+        if (givenName == null || givenName.isBlank()) {
+            return "unnamed";
+        }
+        return givenName;
+    }
+
+    public record UploadAnswer(
+            String fileName, String message, int rowsLoaded, int rowsRejected, List<String> problems) {}
 }

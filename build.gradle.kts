@@ -80,7 +80,7 @@ subprojects {
 
     configure<SpotlessExtension> {
         java {
-            googleJavaFormat(rootProject.libs.versions.googleJavaFormat.get())
+            palantirJavaFormat()
             removeUnusedImports()
             trimTrailingWhitespace()
             endWithNewline()

@@ -18,35 +18,35 @@ import vyshaliprabananthlal.api.who.Entitlements;
 @RequestMapping("/api/funds/{fundId}/exposure")
 public class LiveController {
 
-  private final Entitlements entitlements;
-  private final ScreenRegistry watching;
-  private final ExposurePublisher pushing;
-  private final CallerIdentity whoIsAsking;
-  private final Duration howLongAScreenMayStayOpen;
+    private final Entitlements entitlements;
+    private final ScreenRegistry watching;
+    private final ExposurePublisher pushing;
+    private final CallerIdentity whoIsAsking;
+    private final Duration howLongAScreenMayStayOpen;
 
-  public LiveController(
-      Entitlements entitlements,
-      ScreenRegistry watching,
-      ExposurePublisher pushing,
-      CallerIdentity whoIsAsking,
-      @Value("${rtat.live.screen-timeout-minutes:30}") long timeoutMinutes) {
+    public LiveController(
+            Entitlements entitlements,
+            ScreenRegistry watching,
+            ExposurePublisher pushing,
+            CallerIdentity whoIsAsking,
+            @Value("${rtat.live.screen-timeout-minutes:30}") long timeoutMinutes) {
 
-    this.entitlements = entitlements;
-    this.watching = watching;
-    this.pushing = pushing;
-    this.whoIsAsking = whoIsAsking;
-    this.howLongAScreenMayStayOpen = Duration.ofMinutes(timeoutMinutes);
-  }
+        this.entitlements = entitlements;
+        this.watching = watching;
+        this.pushing = pushing;
+        this.whoIsAsking = whoIsAsking;
+        this.howLongAScreenMayStayOpen = Duration.ofMinutes(timeoutMinutes);
+    }
 
-  @GetMapping(value = "/live", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public SseEmitter watchThisFund(@PathVariable int fundId, Authentication token) {
-    entitlements.requireVisible(whoIsAsking.userId(token), fundId);
+    @GetMapping(value = "/live", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter watchThisFund(@PathVariable int fundId, Authentication token) {
+        entitlements.requireVisible(whoIsAsking.userId(token), fundId);
 
-    SseEmitter screen = new SseEmitter(howLongAScreenMayStayOpen.toMillis());
-    watching.add(fundId, screen);
+        SseEmitter screen = new SseEmitter(howLongAScreenMayStayOpen.toMillis());
+        watching.add(fundId, screen);
 
-    pushing.publish(fundId);
+        pushing.publish(fundId);
 
-    return screen;
-  }
+        return screen;
+    }
 }

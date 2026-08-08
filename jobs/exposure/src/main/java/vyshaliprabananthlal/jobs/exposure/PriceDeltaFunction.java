@@ -9,61 +9,63 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
-public class PriceDeltaFunction extends KeyedProcessFunction<Integer, PriceTick, ExposureDelta> {
+public class PriceDeltaFunction
+        extends KeyedProcessFunction<Integer, ExposureMessages.PriceTick, ExposureMessages.ExposureDelta> {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  private final Map<Integer, List<FundHolding>> whoHoldsWhat;
+    private final Map<Integer, List<ExposureMessages.FundHolding>> whoHoldsWhat;
 
-  private transient ValueState<Double> whatItWasWorthLastTime;
+    private transient ValueState<Double> whatItWasWorthLastTime;
 
-  public PriceDeltaFunction(Map<Integer, List<FundHolding>> whoHoldsWhat) {
-    this.whoHoldsWhat = whoHoldsWhat;
-  }
-
-  @Override
-  public void open(OpenContext context) {
-    whatItWasWorthLastTime =
-        getRuntimeContext()
-            .getState(new ValueStateDescriptor<>("the price we saw last", Double.class));
-  }
-
-  @Override
-  public void processElement(PriceTick tick, Context context, Collector<ExposureDelta> out)
-      throws Exception {
-
-    List<FundHolding> holders = whoHoldsWhat.get(tick.productId());
-
-    Double lastPrice = whatItWasWorthLastTime.value();
-    whatItWasWorthLastTime.update(tick.price());
-
-    if (holders == null || holders.isEmpty()) {
-      return;
+    public PriceDeltaFunction(Map<Integer, List<ExposureMessages.FundHolding>> whoHoldsWhat) {
+        this.whoHoldsWhat = whoHoldsWhat;
     }
 
-    if (lastPrice == null) {
-      emit(holders, tick.price(), out);
-      return;
+    @Override
+    public void open(OpenContext context) {
+        whatItWasWorthLastTime =
+                getRuntimeContext().getState(new ValueStateDescriptor<>("the price we saw last", Double.class));
     }
 
-    double howMuchThePriceMoved = tick.price() - lastPrice;
-    if (howMuchThePriceMoved == 0) {
-      return;
+    @Override
+    public void processElement(
+            ExposureMessages.PriceTick tick, Context context, Collector<ExposureMessages.ExposureDelta> out)
+            throws Exception {
+
+        List<ExposureMessages.FundHolding> holders = whoHoldsWhat.get(tick.productId());
+
+        Double lastPrice = whatItWasWorthLastTime.value();
+        whatItWasWorthLastTime.update(tick.price());
+
+        if (holders == null || holders.isEmpty()) {
+            return;
+        }
+
+        if (lastPrice == null) {
+            emit(holders, tick.price(), out);
+            return;
+        }
+
+        double howMuchThePriceMoved = tick.price() - lastPrice;
+        if (howMuchThePriceMoved == 0) {
+            return;
+        }
+
+        emit(holders, howMuchThePriceMoved, out);
     }
 
-    emit(holders, howMuchThePriceMoved, out);
-  }
-
-  private void emit(
-      List<FundHolding> holders, double moveOrWholePrice, Collector<ExposureDelta> out) {
-    for (FundHolding holder : holders) {
-      out.collect(
-          new ExposureDelta(
-              holder.fundId(), holder.currency(), moveOrWholePrice * holder.howMany()));
+    private void emit(
+            List<ExposureMessages.FundHolding> holders,
+            double moveOrWholePrice,
+            Collector<ExposureMessages.ExposureDelta> out) {
+        for (ExposureMessages.FundHolding holder : holders) {
+            out.collect(new ExposureMessages.ExposureDelta(
+                    holder.fundId(), holder.currency(), moveOrWholePrice * holder.quantity()));
+        }
     }
-  }
 
-  static Configuration noSettings() {
-    return new Configuration();
-  }
+    static Configuration noSettings() {
+        return new Configuration();
+    }
 }
