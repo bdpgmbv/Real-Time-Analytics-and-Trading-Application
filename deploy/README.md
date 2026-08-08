@@ -685,3 +685,62 @@ clock, and a decision about what to do with a row whose owner never came back.
 
 Proved with two real threads racing for the same lock: one did the work, one skipped, and work
 that throws still releases the lock rather than holding it forever.
+
+---
+
+## When the database has a bad moment
+
+Two different problems, two different answers, both in the api.
+
+**Retry** is for the blip — a dropped connection, a failover that took two seconds. Three
+attempts, backing off, and only for failures that trying again could fix. Asking twice for a
+fund that does not exist would just be slower.
+
+**The circuit breaker** is for the outage. After half of twenty calls fail it stops trying for
+ten seconds and fails immediately. That sounds worse and is better: without it every request
+waits for its own timeout, the connection pool fills with calls that cannot succeed, and a
+database problem becomes an API problem for every client at once.
+
+Either way the caller gets **503, not 500** — try again, rather than something is broken, which
+is also what a load balancer needs to hear. It never invents an answer: a screen showing a stale
+exposure without saying so is worse than one saying it could not load, because somebody would
+trade on it.
+
+State is visible at `/actuator/circuitbreakers`.
+
+## Serving more screens per node
+
+The sweep used to recalculate watched funds one at a time. At roughly fourteen milliseconds each,
+a one second sweep managed about seventy funds before it overran its own interval and screens
+began to lag.
+
+The work is independent per fund and spends nearly all its time waiting on the database, so it
+now runs on a bounded pool — `RTAT_LIVE_RECALCULATE_THREADS`, eight by default. Bounded and
+smaller than the connection pool on purpose: unbounded threads would move the queue from here to
+the database, where it is harder to see. A sweep that cannot finish inside its own interval gives
+up rather than piling sweeps on top of each other, and says so through
+`rtat_live_sweep_overran_total`.
+
+## Taking a client on
+
+```bash
+./deploy/operate/new-client.sh "Adriatic Capital" EUROPE 3
+```
+
+Creates the client, its funds, its accounts and one administrator, all carrying the new
+`client_id` so row level security keeps them apart from the first row onwards. Verified: the new
+client sees its own 3 funds and 6 accounts, and zero rows belonging to anyone else.
+
+Only the first person may trade. Everybody after them is added deliberately.
+
+## Backups
+
+```bash
+./deploy/operate/backup.sh                    # take one
+./deploy/operate/backup.sh --verify FILE      # restore it and count the rows
+```
+
+Custom format, so one table can be restored without the rest. **The verify step exists because a
+backup nobody has restored is a hope, not a backup.** It restores into a scratch database, counts
+what came back, and drops it again. Proved on the current data: 1,630,800 positions restored from
+a 32 MB file.

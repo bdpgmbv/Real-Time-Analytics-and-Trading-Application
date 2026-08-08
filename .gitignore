@@ -37,3 +37,4 @@ Thumbs.db
 deploy/.env
 *.secret
 secrets/
+backups/

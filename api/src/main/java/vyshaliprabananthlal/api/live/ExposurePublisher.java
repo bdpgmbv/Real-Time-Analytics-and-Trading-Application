@@ -2,10 +2,19 @@ package vyshaliprabananthlal.api.live;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.calculate.exposure.ExposureCalculator;
@@ -24,16 +33,33 @@ public class ExposurePublisher {
     private final Counter pushed;
     private final Counter skippedBecauseNothingChanged;
 
+    private final Counter sweepsThatOverran;
+    private final ExecutorService recalculators;
+    private final Duration oneSweepBudget;
+
     private final Map<Integer, String> whatWeLastSent = new ConcurrentHashMap<>();
 
     public ExposurePublisher(
-            ScreenRegistry screens, MarketChangeFlag changes, ExposureCalculator calculator, MeterRegistry meters) {
+            ScreenRegistry screens,
+            MarketChangeFlag changes,
+            ExposureCalculator calculator,
+            MeterRegistry meters,
+            @Value("${rtat.live.recalculate-threads:8}") int howManyThreads,
+            @Value("${rtat.live.push-every-milliseconds:1000}") long sweepBudgetMillis) {
 
         this.screens = screens;
         this.changes = changes;
         this.calculator = calculator;
         this.pushed = meters.counter("rtat.live.pushed");
         this.skippedBecauseNothingChanged = meters.counter("rtat.live.unchanged");
+        this.sweepsThatOverran = meters.counter("rtat.live.sweep.overran");
+        this.oneSweepBudget = Duration.ofMillis(sweepBudgetMillis);
+
+        // Named, so a thread dump says which pool a stuck thread belongs to.
+        AtomicInteger nextNumber = new AtomicInteger(1);
+        this.recalculators = Executors.newFixedThreadPool(
+                howManyThreads,
+                runnable -> new Thread(runnable, "exposure-recalculator-" + nextNumber.getAndIncrement()));
     }
 
     /**
@@ -55,9 +81,48 @@ public class ExposurePublisher {
             return;
         }
 
-        for (int fundId : screens.watchedFunds()) {
-            publishFund(fundId);
+        recalculateInParallel(screens.watchedFunds());
+    }
+
+    /**
+     * One fund at a time was the limit on how many screens a node could serve.
+     *
+     * <p>A calculation takes about fourteen milliseconds, so a sweep every second could manage
+     * roughly seventy funds before it overran its own interval and the screens started lagging.
+     * The work is independent per fund and spends nearly all its time waiting on the database,
+     * so it parallelises almost perfectly.
+     *
+     * <p>The pool is bounded and smaller than the connection pool on purpose. Unbounded threads
+     * would simply move the queue from here to the database, where it is harder to see.
+     */
+    private void recalculateInParallel(Set<Integer> funds) {
+        CountDownLatch allDone = new CountDownLatch(funds.size());
+
+        for (int fundId : funds) {
+            recalculators.execute(() -> {
+                try {
+                    publishFund(fundId);
+                } finally {
+                    allDone.countDown();
+                }
+            });
         }
+
+        try {
+            // If a sweep cannot finish inside its own interval, let the next one start rather
+            // than piling sweeps on top of each other.
+            if (!allDone.await(oneSweepBudget.toMillis(), TimeUnit.MILLISECONDS)) {
+                LOG.warn("a sweep did not finish within {}", oneSweepBudget);
+                sweepsThatOverran.increment();
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @PreDestroy
+    void stopRecalculating() {
+        recalculators.shutdown();
     }
 
     public void publishFund(int fundId) {

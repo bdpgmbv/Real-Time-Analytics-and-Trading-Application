@@ -35,7 +35,7 @@ class PushToTheScreensTest {
         changes = new MarketChangeFlag();
         calculator = mock(ExposureCalculator.class);
         meters = new SimpleMeterRegistry();
-        pushing = new ExposurePublisher(watching, changes, calculator, meters);
+        pushing = new ExposurePublisher(watching, changes, calculator, meters, 4, 5000);
     }
 
     @Test

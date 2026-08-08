@@ -1,4 +1,5 @@
 [versions]
+resilience4j = "2.3.0"
 # Flink 2.2.x, NOT 2.3.0: flink-connector-kafka's newest build is 5.0.0-2.2, which
 # targets the 2.2 line. Connector alignment beats being on the newest core.
 flink = "2.2.1"
@@ -30,6 +31,7 @@ spotbugsPlugin = "6.5.9"
 cyclonedxPlugin = "3.3.0"
 
 [libraries]
+resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
 micrometer-tracing-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel" }

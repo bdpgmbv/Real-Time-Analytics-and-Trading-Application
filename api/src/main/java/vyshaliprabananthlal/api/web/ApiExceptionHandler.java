@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import vyshaliprabananthlal.api.resilience.DatabaseCalls;
 import vyshaliprabananthlal.api.who.Entitlements;
 
 /**
@@ -30,5 +31,18 @@ public class ApiExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> notFound(IllegalArgumentException missing) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", missing.getMessage()));
+    }
+
+    /**
+     * The database is down or the breaker is open.
+     *
+     * <p>503 rather than 500, because it says try again rather than something is broken, and
+     * because a load balancer treats the two differently.
+     */
+    @ExceptionHandler(DatabaseCalls.DatabaseUnavailable.class)
+    public ResponseEntity<Map<String, String>> databaseDown(DatabaseCalls.DatabaseUnavailable outage) {
+        LOG.error("answering 503: {}", outage.getMessage());
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("message", outage.getMessage()));
     }
 }

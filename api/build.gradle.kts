@@ -17,6 +17,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation(libs.micrometer.prometheus)
+    implementation(libs.resilience4j.spring.boot)
     implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
     implementation("org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry")
     runtimeOnly(libs.postgresql)

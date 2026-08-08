@@ -22,6 +22,30 @@ spring:
 server:
   port: ${RTAT_PORT:8095}
 
+resilience4j:
+  retry:
+    instances:
+      database:
+        max-attempts: 3
+        wait-duration: 100ms
+        exponential-backoff-multiplier: 2
+        # Only the failures that trying again could fix. A missing fund is not one of them.
+        retry-exceptions:
+          - org.springframework.dao.TransientDataAccessException
+          - org.springframework.dao.RecoverableDataAccessException
+          - java.sql.SQLTransientException
+
+  circuitbreaker:
+    instances:
+      database:
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        # Long enough that the database gets a chance to recover before we crowd it again.
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
 management:
   tracing:
     enabled: ${RTAT_TRACING:true}
@@ -35,7 +59,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, metrics, prometheus, info
+        include: health, metrics, prometheus, info, circuitbreakers
   server:
     port: ${RTAT_ADMIN_PORT:9193}
     address: ${RTAT_ADMIN_ADDRESS:127.0.0.1}
