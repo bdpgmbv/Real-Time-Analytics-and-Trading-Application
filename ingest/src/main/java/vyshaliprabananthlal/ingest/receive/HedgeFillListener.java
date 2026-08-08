@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import vyshaliprabananthlal.ingest.message.Messages;
+import vyshaliprabananthlal.ingest.message.JsonReader;
 import vyshaliprabananthlal.ingest.sql.Sql;
 
 @Component
@@ -20,13 +20,13 @@ public class HedgeFillListener {
 
   private final JdbcTemplate database;
   private final KafkaBatch batch;
-  private final Messages messages;
+  private final JsonReader messages;
   private final String recordTheFill;
   private final String moveTheHedgeOn;
 
   private long howManyFillsRecorded;
 
-  public HedgeFillListener(JdbcTemplate database, KafkaBatch batch, Messages messages, Sql sql) {
+  public HedgeFillListener(JdbcTemplate database, KafkaBatch batch, JsonReader messages, Sql sql) {
 
     this.database = database;
     this.batch = batch;

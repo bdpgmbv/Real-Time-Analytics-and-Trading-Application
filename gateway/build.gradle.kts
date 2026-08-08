@@ -23,7 +23,7 @@ dependencies {
 }
 
 val provedByRunningIt =
-    listOf("vyshaliprabananthlal/gateway/GatewayApplication*", "vyshaliprabananthlal/gateway/limit/HowWeAreSecuredAtTheEdge*")
+    listOf("vyshaliprabananthlal/gateway/GatewayApplication*", "vyshaliprabananthlal/gateway/limit/EdgeSecurityConfig*")
 
 tasks.named<JacocoReport>("jacocoTestReport") {
     classDirectories.setFrom(

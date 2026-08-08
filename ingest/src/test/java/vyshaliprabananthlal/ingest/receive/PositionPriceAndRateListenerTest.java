@@ -15,7 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.support.Acknowledgment;
-import vyshaliprabananthlal.ingest.message.Messages;
+import vyshaliprabananthlal.ingest.message.JsonReader;
 import vyshaliprabananthlal.ingest.sql.Sql;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
@@ -65,7 +65,7 @@ class PositionPriceAndRateListenerTest {
   void positionIsSetNotAdded() {
     PositionListener listener =
         new PositionListener(
-            new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+            new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
 
     listener.whenPositionsArrive(List.of(positionMessage(750)), kafka);
 
@@ -78,7 +78,7 @@ class PositionPriceAndRateListenerTest {
   void positionMessagesAreSafeToReplay() {
     PositionListener listener =
         new PositionListener(
-            new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+            new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
 
     listener.whenPositionsArrive(List.of(positionMessage(750)), kafka);
     listener.whenPositionsArrive(List.of(positionMessage(750)), kafka);
@@ -91,7 +91,7 @@ class PositionPriceAndRateListenerTest {
   void priceIsUpdated() {
     PriceListener listener =
         new PriceListener(
-            new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+            new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
 
     listener.whenPricesArrive(List.of(priceMessage(250.75)), kafka);
 
@@ -104,7 +104,7 @@ class PositionPriceAndRateListenerTest {
   void rateIsUpdatedAndMarked() {
     RateListener listener =
         new RateListener(
-            new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+            new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
 
     listener.whenRatesArrive(List.of(rateMessage("JPY", "USD", 0.0064)), kafka);
 
@@ -118,7 +118,7 @@ class PositionPriceAndRateListenerTest {
   void unknownRatePairIsIgnored() {
     RateListener listener =
         new RateListener(
-            new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+            new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
 
     listener.whenRatesArrive(List.of(rateMessage("ZZZ", "USD", 1.23)), kafka);
 

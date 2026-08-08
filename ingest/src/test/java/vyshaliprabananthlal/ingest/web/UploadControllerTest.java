@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import vyshaliprabananthlal.ingest.files.FileLoader;
 import vyshaliprabananthlal.ingest.files.LoadResult;
-import vyshaliprabananthlal.ingest.format.BadLine;
+import vyshaliprabananthlal.ingest.format.BadLineException;
 import vyshaliprabananthlal.ingest.web.UploadController.UploadAnswer;
 
 class UploadControllerTest {
@@ -100,7 +100,8 @@ class UploadControllerTest {
   @DisplayName("a file no custodian format matches comes back as a bad request, not a crash")
   void anUnreadableFileIsARejection() throws Exception {
     when(loader.load(any(), any(), any()))
-        .thenThrow(new BadLine("no custodian format matches this heading: who,knows,what"));
+        .thenThrow(
+            new BadLineException("no custodian format matches this heading: who,knows,what"));
 
     ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("odd.csv"));
 

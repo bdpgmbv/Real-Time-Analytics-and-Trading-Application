@@ -14,14 +14,14 @@ public class ExposureCalculator {
 
   private final JdbcTemplate database;
   private final ExchangeRates exchangeRates;
-  private final FundFacts fundFacts;
+  private final FundReference fundFacts;
   private final Sql sql;
   private final Timer howLongItTakes;
 
   public ExposureCalculator(
       JdbcTemplate database,
       ExchangeRates exchangeRates,
-      FundFacts fundFacts,
+      FundReference fundFacts,
       Sql sql,
       MeterRegistry meters) {
 

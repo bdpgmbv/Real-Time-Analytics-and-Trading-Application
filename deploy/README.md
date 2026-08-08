@@ -291,7 +291,7 @@ The first authenticated request after a restart took **137 ms, of which 100 ms w
 `authenticate bearertoken`** — fetching Keycloak's signing keys, lazily, while a client
 waited. Every request after it was 7 ms.
 
-`WarmUpTheTokenKeys` now fetches them during startup instead:
+`TokenKeyWarmUp` now fetches them during startup instead:
 
 | | first request | warm |
 |---|---|---|

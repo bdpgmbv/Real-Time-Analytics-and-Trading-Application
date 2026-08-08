@@ -75,7 +75,7 @@ class EntitlementsTest {
   @DisplayName("asking directly for another company's fund is refused, not quietly emptied")
   void askingForAnotherCompanysFundIsRefused() {
     assertThatThrownBy(() -> entitlements.mustBeAbleToSee("adriatic-reader", 20))
-        .isInstanceOf(NotAllowed.class)
+        .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("cannot see fund 20");
   }
 
@@ -83,7 +83,7 @@ class EntitlementsTest {
   @DisplayName("a fund that does not exist is refused the same way, leaking nothing")
   void aFundThatDoesNotExistLeaksNothing() {
     assertThatThrownBy(() -> entitlements.mustBeAbleToSee("adriatic-reader", 999))
-        .isInstanceOf(NotAllowed.class)
+        .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("cannot see fund 999");
   }
 
@@ -100,7 +100,7 @@ class EntitlementsTest {
         .doesNotThrowAnyException();
 
     assertThatThrownBy(() -> entitlements.mustBeAbleToSendTradesFor("adriatic-reader", 10))
-        .isInstanceOf(NotAllowed.class)
+        .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("not send trades");
   }
 
@@ -115,7 +115,7 @@ class EntitlementsTest {
   @DisplayName("trying to trade on a fund you cannot even see says you cannot see it")
   void tradingOnAnInvisibleFund() {
     assertThatThrownBy(() -> entitlements.mustBeAbleToSendTradesFor("nordwind-reader", 10))
-        .isInstanceOf(NotAllowed.class)
+        .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("cannot see fund 10");
   }
 

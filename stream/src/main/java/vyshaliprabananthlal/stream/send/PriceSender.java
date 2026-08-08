@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Random;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.MovingPrice;
-import vyshaliprabananthlal.stream.plumbing.Pace;
-import vyshaliprabananthlal.stream.plumbing.Rows;
-import vyshaliprabananthlal.stream.plumbing.SendToKafka;
+import vyshaliprabananthlal.stream.plumbing.KafkaPublisher;
+import vyshaliprabananthlal.stream.plumbing.QueryRunner;
+import vyshaliprabananthlal.stream.plumbing.SendRate;
 
 @Component
 public class PriceSender implements Sender {
@@ -20,10 +20,10 @@ public class PriceSender implements Sender {
 
   private static final Random DICE = new Random();
 
-  private final Rows rows;
-  private final SendToKafka kafka;
+  private final QueryRunner rows;
+  private final KafkaPublisher kafka;
 
-  public PriceSender(Rows rows, SendToKafka kafka) {
+  public PriceSender(QueryRunner rows, KafkaPublisher kafka) {
     this.rows = rows;
     this.kafka = kafka;
   }
@@ -42,7 +42,7 @@ public class PriceSender implements Sender {
             "no prices found - run db/3-generate.sql first");
 
     long startedAtSecond = System.currentTimeMillis() / 1000;
-    Pace pace = new Pace();
+    SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
       MovingPrice price = prices.get(DICE.nextInt(prices.size()));

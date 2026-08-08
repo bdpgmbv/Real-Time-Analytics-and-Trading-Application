@@ -31,7 +31,7 @@ class ExposureCalculatorTest {
         new ExposureCalculator(
             database,
             new ExchangeRates(database, sql),
-            new FundFacts(database, sql, new SimpleMeterRegistry()),
+            new FundReference(database, sql, new SimpleMeterRegistry()),
             sql,
             new SimpleMeterRegistry());
 

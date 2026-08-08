@@ -27,7 +27,7 @@ public class Entitlements {
 
   public void mustBeAbleToSee(String userId, int fundId) {
     if (findEntitlement(userId, fundId).isEmpty()) {
-      throw new NotAllowed("you cannot see fund " + fundId);
+      throw new NotAllowedException("you cannot see fund " + fundId);
     }
   }
 
@@ -35,10 +35,11 @@ public class Entitlements {
     List<Boolean> found = findEntitlement(userId, fundId);
 
     if (found.isEmpty()) {
-      throw new NotAllowed("you cannot see fund " + fundId);
+      throw new NotAllowedException("you cannot see fund " + fundId);
     }
     if (!found.get(0)) {
-      throw new NotAllowed("you may look at fund " + fundId + " but not send trades for it");
+      throw new NotAllowedException(
+          "you may look at fund " + fundId + " but not send trades for it");
     }
   }
 

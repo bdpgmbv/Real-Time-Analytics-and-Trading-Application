@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Random;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.MovingHolding;
-import vyshaliprabananthlal.stream.plumbing.Pace;
-import vyshaliprabananthlal.stream.plumbing.Rows;
-import vyshaliprabananthlal.stream.plumbing.SendToKafka;
+import vyshaliprabananthlal.stream.plumbing.KafkaPublisher;
+import vyshaliprabananthlal.stream.plumbing.QueryRunner;
+import vyshaliprabananthlal.stream.plumbing.SendRate;
 
 @Component
 public class PositionSender implements Sender {
@@ -17,10 +17,10 @@ public class PositionSender implements Sender {
 
   private static final Random DICE = new Random();
 
-  private final Rows rows;
-  private final SendToKafka kafka;
+  private final QueryRunner rows;
+  private final KafkaPublisher kafka;
 
-  public PositionSender(Rows rows, SendToKafka kafka) {
+  public PositionSender(QueryRunner rows, KafkaPublisher kafka) {
     this.rows = rows;
     this.kafka = kafka;
   }
@@ -38,7 +38,7 @@ public class PositionSender implements Sender {
             (row, number) -> new MovingHolding(row.getInt(1), row.getInt(2), row.getDouble(3)),
             "no positions found - run db/3-generate.sql first");
 
-    Pace pace = new Pace();
+    SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
       MovingHolding holding = holdings.get(DICE.nextInt(holdings.size()));

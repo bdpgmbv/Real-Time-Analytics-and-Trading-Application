@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import vyshaliprabananthlal.ingest.files.FileLoader;
 import vyshaliprabananthlal.ingest.files.LoadResult;
-import vyshaliprabananthlal.ingest.format.BadLine;
+import vyshaliprabananthlal.ingest.format.BadLineException;
 
 @RestController
 public class UploadController {
@@ -47,7 +47,7 @@ public class UploadController {
               result.rowsRejected(),
               loader.problemsFrom(result.fileLoadId())));
 
-    } catch (BadLine wholeFileIsWrong) {
+    } catch (BadLineException wholeFileIsWrong) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(new UploadAnswer(fileName, wholeFileIsWrong.whatIsWrong(), 0, 0, List.of()));
     }

@@ -18,7 +18,7 @@ public class ExchangeRates {
     this.sql = sql;
   }
 
-  @Cacheable(WhatWeCache.EXCHANGE_RATES)
+  @Cacheable(CacheConfig.EXCHANGE_RATES)
   public Map<String, Double> into(String reportingCurrency) {
     Map<String, Double> rates = new HashMap<>();
 

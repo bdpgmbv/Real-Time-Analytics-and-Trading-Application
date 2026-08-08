@@ -16,7 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.support.Acknowledgment;
-import vyshaliprabananthlal.ingest.message.Messages;
+import vyshaliprabananthlal.ingest.message.JsonReader;
 import vyshaliprabananthlal.ingest.sql.Sql;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
@@ -37,7 +37,7 @@ class TradeListenerTest {
   void startWithOnePosition() {
     listener =
         new TradeListener(
-            new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+            new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
     kafka = mock(Acknowledgment.class);
 
     database.execute("TRUNCATE trade, position, account, fund, client, product, currency CASCADE");

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import vyshaliprabananthlal.ingest.format.BadLine;
+import vyshaliprabananthlal.ingest.format.BadLineException;
 
 @Component
 public class FolderWatcher {
@@ -67,7 +67,7 @@ public class FolderWatcher {
 
     } catch (IOException couldNotRead) {
       LOG.error("could not read {}: {}", file, couldNotRead.getMessage());
-    } catch (BadLine wholeFileIsWrong) {
+    } catch (BadLineException wholeFileIsWrong) {
       LOG.error("{} was refused: {}", nameOf(file), wholeFileIsWrong.whatIsWrong());
       moveAside(file);
     }

@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import vyshaliprabananthlal.api.live.PushToTheScreens;
-import vyshaliprabananthlal.api.live.WhoIsWatching;
-import vyshaliprabananthlal.api.security.WhoIsAsking;
+import vyshaliprabananthlal.api.live.ExposurePublisher;
+import vyshaliprabananthlal.api.live.ScreenRegistry;
+import vyshaliprabananthlal.api.security.CallerIdentity;
 import vyshaliprabananthlal.api.who.Entitlements;
 
 @RestController
@@ -19,16 +19,16 @@ import vyshaliprabananthlal.api.who.Entitlements;
 public class LiveController {
 
   private final Entitlements entitlements;
-  private final WhoIsWatching watching;
-  private final PushToTheScreens pushing;
-  private final WhoIsAsking whoIsAsking;
+  private final ScreenRegistry watching;
+  private final ExposurePublisher pushing;
+  private final CallerIdentity whoIsAsking;
   private final Duration howLongAScreenMayStayOpen;
 
   public LiveController(
       Entitlements entitlements,
-      WhoIsWatching watching,
-      PushToTheScreens pushing,
-      WhoIsAsking whoIsAsking,
+      ScreenRegistry watching,
+      ExposurePublisher pushing,
+      CallerIdentity whoIsAsking,
       @Value("${rtat.live.screen-timeout-minutes:30}") long timeoutMinutes) {
 
     this.entitlements = entitlements;

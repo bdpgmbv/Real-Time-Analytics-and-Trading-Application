@@ -47,7 +47,7 @@ class FolderWatcherTest {
     FileLoader loader =
         new FileLoader(
             database,
-            new LoadBook(database, new Sql()),
+            new FileLoadJournal(database, new Sql()),
             List.of(new CommaFormat(), new PipeFormat()),
             new Sql(),
             new SimpleMeterRegistry());
@@ -129,7 +129,7 @@ class FolderWatcherTest {
     FileLoader loader =
         new FileLoader(
             database,
-            new LoadBook(database, new Sql()),
+            new FileLoadJournal(database, new Sql()),
             List.of(new CommaFormat()),
             new Sql(),
             new SimpleMeterRegistry());

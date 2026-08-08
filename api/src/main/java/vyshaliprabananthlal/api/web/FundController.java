@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import vyshaliprabananthlal.api.security.WhoIsAsking;
+import vyshaliprabananthlal.api.security.CallerIdentity;
 import vyshaliprabananthlal.api.who.Entitlements;
 import vyshaliprabananthlal.api.who.VisibleFund;
 import vyshaliprabananthlal.calculate.exposure.ExposureCalculator;
@@ -19,10 +19,10 @@ public class FundController {
 
   private final Entitlements entitlements;
   private final ExposureCalculator calculator;
-  private final WhoIsAsking whoIsAsking;
+  private final CallerIdentity whoIsAsking;
 
   public FundController(
-      Entitlements entitlements, ExposureCalculator calculator, WhoIsAsking whoIsAsking) {
+      Entitlements entitlements, ExposureCalculator calculator, CallerIdentity whoIsAsking) {
 
     this.entitlements = entitlements;
     this.calculator = calculator;

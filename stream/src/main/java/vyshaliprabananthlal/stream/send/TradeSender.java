@@ -3,10 +3,10 @@ package vyshaliprabananthlal.stream.send;
 import java.util.List;
 import java.util.Random;
 import org.springframework.stereotype.Component;
-import vyshaliprabananthlal.stream.message.WhatToTrade;
-import vyshaliprabananthlal.stream.plumbing.Pace;
-import vyshaliprabananthlal.stream.plumbing.Rows;
-import vyshaliprabananthlal.stream.plumbing.SendToKafka;
+import vyshaliprabananthlal.stream.message.TradeCandidate;
+import vyshaliprabananthlal.stream.plumbing.KafkaPublisher;
+import vyshaliprabananthlal.stream.plumbing.QueryRunner;
+import vyshaliprabananthlal.stream.plumbing.SendRate;
 
 @Component
 public class TradeSender implements Sender {
@@ -17,10 +17,10 @@ public class TradeSender implements Sender {
 
   private static final Random DICE = new Random();
 
-  private final Rows rows;
-  private final SendToKafka kafka;
+  private final QueryRunner rows;
+  private final KafkaPublisher kafka;
 
-  public TradeSender(Rows rows, SendToKafka kafka) {
+  public TradeSender(QueryRunner rows, KafkaPublisher kafka) {
     this.rows = rows;
     this.kafka = kafka;
   }
@@ -32,17 +32,17 @@ public class TradeSender implements Sender {
 
   @Override
   public void sendUntilStopped() throws InterruptedException {
-    List<WhatToTrade> choices =
+    List<TradeCandidate> choices =
         rows.loadOrComplain(
             "SELECT account_id, product_id FROM position LIMIT " + HOW_MANY_TO_LOAD,
-            (row, number) -> new WhatToTrade(row.getInt(1), row.getInt(2)),
+            (row, number) -> new TradeCandidate(row.getInt(1), row.getInt(2)),
             "no positions found - run db/3-generate.sql first");
 
     long nextTradeNumber = System.currentTimeMillis();
-    Pace pace = new Pace();
+    SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
-      WhatToTrade choice = choices.get(DICE.nextInt(choices.size()));
+      TradeCandidate choice = choices.get(DICE.nextInt(choices.size()));
 
       kafka.send(KAFKA_TOPIC, choice.messageKey(), choice.newTrade(nextTradeNumber));
 

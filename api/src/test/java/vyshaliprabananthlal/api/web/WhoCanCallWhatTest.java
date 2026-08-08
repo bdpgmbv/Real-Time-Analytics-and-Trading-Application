@@ -20,10 +20,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import vyshaliprabananthlal.api.security.HowWeAreSecured;
-import vyshaliprabananthlal.api.security.WhoIsAsking;
+import vyshaliprabananthlal.api.security.CallerIdentity;
+import vyshaliprabananthlal.api.security.SecurityConfig;
 import vyshaliprabananthlal.api.who.Entitlements;
-import vyshaliprabananthlal.api.who.NotAllowed;
+import vyshaliprabananthlal.api.who.NotAllowedException;
 import vyshaliprabananthlal.api.who.VisibleFund;
 import vyshaliprabananthlal.calculate.exposure.ExposureCalculator;
 import vyshaliprabananthlal.calculate.exposure.FundExposure;
@@ -37,7 +37,7 @@ import vyshaliprabananthlal.calculate.hedge.HedgeBook;
       "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost/not-used",
       "rtat.oidc.user-claim=sub"
     })
-@Import({HowWeAreSecured.class, WhoIsAsking.class, WhenSomethingIsRefused.class})
+@Import({SecurityConfig.class, CallerIdentity.class, ApiExceptionHandler.class})
 class WhoCanCallWhatTest {
 
   @Autowired private MockMvc http;
@@ -84,7 +84,7 @@ class WhoCanCallWhatTest {
   @Test
   @DisplayName("asking for another company's fund gets 403, and the exposure is never calculated")
   void anotherCompanysFundIsForbidden() throws Exception {
-    doThrow(new NotAllowed("you cannot see fund 20"))
+    doThrow(new NotAllowedException("you cannot see fund 20"))
         .when(entitlements)
         .mustBeAbleToSee(anyString(), anyInt());
 
@@ -98,7 +98,7 @@ class WhoCanCallWhatTest {
   @Test
   @DisplayName("a reader may not send hedges even for a fund they can see")
   void aReaderMayNotSendHedges() throws Exception {
-    doThrow(new NotAllowed("you may look at fund 10 but not send trades for it"))
+    doThrow(new NotAllowedException("you may look at fund 10 but not send trades for it"))
         .when(entitlements)
         .mustBeAbleToSendTradesFor(anyString(), anyInt());
 

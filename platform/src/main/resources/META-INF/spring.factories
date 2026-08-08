@@ -1,5 +1,5 @@
 org.springframework.boot.EnvironmentPostProcessor=\
-  vyshaliprabananthlal.platform.secrets.SecretsFromFiles
+  vyshaliprabananthlal.platform.secrets.FileSecretsLoader
 
 org.springframework.context.ApplicationListener=\
-  vyshaliprabananthlal.platform.secrets.RefuseToStartWithoutSecrets
+  vyshaliprabananthlal.platform.secrets.RequiredSecretsCheck

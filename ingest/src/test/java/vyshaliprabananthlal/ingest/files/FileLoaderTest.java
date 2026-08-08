@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import vyshaliprabananthlal.ingest.format.BadLine;
+import vyshaliprabananthlal.ingest.format.BadLineException;
 import vyshaliprabananthlal.ingest.format.CommaFormat;
 import vyshaliprabananthlal.ingest.format.PipeFormat;
 import vyshaliprabananthlal.ingest.sql.Sql;
@@ -39,7 +39,7 @@ class FileLoaderTest {
     loader =
         new FileLoader(
             database,
-            new LoadBook(database, new Sql()),
+            new FileLoadJournal(database, new Sql()),
             List.of(new CommaFormat(), new PipeFormat()),
             new Sql(),
             new SimpleMeterRegistry());
@@ -197,7 +197,7 @@ class FileLoaderTest {
   @DisplayName("a heading no custodian uses is refused before anything is loaded")
   void unknownFormatIsRefused() {
     assertThatThrownBy(() -> loader.load("odd.csv", "who,knows,what\n1,2,3\n", "UI UPLOAD"))
-        .isInstanceOf(BadLine.class)
+        .isInstanceOf(BadLineException.class)
         .hasMessageContaining("no custodian format matches");
 
     assertThat(howManyFilesLoaded()).isZero();

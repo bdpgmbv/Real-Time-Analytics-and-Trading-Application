@@ -16,7 +16,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.kafka.support.Acknowledgment;
-import vyshaliprabananthlal.ingest.message.Messages;
+import vyshaliprabananthlal.ingest.message.JsonReader;
 import vyshaliprabananthlal.ingest.sql.Sql;
 import vyshaliprabananthlal.platform.testing.SharedPostgres;
 
@@ -144,7 +144,7 @@ class WhenThingsGoWrongTest {
   private PositionListener positionListener() {
     database.execute("TRUNCATE position");
     return new PositionListener(
-        new KafkaBatch(database, new SimpleMeterRegistry()), new Messages(), new Sql());
+        new KafkaBatch(database, new SimpleMeterRegistry()), new JsonReader(), new Sql());
   }
 
   private int howManyPositions() {

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import vyshaliprabananthlal.ingest.message.Messages;
+import vyshaliprabananthlal.ingest.message.JsonReader;
 import vyshaliprabananthlal.ingest.sql.Sql;
 
 @Component
@@ -18,12 +18,12 @@ public class TradeListener {
   private static final Logger LOG = LoggerFactory.getLogger(TradeListener.class);
 
   private final KafkaBatch batch;
-  private final Messages messages;
+  private final JsonReader messages;
   private final String statement;
 
   private long howManyTradesRecorded;
 
-  public TradeListener(KafkaBatch batch, Messages messages, Sql sql) {
+  public TradeListener(KafkaBatch batch, JsonReader messages, Sql sql) {
     this.batch = batch;
     this.messages = messages;
     this.statement = sql.statement("record-trade-and-move-position");

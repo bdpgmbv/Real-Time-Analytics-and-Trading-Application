@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import vyshaliprabananthlal.ingest.format.BadLine;
+import vyshaliprabananthlal.ingest.format.BadLineException;
 import vyshaliprabananthlal.ingest.format.CustodianFormat;
 import vyshaliprabananthlal.ingest.format.PositionRow;
 import vyshaliprabananthlal.ingest.sql.Sql;
@@ -19,7 +19,7 @@ public class FileLoader {
   private static final Logger LOG = LoggerFactory.getLogger(FileLoader.class);
 
   private final JdbcTemplate database;
-  private final LoadBook book;
+  private final FileLoadJournal book;
   private final List<CustodianFormat> knownFormats;
   private final String savePosition;
   private final Counter rowsLoadedCounter;
@@ -28,7 +28,7 @@ public class FileLoader {
 
   public FileLoader(
       JdbcTemplate database,
-      LoadBook book,
+      FileLoadJournal book,
       List<CustodianFormat> knownFormats,
       Sql sql,
       MeterRegistry meters) {
@@ -54,7 +54,7 @@ public class FileLoader {
 
     List<String> lines = contents.lines().toList();
     if (lines.isEmpty()) {
-      throw new BadLine("the file is empty");
+      throw new BadLineException("the file is empty");
     }
 
     CustodianFormat format = whichFormatIsThis(lines.get(0));
@@ -109,7 +109,7 @@ public class FileLoader {
 
       return rowsChanged == 0 ? Optional.of("no such account or security") : Optional.empty();
 
-    } catch (BadLine whatIsWrong) {
+    } catch (BadLineException whatIsWrong) {
       return Optional.of(whatIsWrong.whatIsWrong());
     }
   }
@@ -120,7 +120,7 @@ public class FileLoader {
         return format;
       }
     }
-    throw new BadLine("no custodian format matches this heading: " + headingLine);
+    throw new BadLineException("no custodian format matches this heading: " + headingLine);
   }
 
   private record Tally(int loaded, int rejected) {}

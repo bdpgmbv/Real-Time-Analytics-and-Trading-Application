@@ -29,12 +29,11 @@ public final class ExposureJob {
       throw new IllegalStateException("RTAT_DB_PASSWORD is not set");
     }
 
-    Map<Integer, List<WhoHoldsIt>> whoHoldsWhat =
-        LoadWhoHoldsWhat.from(databaseUrl, user, password);
+    Map<Integer, List<FundHolding>> whoHoldsWhat = HoldingsLoader.from(databaseUrl, user, password);
 
     System.out.println(
         "loaded "
-            + LoadWhoHoldsWhat.howManyHoldings(whoHoldsWhat)
+            + HoldingsLoader.howManyHoldings(whoHoldsWhat)
             + " holdings across "
             + whoHoldsWhat.size()
             + " securities");
@@ -65,11 +64,11 @@ public final class ExposureJob {
         flink.fromSource(prices, WatermarkStrategy.noWatermarks(), "prices from kafka");
 
     asText
-        .map(new ReadTheTick())
+        .map(new PriceTickParser())
         .keyBy(PriceTick::productId)
-        .process(new WhatThePriceMoveDid(whoHoldsWhat))
+        .process(new PriceDeltaFunction(whoHoldsWhat))
         .keyBy(ExposureDelta::key)
-        .process(new KeepTheRunningTotal())
+        .process(new RunningTotalFunction())
         .map(RunningTotal::asMessage)
         .sinkTo(totals);
 

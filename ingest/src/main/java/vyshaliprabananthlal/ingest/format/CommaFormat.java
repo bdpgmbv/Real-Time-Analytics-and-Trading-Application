@@ -22,17 +22,18 @@ public class CommaFormat implements CustodianFormat {
     String[] cells = line.split(",", -1);
 
     if (cells.length != 4) {
-      throw new BadLine("expected 4 values separated by commas, found " + cells.length);
+      throw new BadLineException("expected 4 values separated by commas, found " + cells.length);
     }
 
     String accountName = cells[0].trim();
     String identifier = cells[1].trim();
 
     if (accountName.isEmpty()) {
-      throw new BadLine("the account name is empty");
+      throw new BadLineException("the account name is empty");
     }
     if (identifier.length() != 9) {
-      throw new BadLine("the identifier must be 9 characters, found " + identifier.length());
+      throw new BadLineException(
+          "the identifier must be 9 characters, found " + identifier.length());
     }
 
     return new PositionRow(
@@ -43,7 +44,7 @@ public class CommaFormat implements CustodianFormat {
     try {
       return Double.parseDouble(cell.trim());
     } catch (NumberFormatException notANumber) {
-      throw new BadLine("the " + whatItIs + " is not a number: " + cell.trim());
+      throw new BadLineException("the " + whatItIs + " is not a number: " + cell.trim());
     }
   }
 }

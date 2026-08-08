@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Random;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.MovingRate;
-import vyshaliprabananthlal.stream.plumbing.Pace;
-import vyshaliprabananthlal.stream.plumbing.Rows;
-import vyshaliprabananthlal.stream.plumbing.SendToKafka;
+import vyshaliprabananthlal.stream.plumbing.KafkaPublisher;
+import vyshaliprabananthlal.stream.plumbing.QueryRunner;
+import vyshaliprabananthlal.stream.plumbing.SendRate;
 
 @Component
 public class CurrencyRateSender implements Sender {
@@ -16,10 +16,10 @@ public class CurrencyRateSender implements Sender {
 
   private static final Random DICE = new Random();
 
-  private final Rows rows;
-  private final SendToKafka kafka;
+  private final QueryRunner rows;
+  private final KafkaPublisher kafka;
 
-  public CurrencyRateSender(Rows rows, SendToKafka kafka) {
+  public CurrencyRateSender(QueryRunner rows, KafkaPublisher kafka) {
     this.rows = rows;
     this.kafka = kafka;
   }
@@ -38,7 +38,7 @@ public class CurrencyRateSender implements Sender {
                 new MovingRate(row.getString(1).trim(), row.getString(2).trim(), row.getDouble(3)),
             "no rates found - run db/2-reference.sql first");
 
-    Pace pace = new Pace();
+    SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
       MovingRate rate = rates.get(DICE.nextInt(rates.size()));

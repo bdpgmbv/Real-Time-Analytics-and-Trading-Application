@@ -22,17 +22,17 @@ public class PipeFormat implements CustodianFormat {
     String[] cells = line.split("\\|", -1);
 
     if (cells.length != 4) {
-      throw new BadLine("expected 4 values separated by pipes, found " + cells.length);
+      throw new BadLineException("expected 4 values separated by pipes, found " + cells.length);
     }
 
     String identifier = cells[0].trim();
     String accountName = cells[1].trim();
 
     if (accountName.isEmpty()) {
-      throw new BadLine("the portfolio name is empty");
+      throw new BadLineException("the portfolio name is empty");
     }
     if (identifier.length() != 9) {
-      throw new BadLine("the security must be 9 characters, found " + identifier.length());
+      throw new BadLineException("the security must be 9 characters, found " + identifier.length());
     }
 
     return new PositionRow(

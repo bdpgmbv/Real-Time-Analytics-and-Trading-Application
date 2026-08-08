@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import vyshaliprabananthlal.api.security.WhoIsAsking;
+import vyshaliprabananthlal.api.security.CallerIdentity;
 import vyshaliprabananthlal.api.who.Entitlements;
 import vyshaliprabananthlal.calculate.exposure.ExposureCalculator;
 import vyshaliprabananthlal.calculate.hedge.HedgeAdviser;
@@ -23,14 +23,14 @@ public class HedgeController {
   private final ExposureCalculator calculator;
   private final HedgeAdviser adviser;
   private final HedgeBook book;
-  private final WhoIsAsking whoIsAsking;
+  private final CallerIdentity whoIsAsking;
 
   public HedgeController(
       Entitlements entitlements,
       ExposureCalculator calculator,
       HedgeAdviser adviser,
       HedgeBook book,
-      WhoIsAsking whoIsAsking) {
+      CallerIdentity whoIsAsking) {
 
     this.entitlements = entitlements;
     this.calculator = calculator;

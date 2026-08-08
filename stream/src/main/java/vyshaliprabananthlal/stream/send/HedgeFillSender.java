@@ -6,9 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import vyshaliprabananthlal.stream.message.WaitingHedge;
-import vyshaliprabananthlal.stream.plumbing.Pace;
-import vyshaliprabananthlal.stream.plumbing.Rows;
-import vyshaliprabananthlal.stream.plumbing.SendToKafka;
+import vyshaliprabananthlal.stream.plumbing.KafkaPublisher;
+import vyshaliprabananthlal.stream.plumbing.QueryRunner;
+import vyshaliprabananthlal.stream.plumbing.SendRate;
 
 @Component
 public class HedgeFillSender implements Sender {
@@ -24,10 +24,10 @@ public class HedgeFillSender implements Sender {
 
   private static final Random DICE = new Random();
 
-  private final Rows rows;
-  private final SendToKafka kafka;
+  private final QueryRunner rows;
+  private final KafkaPublisher kafka;
 
-  public HedgeFillSender(Rows rows, SendToKafka kafka) {
+  public HedgeFillSender(QueryRunner rows, KafkaPublisher kafka) {
     this.rows = rows;
     this.kafka = kafka;
   }
@@ -40,7 +40,7 @@ public class HedgeFillSender implements Sender {
   @Override
   public void sendUntilStopped() throws InterruptedException {
     long nextFillNumber = System.currentTimeMillis();
-    Pace pace = new Pace();
+    SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
       List<WaitingHedge> waiting = whatIsWaiting();

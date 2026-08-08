@@ -6,7 +6,7 @@
   </Match>
 
   <Match>
-    <Class name="vyshaliprabananthlal.stream.plumbing.SendToKafka"/>
+    <Class name="vyshaliprabananthlal.stream.plumbing.KafkaPublisher"/>
     <Method name="send"/>
     <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
   </Match>
