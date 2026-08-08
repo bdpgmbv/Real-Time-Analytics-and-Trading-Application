@@ -38,7 +38,7 @@ class PaceTest {
     long startedAt = System.nanoTime();
 
     SendRate pace = new SendRate();
-    pace.waitYourTurn(1);
+    pace.acquire(1);
 
     long tookMilliseconds = (System.nanoTime() - startedAt) / 1_000_000L;
 
@@ -49,13 +49,13 @@ class PaceTest {
   @DisplayName("falling a long way behind does not build up a debt to be sprinted off later")
   void fallingBehindDoesNotBuildUpADebt() throws InterruptedException {
     SendRate pace = new SendRate();
-    pace.waitYourTurn(1000);
+    pace.acquire(1000);
 
     Thread.sleep(1500);
 
     long startedAt = System.nanoTime();
     for (int turn = 0; turn < 500; turn++) {
-      pace.waitYourTurn(1000);
+      pace.acquire(1000);
     }
     long tookMilliseconds = (System.nanoTime() - startedAt) / 1_000_000L;
 
@@ -67,7 +67,7 @@ class PaceTest {
   void aRateOfZeroIsRefused() {
     SendRate pace = new SendRate();
 
-    assertThatThrownBy(() -> pace.waitYourTurn(0))
+    assertThatThrownBy(() -> pace.acquire(0))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("at least 1");
   }
@@ -77,7 +77,7 @@ class PaceTest {
     long startedAt = System.nanoTime();
 
     for (int turn = 0; turn < howManyTurns; turn++) {
-      pace.waitYourTurn(howManyPerSecond);
+      pace.acquire(howManyPerSecond);
     }
 
     double secondsTaken = (System.nanoTime() - startedAt) / 1_000_000_000.0;

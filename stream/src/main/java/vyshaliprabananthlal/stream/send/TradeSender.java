@@ -15,7 +15,7 @@ public class TradeSender implements Sender {
   private static final int HOW_MANY_PER_SECOND = 8;
   private static final int HOW_MANY_TO_LOAD = 100000;
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final QueryRunner rows;
   private final KafkaPublisher kafka;
@@ -31,9 +31,9 @@ public class TradeSender implements Sender {
   }
 
   @Override
-  public void sendUntilStopped() throws InterruptedException {
+  public void sendContinuously() throws InterruptedException {
     List<TradeCandidate> choices =
-        rows.loadOrComplain(
+        rows.queryRequired(
             "SELECT account_id, product_id FROM position LIMIT " + HOW_MANY_TO_LOAD,
             (row, number) -> new TradeCandidate(row.getInt(1), row.getInt(2)),
             "no positions found - run db/3-generate.sql first");
@@ -42,12 +42,12 @@ public class TradeSender implements Sender {
     SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
-      TradeCandidate choice = choices.get(DICE.nextInt(choices.size()));
+      TradeCandidate choice = choices.get(RANDOM.nextInt(choices.size()));
 
       kafka.send(KAFKA_TOPIC, choice.messageKey(), choice.newTrade(nextTradeNumber));
 
       nextTradeNumber = nextTradeNumber + 1;
-      pace.waitYourTurn(HOW_MANY_PER_SECOND);
+      pace.acquire(HOW_MANY_PER_SECOND);
     }
   }
 }

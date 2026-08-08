@@ -62,7 +62,7 @@ class LoadWhoHoldsWhatTest {
   @Test
   @DisplayName("the count of holdings is the size of the work a price tick can cause")
   void theCountIsTheWorkAPriceTickCauses() throws SQLException {
-    assertThat(HoldingsLoader.howManyHoldings(load())).isEqualTo(2);
+    assertThat(HoldingsLoader.holdingCount(load())).isEqualTo(2);
   }
 
   private Map<Integer, List<FundHolding>> load() throws SQLException {

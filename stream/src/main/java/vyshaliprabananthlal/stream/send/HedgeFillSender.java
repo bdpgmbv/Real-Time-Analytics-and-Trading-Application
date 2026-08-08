@@ -22,7 +22,7 @@ public class HedgeFillSender implements Sender {
   private static final int ONE_IN_THIS_MANY_IS_SPLIT = 3;
   private static final int LOOK_AGAIN_AFTER_SECONDS = 5;
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final QueryRunner rows;
   private final KafkaPublisher kafka;
@@ -38,12 +38,12 @@ public class HedgeFillSender implements Sender {
   }
 
   @Override
-  public void sendUntilStopped() throws InterruptedException {
+  public void sendContinuously() throws InterruptedException {
     long nextFillNumber = System.currentTimeMillis();
     SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
-      List<WaitingHedge> waiting = whatIsWaiting();
+      List<WaitingHedge> waiting = pendingHedges();
 
       if (waiting.isEmpty()) {
         LOG.info("nothing waiting to be filled, looking again in a moment");
@@ -52,21 +52,21 @@ public class HedgeFillSender implements Sender {
       }
 
       for (WaitingHedge hedge : waiting) {
-        boolean itComesBackInTwoParts = DICE.nextInt(ONE_IN_THIS_MANY_IS_SPLIT) == 0;
+        boolean itComesBackInTwoParts = RANDOM.nextInt(ONE_IN_THIS_MANY_IS_SPLIT) == 0;
 
         List<String> fills = hedge.fillMessages(nextFillNumber, itComesBackInTwoParts);
         nextFillNumber = nextFillNumber + fills.size();
 
         for (String fill : fills) {
           kafka.send(KAFKA_TOPIC, hedge.messageKey(), fill);
-          pace.waitYourTurn(HOW_MANY_PER_SECOND);
+          pace.acquire(HOW_MANY_PER_SECOND);
         }
       }
     }
   }
 
-  private List<WaitingHedge> whatIsWaiting() {
-    return rows.loadOrEmpty(
+  private List<WaitingHedge> pendingHedges() {
+    return rows.query(
         "SELECT hedge_id, client_chose, their_reference FROM hedge"
             + " WHERE status IN ('SENT', 'PARTIALLY FILLED')"
             + " ORDER BY hedge_id LIMIT "

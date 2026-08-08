@@ -45,7 +45,7 @@ public class HedgeFillListener {
       database.update(moveTheHedgeOn, fill[1]);
     }
 
-    batch.everythingLanded(kafka);
+    batch.acknowledge(kafka);
 
     howManyFillsRecorded = howManyFillsRecorded + recorded;
 

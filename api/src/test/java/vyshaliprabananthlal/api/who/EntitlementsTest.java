@@ -74,7 +74,7 @@ class EntitlementsTest {
   @Test
   @DisplayName("asking directly for another company's fund is refused, not quietly emptied")
   void askingForAnotherCompanysFundIsRefused() {
-    assertThatThrownBy(() -> entitlements.mustBeAbleToSee("adriatic-reader", 20))
+    assertThatThrownBy(() -> entitlements.requireVisible("adriatic-reader", 20))
         .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("cannot see fund 20");
   }
@@ -82,7 +82,7 @@ class EntitlementsTest {
   @Test
   @DisplayName("a fund that does not exist is refused the same way, leaking nothing")
   void aFundThatDoesNotExistLeaksNothing() {
-    assertThatThrownBy(() -> entitlements.mustBeAbleToSee("adriatic-reader", 999))
+    assertThatThrownBy(() -> entitlements.requireVisible("adriatic-reader", 999))
         .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("cannot see fund 999");
   }
@@ -96,10 +96,10 @@ class EntitlementsTest {
   @Test
   @DisplayName("looking is allowed but sending trades is a separate permission")
   void lookingAndTradingAreSeparate() {
-    assertThatCode(() -> entitlements.mustBeAbleToSee("adriatic-reader", 10))
+    assertThatCode(() -> entitlements.requireVisible("adriatic-reader", 10))
         .doesNotThrowAnyException();
 
-    assertThatThrownBy(() -> entitlements.mustBeAbleToSendTradesFor("adriatic-reader", 10))
+    assertThatThrownBy(() -> entitlements.requireTradePermission("adriatic-reader", 10))
         .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("not send trades");
   }
@@ -107,14 +107,14 @@ class EntitlementsTest {
   @Test
   @DisplayName("a user who may trade may also look")
   void aTraderMayAlsoLook() {
-    assertThatCode(() -> entitlements.mustBeAbleToSendTradesFor("adriatic-trader", 10))
+    assertThatCode(() -> entitlements.requireTradePermission("adriatic-trader", 10))
         .doesNotThrowAnyException();
   }
 
   @Test
   @DisplayName("trying to trade on a fund you cannot even see says you cannot see it")
   void tradingOnAnInvisibleFund() {
-    assertThatThrownBy(() -> entitlements.mustBeAbleToSendTradesFor("nordwind-reader", 10))
+    assertThatThrownBy(() -> entitlements.requireTradePermission("nordwind-reader", 10))
         .isInstanceOf(NotAllowedException.class)
         .hasMessageContaining("cannot see fund 10");
   }
@@ -122,8 +122,7 @@ class EntitlementsTest {
   @Test
   @DisplayName("asking for accounts you may see gives them back")
   void accountsYouMaySeeComeBack() {
-    List<Integer> allowed =
-        entitlements.narrowToWhatTheyMaySee("adriatic-reader", 10, List.of(100, 101));
+    List<Integer> allowed = entitlements.filterVisible("adriatic-reader", 10, List.of(100, 101));
 
     assertThat(allowed).containsExactly(100, 101);
   }
@@ -131,8 +130,7 @@ class EntitlementsTest {
   @Test
   @DisplayName("slipping another company's account into the list drops it silently")
   void anotherCompanysAccountIsDropped() {
-    List<Integer> allowed =
-        entitlements.narrowToWhatTheyMaySee("adriatic-reader", 10, List.of(100, 200));
+    List<Integer> allowed = entitlements.filterVisible("adriatic-reader", 10, List.of(100, 200));
 
     assertThat(allowed).containsExactly(100);
   }
@@ -143,8 +141,7 @@ class EntitlementsTest {
     database.execute(
         "INSERT INTO account (account_id,fund_id,name) OVERRIDING SYSTEM VALUE VALUES (110,11,'B1')");
 
-    List<Integer> allowed =
-        entitlements.narrowToWhatTheyMaySee("adriatic-reader", 10, List.of(100, 110));
+    List<Integer> allowed = entitlements.filterVisible("adriatic-reader", 10, List.of(100, 110));
 
     assertThat(allowed).containsExactly(100);
   }
@@ -152,7 +149,7 @@ class EntitlementsTest {
   @Test
   @DisplayName("asking for no accounts asks the database nothing")
   void askingForNothingReturnsNothing() {
-    assertThat(entitlements.narrowToWhatTheyMaySee("adriatic-reader", 10, List.of())).isEmpty();
+    assertThat(entitlements.filterVisible("adriatic-reader", 10, List.of())).isEmpty();
   }
 
   private static String readFile(String path) {

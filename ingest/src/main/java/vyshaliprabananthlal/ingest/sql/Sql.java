@@ -15,10 +15,10 @@ public class Sql {
   private final Map<String, String> alreadyRead = new ConcurrentHashMap<>();
 
   public String statement(String name) {
-    return alreadyRead.computeIfAbsent(name, Sql::readFromTheClasspath);
+    return alreadyRead.computeIfAbsent(name, Sql::readResource);
   }
 
-  private static String readFromTheClasspath(String name) {
+  private static String readResource(String name) {
     String path = WHERE_THEY_LIVE + name + ".sql";
 
     try (InputStream file = Sql.class.getClassLoader().getResourceAsStream(path)) {

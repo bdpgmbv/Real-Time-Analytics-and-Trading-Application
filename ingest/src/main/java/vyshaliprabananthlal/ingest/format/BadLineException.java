@@ -2,14 +2,14 @@ package vyshaliprabananthlal.ingest.format;
 
 public class BadLineException extends RuntimeException {
 
-  private final String whatIsWrong;
+  private final String reason;
 
-  public BadLineException(String whatIsWrong) {
-    super(whatIsWrong);
-    this.whatIsWrong = whatIsWrong;
+  public BadLineException(String reason) {
+    super(reason);
+    this.reason = reason;
   }
 
-  public String whatIsWrong() {
-    return whatIsWrong;
+  public String reason() {
+    return reason;
   }
 }

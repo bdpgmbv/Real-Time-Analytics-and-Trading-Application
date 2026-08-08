@@ -30,7 +30,7 @@ public class KafkaBatch {
 
     int rowsChanged = write(feed, statement, rows);
 
-    everythingLanded(kafka);
+    acknowledge(kafka);
 
     return rowsChanged;
   }
@@ -39,7 +39,7 @@ public class KafkaBatch {
     Timer.Sample howLongItTook = Timer.start(meters);
 
     try {
-      int rowsChanged = howManyRowsChanged(database.batchUpdate(statement, rows));
+      int rowsChanged = totalRowsChanged(database.batchUpdate(statement, rows));
 
       rowCounter(feed).increment(rowsChanged);
       return rowsChanged;
@@ -53,7 +53,7 @@ public class KafkaBatch {
     }
   }
 
-  public void everythingLanded(Acknowledgment kafka) {
+  public void acknowledge(Acknowledgment kafka) {
     kafka.acknowledge();
   }
 
@@ -77,7 +77,7 @@ public class KafkaBatch {
         feed, which -> Counter.builder("rtat.batch.failed").tag("feed", which).register(meters));
   }
 
-  static int howManyRowsChanged(int[] whatTheDatabaseReported) {
+  static int totalRowsChanged(int[] whatTheDatabaseReported) {
     int total = 0;
     for (int rowsChanged : whatTheDatabaseReported) {
       total = total + Math.max(0, rowsChanged);

@@ -168,7 +168,7 @@ class FileLoaderTest {
         """;
 
     LoadResult result = loader.load("messy.csv", file, "UI UPLOAD");
-    List<String> problems = loader.problemsFrom(result.fileLoadId());
+    List<String> problems = loader.problemsFor(result.fileLoadId());
 
     assertThat(problems).hasSize(3);
     assertThat(problems.get(0)).contains("line 2").contains("quantity is not a number");
@@ -189,7 +189,7 @@ class FileLoaderTest {
 
     assertThat(result.rowsLoaded()).isZero();
     assertThat(result.rowsRejected()).isEqualTo(1);
-    assertThat(loader.problemsFrom(result.fileLoadId()).get(0))
+    assertThat(loader.problemsFor(result.fileLoadId()).get(0))
         .contains("no such account or security");
   }
 

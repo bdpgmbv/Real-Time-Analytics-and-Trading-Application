@@ -86,7 +86,7 @@ class WhoCanCallWhatTest {
   void anotherCompanysFundIsForbidden() throws Exception {
     doThrow(new NotAllowedException("you cannot see fund 20"))
         .when(entitlements)
-        .mustBeAbleToSee(anyString(), anyInt());
+        .requireVisible(anyString(), anyInt());
 
     http.perform(get("/api/funds/20/exposure").with(jwt().jwt(it -> it.subject("adriatic-reader"))))
         .andExpect(status().isForbidden())
@@ -100,7 +100,7 @@ class WhoCanCallWhatTest {
   void aReaderMayNotSendHedges() throws Exception {
     doThrow(new NotAllowedException("you may look at fund 10 but not send trades for it"))
         .when(entitlements)
-        .mustBeAbleToSendTradesFor(anyString(), anyInt());
+        .requireTradePermission(anyString(), anyInt());
 
     http.perform(
             post("/api/funds/10/hedges")
@@ -111,7 +111,7 @@ class WhoCanCallWhatTest {
         .andExpect(content().string(org.hamcrest.Matchers.containsString("not send trades")));
 
     org.mockito.Mockito.verify(book, org.mockito.Mockito.never())
-        .sendToTheMarket(
+        .submit(
             anyInt(),
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.any(),
@@ -122,8 +122,8 @@ class WhoCanCallWhatTest {
   @DisplayName("the user the hedge is recorded against comes from the token, not the request body")
   void theUserComesFromTheTokenNotTheBody() throws Exception {
     when(calculator.forWholeFund(10)).thenReturn(new FundExposure(10, "USD", List.of(), 0));
-    when(adviser.whatToHedge(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
-    when(book.sendToTheMarket(
+    when(adviser.recommendFor(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
+    when(book.submit(
             anyInt(),
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.any(),
@@ -138,7 +138,7 @@ class WhoCanCallWhatTest {
         .andExpect(status().isOk());
 
     org.mockito.Mockito.verify(book)
-        .sendToTheMarket(
+        .submit(
             org.mockito.ArgumentMatchers.eq(10),
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.any(),
@@ -148,7 +148,7 @@ class WhoCanCallWhatTest {
   @Test
   @DisplayName("accounts asked for are narrowed to the ones that user may see")
   void accountsAreNarrowed() throws Exception {
-    when(entitlements.narrowToWhatTheyMaySee("adriatic-reader", 10, List.of(100, 200)))
+    when(entitlements.filterVisible("adriatic-reader", 10, List.of(100, 200)))
         .thenReturn(List.of(100));
     when(calculator.forAccounts(10, List.of(100)))
         .thenReturn(new FundExposure(10, "USD", List.of(), 1));

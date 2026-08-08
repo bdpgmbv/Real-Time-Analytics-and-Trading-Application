@@ -15,7 +15,7 @@ public class RateLimitKeyResolver implements KeyResolver {
     return exchange
         .getPrincipal()
         .map(RateLimitKeyResolver::nameOf)
-        .defaultIfEmpty(fallBackToTheCaller(exchange));
+        .defaultIfEmpty(callerAddress(exchange));
   }
 
   static String nameOf(java.security.Principal principal) {
@@ -24,7 +24,7 @@ public class RateLimitKeyResolver implements KeyResolver {
     return name == null || name.isBlank() ? NOBODY_IN_PARTICULAR : name;
   }
 
-  static String fallBackToTheCaller(ServerWebExchange exchange) {
+  static String callerAddress(ServerWebExchange exchange) {
     var remote = exchange.getRequest().getRemoteAddress();
 
     return remote == null ? NOBODY_IN_PARTICULAR : remote.getAddress().getHostAddress();

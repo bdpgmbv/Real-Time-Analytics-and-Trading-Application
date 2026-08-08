@@ -16,7 +16,7 @@ class HedgeAdviserTest {
   @DisplayName("a foreign currency the fund is holding is suggested for selling")
   void aHoldingIsSuggestedForSelling() {
     List<Recommendation> advice =
-        adviser.whatToHedge(usdFundHolding(new Exposure("EUR", 5000000, 5500000)));
+        adviser.recommendFor(usdFundHolding(new Exposure("EUR", 5000000, 5500000)));
 
     assertThat(advice).hasSize(1);
     assertThat(advice.get(0).currency()).isEqualTo("EUR");
@@ -28,7 +28,7 @@ class HedgeAdviserTest {
   @DisplayName("the currency the fund reports in is never hedged against itself")
   void theReportingCurrencyIsNeverHedged() {
     List<Recommendation> advice =
-        adviser.whatToHedge(usdFundHolding(new Exposure("USD", 9000000, 9000000)));
+        adviser.recommendFor(usdFundHolding(new Exposure("USD", 9000000, 9000000)));
 
     assertThat(advice).isEmpty();
   }
@@ -37,7 +37,7 @@ class HedgeAdviserTest {
   @DisplayName("an amount too small to be worth a trade is left alone")
   void aTinyExposureIsLeftAlone() {
     List<Recommendation> advice =
-        adviser.whatToHedge(usdFundHolding(new Exposure("EUR", 50000, 55000)));
+        adviser.recommendFor(usdFundHolding(new Exposure("EUR", 50000, 55000)));
 
     assertThat(advice).isEmpty();
   }
@@ -46,7 +46,7 @@ class HedgeAdviserTest {
   @DisplayName("a short position is suggested for buying, the opposite way round")
   void aShortIsSuggestedForBuying() {
     List<Recommendation> advice =
-        adviser.whatToHedge(usdFundHolding(new Exposure("JPY", -800000000, -5120000)));
+        adviser.recommendFor(usdFundHolding(new Exposure("JPY", -800000000, -5120000)));
 
     assertThat(advice.get(0).weSuggest()).isEqualTo(800000000.0);
     assertThat(advice.get(0).why()).contains("short");
@@ -56,7 +56,7 @@ class HedgeAdviserTest {
   @DisplayName("the size test uses the reporting currency, not the raw foreign amount")
   void theSizeTestUsesTheReportingCurrency() {
     List<Recommendation> advice =
-        adviser.whatToHedge(usdFundHolding(new Exposure("JPY", 10000000, 64000)));
+        adviser.recommendFor(usdFundHolding(new Exposure("JPY", 10000000, 64000)));
 
     assertThat(advice).isEmpty();
   }
@@ -74,7 +74,7 @@ class HedgeAdviserTest {
                 new Exposure("USD", 1000000, 1000000)),
             4);
 
-    List<Recommendation> advice = adviser.whatToHedge(exposure);
+    List<Recommendation> advice = adviser.recommendFor(exposure);
 
     assertThat(advice).hasSize(2);
     assertThat(advice.stream().map(Recommendation::currency)).containsExactly("EUR", "GBP");
@@ -84,7 +84,7 @@ class HedgeAdviserTest {
   @DisplayName("the reason says which way round it is, so a person can check it")
   void theReasonExplainsItself() {
     List<Recommendation> advice =
-        adviser.whatToHedge(usdFundHolding(new Exposure("EUR", 5000000, 5500000)));
+        adviser.recommendFor(usdFundHolding(new Exposure("EUR", 5000000, 5500000)));
 
     assertThat(advice.get(0).why()).contains("reports in USD").contains("holding").contains("EUR");
   }

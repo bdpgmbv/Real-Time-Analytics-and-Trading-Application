@@ -42,7 +42,7 @@ public class PriceDeltaFunction extends KeyedProcessFunction<Integer, PriceTick,
     }
 
     if (lastPrice == null) {
-      sendOut(holders, tick.price(), out);
+      emit(holders, tick.price(), out);
       return;
     }
 
@@ -51,10 +51,10 @@ public class PriceDeltaFunction extends KeyedProcessFunction<Integer, PriceTick,
       return;
     }
 
-    sendOut(holders, howMuchThePriceMoved, out);
+    emit(holders, howMuchThePriceMoved, out);
   }
 
-  private void sendOut(
+  private void emit(
       List<FundHolding> holders, double moveOrWholePrice, Collector<ExposureDelta> out) {
     for (FundHolding holder : holders) {
       out.collect(

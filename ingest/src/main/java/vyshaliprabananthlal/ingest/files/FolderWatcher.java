@@ -37,12 +37,12 @@ public class FolderWatcher {
       return;
     }
 
-    for (Path file : filesWaiting()) {
+    for (Path file : waitingFiles()) {
       loadOneFile(file);
     }
   }
 
-  List<Path> filesWaiting() {
+  List<Path> waitingFiles() {
     try (var everything = Files.list(folderToWatch)) {
       return everything.filter(Files::isRegularFile).sorted().toList();
     } catch (IOException problem) {
@@ -63,13 +63,13 @@ public class FolderWatcher {
         LOG.info(
             "{}: {} rows loaded, {} rejected", name, result.rowsLoaded(), result.rowsRejected());
       }
-      moveAside(file);
+      moveToFinished(file);
 
     } catch (IOException couldNotRead) {
       LOG.error("could not read {}: {}", file, couldNotRead.getMessage());
     } catch (BadLineException wholeFileIsWrong) {
-      LOG.error("{} was refused: {}", nameOf(file), wholeFileIsWrong.whatIsWrong());
-      moveAside(file);
+      LOG.error("{} was refused: {}", nameOf(file), wholeFileIsWrong.reason());
+      moveToFinished(file);
     }
   }
 
@@ -78,7 +78,7 @@ public class FolderWatcher {
     return justTheName == null ? file.toString() : justTheName.toString();
   }
 
-  private void moveAside(Path file) {
+  private void moveToFinished(Path file) {
     try {
       Files.createDirectories(folderForFinishedFiles);
       Files.move(file, folderForFinishedFiles.resolve(nameOf(file)));

@@ -25,10 +25,10 @@ class MovingPriceTest {
     MovingPrice price = new MovingPrice(1, 100.0);
 
     for (int tick = 0; tick < 5000; tick++) {
-      price.moveALittle();
+      price.move();
     }
 
-    assertThat(price.rightNow()).isBetween(80.0, 120.0);
+    assertThat(price.currentPrice()).isBetween(80.0, 120.0);
   }
 
   @Test
@@ -37,10 +37,10 @@ class MovingPriceTest {
     MovingPrice penny = new MovingPrice(1, 0.02);
 
     for (int tick = 0; tick < 20000; tick++) {
-      penny.moveALittle();
+      penny.move();
     }
 
-    assertThat(penny.rightNow()).isGreaterThan(0.0);
+    assertThat(penny.currentPrice()).isGreaterThan(0.0);
   }
 
   @Test

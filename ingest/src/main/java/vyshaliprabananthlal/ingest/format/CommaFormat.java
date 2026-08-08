@@ -13,7 +13,7 @@ public class CommaFormat implements CustodianFormat {
   }
 
   @Override
-  public boolean looksLikeMine(String headingLine) {
+  public boolean matches(String headingLine) {
     return HEADING.equalsIgnoreCase(headingLine.trim());
   }
 

@@ -4,7 +4,7 @@ public interface CustodianFormat {
 
   String custodianName();
 
-  boolean looksLikeMine(String headingLine);
+  boolean matches(String headingLine);
 
   PositionRow readOneLine(String line);
 }

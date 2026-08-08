@@ -36,7 +36,7 @@ class UploadControllerTest {
   void aGoodUploadReportsWhatHappened() throws Exception {
     when(loader.load(any(), any(), eq("UI UPLOAD")))
         .thenReturn(new LoadResult(7, "Northgate Trust", 50, 50, 0, false));
-    when(loader.problemsFrom(7)).thenReturn(List.of());
+    when(loader.problemsFor(7)).thenReturn(List.of());
 
     ResponseEntity<UploadAnswer> answer = controller.uploadACustodianFile(aFile("positions.csv"));
 
@@ -53,7 +53,7 @@ class UploadControllerTest {
   void uploadsAreMarkedAsComingFromTheScreen() throws Exception {
     when(loader.load(any(), any(), any()))
         .thenReturn(new LoadResult(1, "Northgate Trust", 1, 1, 0, false));
-    when(loader.problemsFrom(1)).thenReturn(List.of());
+    when(loader.problemsFor(1)).thenReturn(List.of());
 
     controller.uploadACustodianFile(aFile("positions.csv"));
 
@@ -65,7 +65,7 @@ class UploadControllerTest {
   void rejectedRowsComeBackToTheUser() throws Exception {
     when(loader.load(any(), any(), any()))
         .thenReturn(new LoadResult(9, "Northgate Trust", 50, 47, 3, false));
-    when(loader.problemsFrom(9))
+    when(loader.problemsFor(9))
         .thenReturn(
             List.of(
                 "line 12: the quantity is not a number: ABC",
@@ -116,7 +116,7 @@ class UploadControllerTest {
   void aFileWithNoNameStillWorks() throws Exception {
     when(loader.load(eq("unnamed"), any(), any()))
         .thenReturn(new LoadResult(1, "Northgate Trust", 1, 1, 0, false));
-    when(loader.problemsFrom(1)).thenReturn(List.of());
+    when(loader.problemsFor(1)).thenReturn(List.of());
 
     MockMultipartFile noName =
         new MockMultipartFile(

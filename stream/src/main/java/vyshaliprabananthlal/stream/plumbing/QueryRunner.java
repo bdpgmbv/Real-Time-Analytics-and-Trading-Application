@@ -14,11 +14,11 @@ public class QueryRunner {
     this.database = database;
   }
 
-  public <T> List<T> loadOrEmpty(String question, RowMapper<T> reader) {
+  public <T> List<T> query(String question, RowMapper<T> reader) {
     return database.query(question, reader);
   }
 
-  public <T> List<T> loadOrComplain(String question, RowMapper<T> reader, String complaint) {
+  public <T> List<T> queryRequired(String question, RowMapper<T> reader, String complaint) {
     List<T> loaded = database.query(question, reader);
 
     if (loaded.isEmpty()) {

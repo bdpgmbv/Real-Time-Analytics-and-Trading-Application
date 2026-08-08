@@ -25,14 +25,14 @@ public class SenderSelector implements ApplicationRunner {
   public void run(ApplicationArguments arguments) throws InterruptedException {
     if (wanted.isBlank()) {
       LOG.error("say which one to run, for example --rtat.send=price");
-      LOG.error("the ones we have: {}", theNamesWeKnow());
+      LOG.error("the ones we have: {}", knownNames());
       return;
     }
 
     Sender chosen = findIt(wanted);
     LOG.info("starting the {} sender", chosen.name());
 
-    chosen.sendUntilStopped();
+    chosen.sendContinuously();
   }
 
   private Sender findIt(String name) {
@@ -41,11 +41,10 @@ public class SenderSelector implements ApplicationRunner {
         return sender;
       }
     }
-    throw new IllegalArgumentException(
-        "no sender called " + name + ", we have: " + theNamesWeKnow());
+    throw new IllegalArgumentException("no sender called " + name + ", we have: " + knownNames());
   }
 
-  private List<String> theNamesWeKnow() {
+  private List<String> knownNames() {
     return everySender.stream().map(Sender::name).sorted().toList();
   }
 }

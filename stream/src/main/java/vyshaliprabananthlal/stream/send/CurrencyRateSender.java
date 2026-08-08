@@ -14,7 +14,7 @@ public class CurrencyRateSender implements Sender {
   private static final String KAFKA_TOPIC = "rtat.fx-rate";
   private static final int HOW_MANY_PER_SECOND = 100;
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final QueryRunner rows;
   private final KafkaPublisher kafka;
@@ -30,9 +30,9 @@ public class CurrencyRateSender implements Sender {
   }
 
   @Override
-  public void sendUntilStopped() throws InterruptedException {
+  public void sendContinuously() throws InterruptedException {
     List<MovingRate> rates =
-        rows.loadOrComplain(
+        rows.queryRequired(
             "SELECT from_currency, to_currency, rate FROM fx_rate",
             (row, number) ->
                 new MovingRate(row.getString(1).trim(), row.getString(2).trim(), row.getDouble(3)),
@@ -41,12 +41,12 @@ public class CurrencyRateSender implements Sender {
     SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
-      MovingRate rate = rates.get(DICE.nextInt(rates.size()));
-      rate.moveALittle();
+      MovingRate rate = rates.get(RANDOM.nextInt(rates.size()));
+      rate.move();
 
       kafka.send(KAFKA_TOPIC, rate.messageKey(), rate.asMessage());
 
-      pace.waitYourTurn(HOW_MANY_PER_SECOND);
+      pace.acquire(HOW_MANY_PER_SECOND);
     }
   }
 }

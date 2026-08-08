@@ -5,7 +5,7 @@ import java.util.Random;
 
 public final class TradeCandidate {
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private static final int BIGGEST_TRADE = 10000;
   private static final int ONE_IN_THIS_MANY_IS_TYPED_IN = 10;
@@ -23,14 +23,14 @@ public final class TradeCandidate {
   }
 
   public String newTrade(long tradeNumber) {
-    long howMany = 1L + DICE.nextInt(BIGGEST_TRADE);
-    boolean itIsASale = DICE.nextInt(2) == 0;
+    long howMany = 1L + RANDOM.nextInt(BIGGEST_TRADE);
+    boolean itIsASale = RANDOM.nextInt(2) == 0;
     if (itIsASale) {
       howMany = -howMany;
     }
 
-    double price = Math.round((5 + DICE.nextDouble() * 300) * 100) / 100.0;
-    boolean typedInByHand = DICE.nextInt(ONE_IN_THIS_MANY_IS_TYPED_IN) == 0;
+    double price = Math.round((5 + RANDOM.nextDouble() * 300) * 100) / 100.0;
+    boolean typedInByHand = RANDOM.nextInt(ONE_IN_THIS_MANY_IS_TYPED_IN) == 0;
     String cameFrom = typedInByHand ? "SOMEONE UPLOADED IT" : "AUTOMATIC FEED";
 
     return String.format(

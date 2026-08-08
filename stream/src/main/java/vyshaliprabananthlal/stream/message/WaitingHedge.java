@@ -6,7 +6,7 @@ import java.util.Random;
 
 public final class WaitingHedge {
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private static final double THE_FIRST_PART_OF_A_SPLIT = 0.4;
 
@@ -38,7 +38,7 @@ public final class WaitingHedge {
   }
 
   private String oneFill(long fillNumber, double amount) {
-    double rate = Math.round((0.9 + DICE.nextDouble() * 0.5) * 100000) / 100000.0;
+    double rate = Math.round((0.9 + RANDOM.nextDouble() * 0.5) * 100000) / 100000.0;
 
     return String.format(
         "{\"fillId\":%d,\"hedgeId\":%d,\"amountFilled\":%s,\"rate\":%s,"

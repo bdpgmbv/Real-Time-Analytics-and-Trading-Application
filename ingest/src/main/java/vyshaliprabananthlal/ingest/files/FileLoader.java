@@ -45,7 +45,7 @@ public class FileLoader {
   public LoadResult load(String fileName, String contents, String arrivedHow) {
     String fingerprint = Fingerprint.of(contents);
 
-    Optional<Integer> alreadyLoaded = book.findLoadOf(fingerprint);
+    Optional<Integer> alreadyLoaded = book.findByFingerprint(fingerprint);
     if (alreadyLoaded.isPresent()) {
       LOG.info("{} has been loaded before, skipping it", fileName);
       filesSkippedCounter.increment();
@@ -57,14 +57,14 @@ public class FileLoader {
       throw new BadLineException("the file is empty");
     }
 
-    CustodianFormat format = whichFormatIsThis(lines.get(0));
+    CustodianFormat format = formatFor(lines.get(0));
     int rowsInFile = lines.size() - 1;
     int fileLoadId =
-        book.startALoad(fileName, fingerprint, format.custodianName(), arrivedHow, rowsInFile);
+        book.startLoad(fileName, fingerprint, format.custodianName(), arrivedHow, rowsInFile);
 
-    Tally tally = readEveryLine(lines, format, fileLoadId);
+    Tally tally = loadRows(lines, format, fileLoadId);
 
-    book.finishALoad(fileLoadId, tally.loaded(), tally.rejected());
+    book.finishLoad(fileLoadId, tally.loaded(), tally.rejected());
     rowsLoadedCounter.increment(tally.loaded());
     rowsRejectedCounter.increment(tally.rejected());
     LOG.info("{}: {} rows loaded, {} rejected", fileName, tally.loaded(), tally.rejected());
@@ -73,11 +73,11 @@ public class FileLoader {
         fileLoadId, format.custodianName(), rowsInFile, tally.loaded(), tally.rejected(), false);
   }
 
-  public List<String> problemsFrom(int fileLoadId) {
-    return book.problemsFrom(fileLoadId);
+  public List<String> problemsFor(int fileLoadId) {
+    return book.problemsFor(fileLoadId);
   }
 
-  private Tally readEveryLine(List<String> lines, CustodianFormat format, int fileLoadId) {
+  private Tally loadRows(List<String> lines, CustodianFormat format, int fileLoadId) {
     int loaded = 0;
     int rejected = 0;
 
@@ -87,19 +87,19 @@ public class FileLoader {
         continue;
       }
 
-      Optional<String> whatIsWrong = savePositionFrom(line, format);
+      Optional<String> reason = savePositionRow(line, format);
 
-      if (whatIsWrong.isEmpty()) {
+      if (reason.isEmpty()) {
         loaded = loaded + 1;
       } else {
-        book.recordABadLine(fileLoadId, lineNumber + 1, line, whatIsWrong.get());
+        book.recordBadLine(fileLoadId, lineNumber + 1, line, reason.get());
         rejected = rejected + 1;
       }
     }
     return new Tally(loaded, rejected);
   }
 
-  private Optional<String> savePositionFrom(String line, CustodianFormat format) {
+  private Optional<String> savePositionRow(String line, CustodianFormat format) {
     try {
       PositionRow row = format.readOneLine(line);
 
@@ -109,14 +109,14 @@ public class FileLoader {
 
       return rowsChanged == 0 ? Optional.of("no such account or security") : Optional.empty();
 
-    } catch (BadLineException whatIsWrong) {
-      return Optional.of(whatIsWrong.whatIsWrong());
+    } catch (BadLineException reason) {
+      return Optional.of(reason.reason());
     }
   }
 
-  private CustodianFormat whichFormatIsThis(String headingLine) {
+  private CustodianFormat formatFor(String headingLine) {
     for (CustodianFormat format : knownFormats) {
-      if (format.looksLikeMine(headingLine)) {
+      if (format.matches(headingLine)) {
         return format;
       }
     }

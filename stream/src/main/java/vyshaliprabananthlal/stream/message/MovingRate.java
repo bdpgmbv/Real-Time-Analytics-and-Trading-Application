@@ -4,35 +4,35 @@ import java.util.Random;
 
 public final class MovingRate {
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final String fromCurrency;
   private final String toCurrency;
   private final double startedAt;
 
-  private double rightNow;
+  private double currentPrice;
 
   public MovingRate(String fromCurrency, String toCurrency, double startedAt) {
     this.fromCurrency = fromCurrency;
     this.toCurrency = toCurrency;
     this.startedAt = startedAt;
-    this.rightNow = startedAt;
+    this.currentPrice = startedAt;
   }
 
-  public void moveALittle() {
+  public void move() {
     boolean sameCurrencyBothSides = fromCurrency.equals(toCurrency);
     if (sameCurrencyBothSides) {
       return;
     }
 
-    double tinyRandomPush = (DICE.nextDouble() - 0.5) * 0.0004 * startedAt;
-    double pullBackTowardsStart = (startedAt - rightNow) * 0.01;
+    double tinyRandomPush = (RANDOM.nextDouble() - 0.5) * 0.0004 * startedAt;
+    double pullBackTowardsStart = (startedAt - currentPrice) * 0.01;
 
-    rightNow = rightNow + tinyRandomPush + pullBackTowardsStart;
+    currentPrice = currentPrice + tinyRandomPush + pullBackTowardsStart;
   }
 
-  public double rightNow() {
-    return rightNow;
+  public double currentPrice() {
+    return currentPrice;
   }
 
   public String messageKey() {
@@ -41,6 +41,6 @@ public final class MovingRate {
 
   public String asMessage() {
     return String.format(
-        "{\"from\":\"%s\",\"to\":\"%s\",\"rate\":%s}", fromCurrency, toCurrency, rightNow);
+        "{\"from\":\"%s\",\"to\":\"%s\",\"rate\":%s}", fromCurrency, toCurrency, currentPrice);
   }
 }

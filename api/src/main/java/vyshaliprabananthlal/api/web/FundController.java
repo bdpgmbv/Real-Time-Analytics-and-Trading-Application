@@ -30,7 +30,7 @@ public class FundController {
   }
 
   @GetMapping
-  public List<VisibleFund> fundsICanSee(Authentication token) {
+  public List<VisibleFund> visibleFunds(Authentication token) {
     return entitlements.fundsVisibleTo(whoIsAsking.userId(token));
   }
 
@@ -41,13 +41,13 @@ public class FundController {
       Authentication token) {
 
     String userId = whoIsAsking.userId(token);
-    entitlements.mustBeAbleToSee(userId, fundId);
+    entitlements.requireVisible(userId, fundId);
 
     if (accounts == null || accounts.isEmpty()) {
       return calculator.forWholeFund(fundId);
     }
 
-    List<Integer> allowed = entitlements.narrowToWhatTheyMaySee(userId, fundId, accounts);
+    List<Integer> allowed = entitlements.filterVisible(userId, fundId, accounts);
     return calculator.forAccounts(fundId, allowed);
   }
 }

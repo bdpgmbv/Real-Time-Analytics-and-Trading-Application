@@ -25,10 +25,10 @@ class MovingRateTest {
     MovingRate sameBothSides = new MovingRate("USD", "USD", 1.0);
 
     for (int tick = 0; tick < 10000; tick++) {
-      sameBothSides.moveALittle();
+      sameBothSides.move();
     }
 
-    assertThat(sameBothSides.rightNow()).isEqualTo(1.0);
+    assertThat(sameBothSides.currentPrice()).isEqualTo(1.0);
   }
 
   @Test
@@ -37,10 +37,10 @@ class MovingRateTest {
     MovingRate rate = new MovingRate("JPY", "USD", 0.006336);
 
     for (int tick = 0; tick < 10000; tick++) {
-      rate.moveALittle();
+      rate.move();
     }
 
-    assertThat(rate.rightNow()).isBetween(0.006, 0.0067);
+    assertThat(rate.currentPrice()).isBetween(0.006, 0.0067);
   }
 
   @Test

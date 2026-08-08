@@ -20,11 +20,11 @@ public class MarketChangeFlag {
     kafka.acknowledge();
   }
 
-  public boolean anythingMoved() {
+  public boolean hasChanged() {
     return anythingMovedSinceWeLastLooked.getAndSet(false);
   }
 
-  void pretendSomethingMoved() {
+  void markChanged() {
     anythingMovedSinceWeLastLooked.set(true);
   }
 }

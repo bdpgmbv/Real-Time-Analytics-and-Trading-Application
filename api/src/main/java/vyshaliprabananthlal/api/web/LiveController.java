@@ -40,12 +40,12 @@ public class LiveController {
 
   @GetMapping(value = "/live", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter watchThisFund(@PathVariable int fundId, Authentication token) {
-    entitlements.mustBeAbleToSee(whoIsAsking.userId(token), fundId);
+    entitlements.requireVisible(whoIsAsking.userId(token), fundId);
 
     SseEmitter screen = new SseEmitter(howLongAScreenMayStayOpen.toMillis());
     watching.add(fundId, screen);
 
-    pushing.pushOneFund(fundId);
+    pushing.publish(fundId);
 
     return screen;
   }

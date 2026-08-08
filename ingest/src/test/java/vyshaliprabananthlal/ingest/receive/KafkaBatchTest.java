@@ -19,16 +19,16 @@ class KafkaBatchTest {
   @Test
   @DisplayName("counts the rows the database says it changed")
   void countsRowsChanged() {
-    assertThat(KafkaBatch.howManyRowsChanged(new int[] {1, 1, 1})).isEqualTo(3);
-    assertThat(KafkaBatch.howManyRowsChanged(new int[] {1, 0, 1})).isEqualTo(2);
-    assertThat(KafkaBatch.howManyRowsChanged(new int[] {})).isZero();
+    assertThat(KafkaBatch.totalRowsChanged(new int[] {1, 1, 1})).isEqualTo(3);
+    assertThat(KafkaBatch.totalRowsChanged(new int[] {1, 0, 1})).isEqualTo(2);
+    assertThat(KafkaBatch.totalRowsChanged(new int[] {})).isZero();
   }
 
   @Test
   @DisplayName("a batch result of SUCCESS_NO_INFO is not counted as negative")
   void noInfoIsNotNegative() {
-    assertThat(KafkaBatch.howManyRowsChanged(new int[] {-2, -2})).isZero();
-    assertThat(KafkaBatch.howManyRowsChanged(new int[] {-3, 5})).isEqualTo(5);
+    assertThat(KafkaBatch.totalRowsChanged(new int[] {-2, -2})).isZero();
+    assertThat(KafkaBatch.totalRowsChanged(new int[] {-3, 5})).isEqualTo(5);
   }
 
   @Test

@@ -43,9 +43,9 @@ class PushToTheScreensTest {
   @DisplayName("with nobody watching, nothing is calculated however much moves")
   void nobodyWatchingMeansNoWork() {
     when(watching.fundsBeingWatched()).thenReturn(Set.of());
-    changes.pretendSomethingMoved();
+    changes.markChanged();
 
-    pushing.pushWhateverMoved();
+    pushing.publishChanges();
 
     verify(calculator, never()).forWholeFund(anyInt());
   }
@@ -55,7 +55,7 @@ class PushToTheScreensTest {
   void nothingMovingMeansNoWork() {
     when(watching.fundsBeingWatched()).thenReturn(Set.of(1));
 
-    pushing.pushWhateverMoved();
+    pushing.publishChanges();
 
     verify(calculator, never()).forWholeFund(anyInt());
   }
@@ -71,7 +71,7 @@ class PushToTheScreensTest {
       changes.whenAnythingArrives(List.of("{}"), kafka);
     }
 
-    pushing.pushWhateverMoved();
+    pushing.publishChanges();
 
     verify(calculator, times(1)).forWholeFund(1);
     verify(watching, times(1)).sendTo(eq(1), anyString(), any());
@@ -82,10 +82,10 @@ class PushToTheScreensTest {
   void aSecondSweepWithNothingNewDoesNothing() {
     when(watching.fundsBeingWatched()).thenReturn(Set.of(1));
     when(calculator.forWholeFund(1)).thenReturn(exposureOf("EUR", 5000000));
-    changes.pretendSomethingMoved();
+    changes.markChanged();
 
-    pushing.pushWhateverMoved();
-    pushing.pushWhateverMoved();
+    pushing.publishChanges();
+    pushing.publishChanges();
 
     verify(calculator, times(1)).forWholeFund(1);
   }
@@ -96,11 +96,11 @@ class PushToTheScreensTest {
     when(watching.fundsBeingWatched()).thenReturn(Set.of(1));
     when(calculator.forWholeFund(1)).thenReturn(exposureOf("EUR", 5000000));
 
-    changes.pretendSomethingMoved();
-    pushing.pushWhateverMoved();
+    changes.markChanged();
+    pushing.publishChanges();
 
-    changes.pretendSomethingMoved();
-    pushing.pushWhateverMoved();
+    changes.markChanged();
+    pushing.publishChanges();
 
     verify(calculator, times(2)).forWholeFund(1);
     verify(watching, times(1)).sendTo(eq(1), anyString(), any());
@@ -115,10 +115,10 @@ class PushToTheScreensTest {
         .thenReturn(exposureOf("EUR", 5000000))
         .thenReturn(exposureOf("EUR", 5100000));
 
-    changes.pretendSomethingMoved();
-    pushing.pushWhateverMoved();
-    changes.pretendSomethingMoved();
-    pushing.pushWhateverMoved();
+    changes.markChanged();
+    pushing.publishChanges();
+    changes.markChanged();
+    pushing.publishChanges();
 
     verify(watching, times(2)).sendTo(eq(1), anyString(), any());
     assertThat(meters.get("rtat.live.pushed").counter().count()).isEqualTo(2.0);
@@ -132,10 +132,10 @@ class PushToTheScreensTest {
         .thenReturn(exposureOf("EUR", 5000000.4))
         .thenReturn(exposureOf("EUR", 5000000.3));
 
-    changes.pretendSomethingMoved();
-    pushing.pushWhateverMoved();
-    changes.pretendSomethingMoved();
-    pushing.pushWhateverMoved();
+    changes.markChanged();
+    pushing.publishChanges();
+    changes.markChanged();
+    pushing.publishChanges();
 
     verify(watching, times(1)).sendTo(eq(1), anyString(), any());
   }
@@ -146,9 +146,9 @@ class PushToTheScreensTest {
     when(watching.fundsBeingWatched()).thenReturn(new java.util.TreeSet<>(Set.of(1, 2)));
     when(calculator.forWholeFund(1)).thenThrow(new IllegalStateException("the database went away"));
     when(calculator.forWholeFund(2)).thenReturn(exposureOf("EUR", 1000000));
-    changes.pretendSomethingMoved();
+    changes.markChanged();
 
-    pushing.pushWhateverMoved();
+    pushing.publishChanges();
 
     verify(watching, times(1)).sendTo(eq(2), anyString(), any());
   }
@@ -158,9 +158,9 @@ class PushToTheScreensTest {
   void everyWatchedFundIsPushed() {
     when(watching.fundsBeingWatched()).thenReturn(new java.util.TreeSet<>(Set.of(1, 2, 3)));
     when(calculator.forWholeFund(anyInt())).thenReturn(exposureOf("EUR", 1000000));
-    changes.pretendSomethingMoved();
+    changes.markChanged();
 
-    pushing.pushWhateverMoved();
+    pushing.publishChanges();
 
     verify(calculator, times(3)).forWholeFund(anyInt());
   }
@@ -172,7 +172,7 @@ class PushToTheScreensTest {
 
     changes.whenAnythingArrives(List.of(), kafka);
 
-    assertThat(changes.anythingMoved()).isFalse();
+    assertThat(changes.hasChanged()).isFalse();
     verify(kafka).acknowledge();
   }
 

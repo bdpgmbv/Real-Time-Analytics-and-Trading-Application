@@ -4,29 +4,29 @@ import java.util.Random;
 
 public final class MovingHolding {
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final int accountNumber;
   private final int productNumber;
   private final double startedAt;
 
-  private double rightNow;
+  private double currentPrice;
 
   public MovingHolding(int accountNumber, int productNumber, double startedAt) {
     this.accountNumber = accountNumber;
     this.productNumber = productNumber;
     this.startedAt = startedAt;
-    this.rightNow = startedAt;
+    this.currentPrice = startedAt;
   }
 
-  public void moveALittle() {
-    double smallMove = (DICE.nextDouble() - 0.5) * 0.02 * startedAt;
+  public void move() {
+    double smallMove = (RANDOM.nextDouble() - 0.5) * 0.02 * startedAt;
 
-    rightNow = startedAt + smallMove;
+    currentPrice = startedAt + smallMove;
   }
 
-  public double rightNow() {
-    return rightNow;
+  public double currentPrice() {
+    return currentPrice;
   }
 
   public String messageKey() {
@@ -34,7 +34,7 @@ public final class MovingHolding {
   }
 
   public String asMessage() {
-    double rounded = Math.round(rightNow * 10000) / 10000.0;
+    double rounded = Math.round(currentPrice * 10000) / 10000.0;
 
     return String.format(
         "{\"accountId\":%d,\"productId\":%d,\"howMany\":%s}",

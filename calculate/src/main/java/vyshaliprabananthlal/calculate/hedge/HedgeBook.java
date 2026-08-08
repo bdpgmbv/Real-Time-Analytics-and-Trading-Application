@@ -19,7 +19,7 @@ public class HedgeBook {
   }
 
   @Transactional
-  public List<Long> sendToTheMarket(
+  public List<Long> submit(
       int fundId, List<Recommendation> advice, List<Double> whatTheClientChose, String whoSentIt) {
 
     if (advice.size() != whatTheClientChose.size()) {
@@ -31,7 +31,7 @@ public class HedgeBook {
               + " answers");
     }
 
-    long nextNumber = nextHedgeNumber();
+    long nextNumber = nextHedgeId();
     List<Long> sent = new ArrayList<>();
 
     for (int which = 0; which < advice.size(); which++) {
@@ -61,7 +61,7 @@ public class HedgeBook {
     return sent;
   }
 
-  private long nextHedgeNumber() {
+  private long nextHedgeId() {
     Long next = database.queryForObject(sql.statement("next-hedge-number"), Long.class);
 
     return next == null ? 1 : next;

@@ -8,13 +8,13 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 public final class SharedPostgres {
 
-  private static final PostgreSQLContainer THE_ONLY_ONE =
+  private static final PostgreSQLContainer INSTANCE =
       new PostgreSQLContainer("postgres:17.10").withDatabaseName("rtat").withReuse(true);
 
   private static final Set<String> ALREADY_APPLIED = ConcurrentHashMap.newKeySet();
 
   static {
-    THE_ONLY_ONE.start();
+    INSTANCE.start();
     makeADatabaseForThisModule();
   }
 
@@ -49,17 +49,17 @@ public final class SharedPostgres {
 
   public static String jdbcUrl() {
     String withoutTheDatabase =
-        THE_ONLY_ONE.getJdbcUrl().replaceAll("/[^/?]+(\\?.*)?$", "/" + ourDatabase());
+        INSTANCE.getJdbcUrl().replaceAll("/[^/?]+(\\?.*)?$", "/" + ourDatabase());
 
     return withoutTheDatabase;
   }
 
   public static String user() {
-    return THE_ONLY_ONE.getUsername();
+    return INSTANCE.getUsername();
   }
 
   public static String password() {
-    return THE_ONLY_ONE.getPassword();
+    return INSTANCE.getPassword();
   }
 
   static String ourDatabase() {
@@ -68,9 +68,9 @@ public final class SharedPostgres {
 
   private static void makeADatabaseForThisModule() {
     DriverManagerDataSource theStartingPoint = new DriverManagerDataSource();
-    theStartingPoint.setUrl(THE_ONLY_ONE.getJdbcUrl());
-    theStartingPoint.setUsername(THE_ONLY_ONE.getUsername());
-    theStartingPoint.setPassword(THE_ONLY_ONE.getPassword());
+    theStartingPoint.setUrl(INSTANCE.getJdbcUrl());
+    theStartingPoint.setUsername(INSTANCE.getUsername());
+    theStartingPoint.setPassword(INSTANCE.getPassword());
 
     JdbcTemplate first = new JdbcTemplate(theStartingPoint);
     Integer alreadyThere =

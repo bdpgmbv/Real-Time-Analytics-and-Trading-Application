@@ -43,7 +43,7 @@ public final class HoldingsLoader {
     return whoHoldsWhat;
   }
 
-  public static int howManyHoldings(Map<Integer, List<FundHolding>> whoHoldsWhat) {
+  public static int holdingCount(Map<Integer, List<FundHolding>> whoHoldsWhat) {
     int total = 0;
     for (List<FundHolding> holders : whoHoldsWhat.values()) {
       total = total + holders.size();

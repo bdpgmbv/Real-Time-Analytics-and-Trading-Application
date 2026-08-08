@@ -25,13 +25,13 @@ public class Entitlements {
         userId);
   }
 
-  public void mustBeAbleToSee(String userId, int fundId) {
+  public void requireVisible(String userId, int fundId) {
     if (findEntitlement(userId, fundId).isEmpty()) {
       throw new NotAllowedException("you cannot see fund " + fundId);
     }
   }
 
-  public void mustBeAbleToSendTradesFor(String userId, int fundId) {
+  public void requireTradePermission(String userId, int fundId) {
     List<Boolean> found = findEntitlement(userId, fundId);
 
     if (found.isEmpty()) {
@@ -43,7 +43,7 @@ public class Entitlements {
     }
   }
 
-  public List<Integer> narrowToWhatTheyMaySee(String userId, int fundId, List<Integer> asked) {
+  public List<Integer> filterVisible(String userId, int fundId, List<Integer> asked) {
     if (asked.isEmpty()) {
       return List.of();
     }

@@ -40,23 +40,23 @@ public class ExposurePublisher {
   }
 
   @Scheduled(fixedDelayString = "${rtat.live.push-every-milliseconds:1000}")
-  public void pushWhateverMoved() {
+  public void publishChanges() {
     if (watching.fundsBeingWatched().isEmpty()) {
       return;
     }
-    if (!changes.anythingMoved()) {
+    if (!changes.hasChanged()) {
       return;
     }
 
     for (int fundId : watching.fundsBeingWatched()) {
-      pushOneFund(fundId);
+      publish(fundId);
     }
   }
 
-  public void pushOneFund(int fundId) {
+  public void publish(int fundId) {
     try {
       FundExposure now = calculator.forWholeFund(fundId);
-      String asText = shortDescriptionOf(now);
+      String asText = signatureOf(now);
 
       if (asText.equals(whatWeLastSent.get(fundId))) {
         skippedBecauseNothingChanged.increment();
@@ -72,7 +72,7 @@ public class ExposurePublisher {
     }
   }
 
-  static String shortDescriptionOf(FundExposure exposure) {
+  static String signatureOf(FundExposure exposure) {
     StringBuilder builder = new StringBuilder();
 
     for (var one : exposure.byCurrency()) {
@@ -81,7 +81,7 @@ public class ExposurePublisher {
     return builder.toString();
   }
 
-  void forgetWhatWeSent() {
+  void clear() {
     whatWeLastSent.clear();
   }
 }

@@ -33,7 +33,7 @@ public final class ExposureJob {
 
     System.out.println(
         "loaded "
-            + HoldingsLoader.howManyHoldings(whoHoldsWhat)
+            + HoldingsLoader.holdingCount(whoHoldsWhat)
             + " holdings across "
             + whoHoldsWhat.size()
             + " securities");

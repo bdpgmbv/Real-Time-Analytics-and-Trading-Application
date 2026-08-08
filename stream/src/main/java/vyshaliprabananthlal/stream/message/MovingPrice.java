@@ -4,28 +4,28 @@ import java.util.Random;
 
 public final class MovingPrice {
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final int productNumber;
   private final double startedAt;
 
-  private double rightNow;
+  private double currentPrice;
 
   public MovingPrice(int productNumber, double startedAt) {
     this.productNumber = productNumber;
     this.startedAt = startedAt;
-    this.rightNow = startedAt;
+    this.currentPrice = startedAt;
   }
 
-  public void moveALittle() {
-    double smallMove = (DICE.nextDouble() - 0.5) * 0.01 * startedAt;
-    double pullBackTowardsStart = (startedAt - rightNow) * 0.005;
+  public void move() {
+    double smallMove = (RANDOM.nextDouble() - 0.5) * 0.01 * startedAt;
+    double pullBackTowardsStart = (startedAt - currentPrice) * 0.005;
 
-    rightNow = Math.max(0.01, rightNow + smallMove + pullBackTowardsStart);
+    currentPrice = Math.max(0.01, currentPrice + smallMove + pullBackTowardsStart);
   }
 
-  public double rightNow() {
-    return rightNow;
+  public double currentPrice() {
+    return currentPrice;
   }
 
   public String messageKey() {
@@ -33,7 +33,7 @@ public final class MovingPrice {
   }
 
   public String asMessage() {
-    double rounded = Math.round(rightNow * 1000000) / 1000000.0;
+    double rounded = Math.round(currentPrice * 1000000) / 1000000.0;
 
     return String.format(
         "{\"productId\":%d,\"price\":%s,\"howFresh\":\"DELAYED 20 MINUTES\"}",

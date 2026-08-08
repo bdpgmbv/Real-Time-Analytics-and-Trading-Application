@@ -18,7 +18,7 @@ public class PriceSender implements Sender {
   private static final int A_BUSY_SPELL_ARRIVES_EVERY_SECONDS = 1200;
   private static final int A_BUSY_SPELL_LASTS_SECONDS = 10;
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final QueryRunner rows;
   private final KafkaPublisher kafka;
@@ -34,9 +34,9 @@ public class PriceSender implements Sender {
   }
 
   @Override
-  public void sendUntilStopped() throws InterruptedException {
+  public void sendContinuously() throws InterruptedException {
     List<MovingPrice> prices =
-        rows.loadOrComplain(
+        rows.queryRequired(
             "SELECT product_id, price FROM price WHERE price > 1",
             (row, number) -> new MovingPrice(row.getInt(1), row.getDouble(2)),
             "no prices found - run db/3-generate.sql first");
@@ -45,16 +45,16 @@ public class PriceSender implements Sender {
     SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
-      MovingPrice price = prices.get(DICE.nextInt(prices.size()));
-      price.moveALittle();
+      MovingPrice price = prices.get(RANDOM.nextInt(prices.size()));
+      price.move();
 
       kafka.send(KAFKA_TOPIC, price.messageKey(), price.asMessage());
 
-      pace.waitYourTurn(inABusySpell(startedAtSecond) ? BUSY_PER_SECOND : NORMAL_PER_SECOND);
+      pace.acquire(isBusyPeriod(startedAtSecond) ? BUSY_PER_SECOND : NORMAL_PER_SECOND);
     }
   }
 
-  private static boolean inABusySpell(long startedAtSecond) {
+  private static boolean isBusyPeriod(long startedAtSecond) {
     long secondsRunning = System.currentTimeMillis() / 1000 - startedAtSecond;
 
     return secondsRunning % A_BUSY_SPELL_ARRIVES_EVERY_SECONDS < A_BUSY_SPELL_LASTS_SECONDS;

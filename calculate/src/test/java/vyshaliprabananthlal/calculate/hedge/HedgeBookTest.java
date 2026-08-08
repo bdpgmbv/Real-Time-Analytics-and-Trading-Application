@@ -39,8 +39,7 @@ class HedgeBookTest {
   @Test
   @DisplayName("a hedge the client accepted is written out as SENT")
   void anAcceptedHedgeIsSent() {
-    List<Long> sent =
-        book.sendToTheMarket(1, List.of(euroAdvice()), List.of(-5000000.0), "a.person");
+    List<Long> sent = book.submit(1, List.of(euroAdvice()), List.of(-5000000.0), "a.person");
 
     assertThat(sent).hasSize(1);
     assertThat(statusOf(sent.get(0))).isEqualTo("SENT");
@@ -51,8 +50,7 @@ class HedgeBookTest {
   @Test
   @DisplayName("what the client chose is kept even when it differs from what we suggested")
   void whatTheClientChoseIsKept() {
-    List<Long> sent =
-        book.sendToTheMarket(1, List.of(euroAdvice()), List.of(-3000000.0), "a.person");
+    List<Long> sent = book.submit(1, List.of(euroAdvice()), List.of(-3000000.0), "a.person");
 
     assertThat(columnOf(sent.get(0), "we_suggested")).isEqualTo(-5000000.0);
     assertThat(columnOf(sent.get(0), "client_chose")).isEqualTo(-3000000.0);
@@ -61,7 +59,7 @@ class HedgeBookTest {
   @Test
   @DisplayName("a recommendation the client declined is not sent at all")
   void aDeclinedRecommendationIsNotSent() {
-    List<Long> sent = book.sendToTheMarket(1, List.of(euroAdvice()), List.of(0.0), "a.person");
+    List<Long> sent = book.submit(1, List.of(euroAdvice()), List.of(0.0), "a.person");
 
     assertThat(sent).isEmpty();
     assertThat(howManyHedges()).isZero();
@@ -71,7 +69,7 @@ class HedgeBookTest {
   @DisplayName("several hedges sent together each get their own number and reference")
   void severalHedgesGetTheirOwnNumbers() {
     List<Long> sent =
-        book.sendToTheMarket(
+        book.submit(
             1, List.of(euroAdvice(), poundAdvice()), List.of(-5000000.0, -2000000.0), "a.person");
 
     assertThat(sent).hasSize(2);
@@ -83,8 +81,8 @@ class HedgeBookTest {
   @Test
   @DisplayName("a second batch carries on numbering, it does not reuse a number")
   void numberingCarriesOn() {
-    List<Long> first = book.sendToTheMarket(1, List.of(euroAdvice()), List.of(-1.0), "a.person");
-    List<Long> second = book.sendToTheMarket(1, List.of(poundAdvice()), List.of(-1.0), "a.person");
+    List<Long> first = book.submit(1, List.of(euroAdvice()), List.of(-1.0), "a.person");
+    List<Long> second = book.submit(1, List.of(poundAdvice()), List.of(-1.0), "a.person");
 
     assertThat(second.get(0)).isGreaterThan(first.get(0));
     assertThat(howManyHedges()).isEqualTo(2);
@@ -94,7 +92,7 @@ class HedgeBookTest {
   @DisplayName("a mismatch between advice and answers is refused before anything is written")
   void aMismatchIsRefused() {
     assertThatThrownBy(
-            () -> book.sendToTheMarket(1, List.of(euroAdvice(), poundAdvice()), List.of(-1.0), "a"))
+            () -> book.submit(1, List.of(euroAdvice(), poundAdvice()), List.of(-1.0), "a"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("2 recommendations but 1 answers");
 
@@ -104,7 +102,7 @@ class HedgeBookTest {
   @Test
   @DisplayName("who sent it is recorded, because a person has to answer for it later")
   void whoSentItIsRecorded() {
-    List<Long> sent = book.sendToTheMarket(1, List.of(euroAdvice()), List.of(-1.0), "r.baumann");
+    List<Long> sent = book.submit(1, List.of(euroAdvice()), List.of(-1.0), "r.baumann");
 
     assertThat(oneText("SELECT sent_by FROM hedge WHERE hedge_id = ?", sent.get(0)))
         .isEqualTo("r.baumann");

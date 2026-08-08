@@ -11,7 +11,7 @@ public final class SendRate {
     this.sendTheNextOneAt = System.nanoTime();
   }
 
-  public void waitYourTurn(int howManyPerSecond) throws InterruptedException {
+  public void acquire(int howManyPerSecond) throws InterruptedException {
     if (howManyPerSecond < 1) {
       throw new IllegalArgumentException("how many per second must be at least 1");
     }

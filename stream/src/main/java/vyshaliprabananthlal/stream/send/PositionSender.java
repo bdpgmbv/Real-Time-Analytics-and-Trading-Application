@@ -15,7 +15,7 @@ public class PositionSender implements Sender {
   private static final int HOW_MANY_PER_SECOND = 7733;
   private static final int HOW_MANY_TO_LOAD = 200000;
 
-  private static final Random DICE = new Random();
+  private static final Random RANDOM = new Random();
 
   private final QueryRunner rows;
   private final KafkaPublisher kafka;
@@ -31,9 +31,9 @@ public class PositionSender implements Sender {
   }
 
   @Override
-  public void sendUntilStopped() throws InterruptedException {
+  public void sendContinuously() throws InterruptedException {
     List<MovingHolding> holdings =
-        rows.loadOrComplain(
+        rows.queryRequired(
             "SELECT account_id, product_id, how_many FROM position LIMIT " + HOW_MANY_TO_LOAD,
             (row, number) -> new MovingHolding(row.getInt(1), row.getInt(2), row.getDouble(3)),
             "no positions found - run db/3-generate.sql first");
@@ -41,12 +41,12 @@ public class PositionSender implements Sender {
     SendRate pace = new SendRate();
 
     while (!Thread.currentThread().isInterrupted()) {
-      MovingHolding holding = holdings.get(DICE.nextInt(holdings.size()));
-      holding.moveALittle();
+      MovingHolding holding = holdings.get(RANDOM.nextInt(holdings.size()));
+      holding.move();
 
       kafka.send(KAFKA_TOPIC, holding.messageKey(), holding.asMessage());
 
-      pace.waitYourTurn(HOW_MANY_PER_SECOND);
+      pace.acquire(HOW_MANY_PER_SECOND);
     }
   }
 }

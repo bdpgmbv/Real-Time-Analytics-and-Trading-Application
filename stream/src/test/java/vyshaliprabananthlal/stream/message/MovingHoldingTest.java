@@ -25,8 +25,8 @@ class MovingHoldingTest {
     MovingHolding holding = new MovingHolding(1, 1, 1000.0);
 
     for (int tick = 0; tick < 5000; tick++) {
-      holding.moveALittle();
-      assertThat(holding.rightNow()).isBetween(990.0, 1010.0);
+      holding.move();
+      assertThat(holding.currentPrice()).isBetween(990.0, 1010.0);
     }
   }
 

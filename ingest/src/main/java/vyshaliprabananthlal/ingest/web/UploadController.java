@@ -27,7 +27,7 @@ public class UploadController {
   public ResponseEntity<UploadAnswer> uploadACustodianFile(@RequestParam("file") MultipartFile file)
       throws IOException {
 
-    String fileName = nameOrUnnamed(file.getOriginalFilename());
+    String fileName = fileNameOr(file.getOriginalFilename());
     String contents = new String(file.getBytes(), StandardCharsets.UTF_8);
 
     try {
@@ -45,15 +45,15 @@ public class UploadController {
               "Loaded from " + result.custodian() + ".",
               result.rowsLoaded(),
               result.rowsRejected(),
-              loader.problemsFrom(result.fileLoadId())));
+              loader.problemsFor(result.fileLoadId())));
 
     } catch (BadLineException wholeFileIsWrong) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(new UploadAnswer(fileName, wholeFileIsWrong.whatIsWrong(), 0, 0, List.of()));
+          .body(new UploadAnswer(fileName, wholeFileIsWrong.reason(), 0, 0, List.of()));
     }
   }
 
-  private static String nameOrUnnamed(@Nullable String givenName) {
+  private static String fileNameOr(@Nullable String givenName) {
     if (givenName == null || givenName.isBlank()) {
       return "unnamed";
     }

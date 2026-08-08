@@ -40,10 +40,10 @@ public class HedgeController {
   }
 
   @GetMapping("/suggested")
-  public List<Recommendation> whatWeSuggest(@PathVariable int fundId, Authentication token) {
-    entitlements.mustBeAbleToSee(whoIsAsking.userId(token), fundId);
+  public List<Recommendation> suggestions(@PathVariable int fundId, Authentication token) {
+    entitlements.requireVisible(whoIsAsking.userId(token), fundId);
 
-    return adviser.whatToHedge(calculator.forWholeFund(fundId));
+    return adviser.recommendFor(calculator.forWholeFund(fundId));
   }
 
   @PostMapping
@@ -51,10 +51,10 @@ public class HedgeController {
       @PathVariable int fundId, @RequestBody WhatTheClientChose chose, Authentication token) {
 
     String userId = whoIsAsking.userId(token);
-    entitlements.mustBeAbleToSendTradesFor(userId, fundId);
+    entitlements.requireTradePermission(userId, fundId);
 
-    List<Recommendation> advice = adviser.whatToHedge(calculator.forWholeFund(fundId));
-    List<Long> sent = book.sendToTheMarket(fundId, advice, chose.amounts(), userId);
+    List<Recommendation> advice = adviser.recommendFor(calculator.forWholeFund(fundId));
+    List<Long> sent = book.submit(fundId, advice, chose.amounts(), userId);
 
     return new SentHedges(sent, sent.size() + " hedges sent to the market");
   }

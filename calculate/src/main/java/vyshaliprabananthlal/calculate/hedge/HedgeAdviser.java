@@ -18,7 +18,7 @@ public class HedgeAdviser {
     this.tooSmallToBother = tooSmallToBother;
   }
 
-  public List<Recommendation> whatToHedge(FundExposure exposure) {
+  public List<Recommendation> recommendFor(FundExposure exposure) {
     List<Recommendation> advice = new ArrayList<>();
 
     for (Exposure one : exposure.byCurrency()) {
@@ -35,12 +35,12 @@ public class HedgeAdviser {
               one.amount(),
               -one.amount(),
               FORWARD,
-              whyWeSaidThat(one, exposure.reportingCurrency())));
+              reasonFor(one, exposure.reportingCurrency())));
     }
     return advice;
   }
 
-  private String whyWeSaidThat(Exposure one, String reportingCurrency) {
+  private String reasonFor(Exposure one, String reportingCurrency) {
     String direction = one.amount() > 0 ? "holding" : "short";
 
     return "the fund reports in "
