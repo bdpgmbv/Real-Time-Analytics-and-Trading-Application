@@ -1,13 +1,9 @@
--- ONLY FOR A THROWAWAY DATABASE. The first statement destroys everything.
---
--- A client's database is never built from this file. It is built and upgraded by the
--- changelog in ingest/src/main/resources/db/changelog, which adds and never drops.
--- This file exists so that a developer can start from nothing in one second.
+--liquibase formatted sql
 
-DROP TABLE IF EXISTS file_row_problem, file_load, position_exposure, position, price, trade,
-  hedge_fill, hedge, entitlement, app_user, account, fund, client, product, fx_rate,
-  exchange, currency CASCADE;
-
+--changeset vyshaliprabananthlal:001-tables
+--comment The tables as they stood when rtat was first shipped.
+--preconditions onFail:MARK_RAN onError:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='position'
 
 CREATE TABLE currency (
   code          CHAR(3)  PRIMARY KEY,
@@ -174,3 +170,41 @@ CREATE TABLE file_row_problem (
   reason TEXT   NOT NULL,
   PRIMARY KEY (file_load_id, line_number)
 );
+
+
+--changeset vyshaliprabananthlal:001-keys-and-indexes
+--comment Keys and indexes, from what was 4-indexes.sql.
+--preconditions onFail:MARK_RAN onError:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname='position_pkey'
+
+ALTER TABLE position
+  ADD PRIMARY KEY (account_id, product_id);
+
+ALTER TABLE position
+  ADD FOREIGN KEY (account_id) REFERENCES account;
+
+ALTER TABLE position
+  ADD FOREIGN KEY (product_id) REFERENCES product;
+
+ALTER TABLE position_exposure
+  ADD PRIMARY KEY (account_id, product_id, slot);
+
+ALTER TABLE price
+  ADD PRIMARY KEY (product_id, price_date);
+
+ALTER TABLE price
+  ADD FOREIGN KEY (product_id) REFERENCES product;
+
+CREATE INDEX ON position(product_id);
+
+CREATE INDEX ON position(is_hedge);
+
+CREATE INDEX ON account (fund_id);
+
+CREATE INDEX ON fund (client_id);
+
+CREATE INDEX ON product (kind);
+
+CREATE INDEX ON entitlement (fund_id);
+
+ANALYZE;

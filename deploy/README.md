@@ -521,3 +521,51 @@ has run against a remote database yet.
 
 In-process rather than Redis, on purpose: the data is small, identical on every instance,
 and a Redis hop would cost more than the query it replaces.
+
+---
+
+## Upgrading a client
+
+A client's database is **built and upgraded by Liquibase**, from the changelog inside the
+ingest jar. It runs on startup, takes a lock, and adds — it never drops.
+
+```
+ingest/src/main/resources/db/changelog/
+  db.changelog-master.yaml
+  changes/001-baseline.sql          the tables as first shipped
+  changes/002-hedge-reason-shown.sql
+```
+
+To change the schema, **add a file**. Never edit one that has run somewhere: a changeset that
+has been applied is history, not source, and Liquibase will refuse it on the next start.
+
+### The baseline has preconditions, and why that matters
+
+`001-baseline.sql` is the schema as it stood the day this started, which means every database
+that already existed has it. So the changeset checks first:
+
+```sql
+--preconditions onFail:MARK_RAN onError:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT count(*) FROM information_schema.tables
+  WHERE table_schema='public' AND table_name='position'
+```
+
+An existing client marks it as run and moves on. A new client runs it. One changelog, both
+cases, no branch.
+
+### Proved both directions
+
+| | | |
+|---|---|---|
+| **existing client** | 001 `MARK_RAN`, 002 `EXECUTED` | 1,630,800 positions and their hedge for 4,000,000 untouched, new column added |
+| **new client** | 001 and 002 both `EXECUTED` | 19 tables, 25 indexes, from an empty database |
+
+### `db/1-schema.sql` is for you, not for them
+
+It opens with `DROP TABLE ... CASCADE`. That is fine on a laptop and would destroy a client, so
+it now says so on the first line. Nothing ships it.
+
+### Only ingest migrates
+
+`api` and `gateway` have `spring.liquibase.enabled: false`. One service owns the schema.
+Three services racing to migrate the same database is a problem you only get to have once.
