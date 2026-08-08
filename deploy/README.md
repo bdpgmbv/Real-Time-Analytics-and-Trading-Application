@@ -143,13 +143,17 @@ Metrics the alerts depend on:
 counted messages read and reported success for four hours a night while the FX rate
 writer was matching zero rows.
 
-## Running a sender
+## Sending it some data
+
+The generator lives in its own project now, `rtat-datagen`, because a client never runs it —
+their prices come from a market data vendor and their positions from their custodian.
 
 ```bash
-java -jar stream/build/libs/rtat-stream-0.1.0-SNAPSHOT.jar --rtat.send=position
+cd ../rtat-datagen
+RTAT_DB_PASSWORD=... java -jar build/libs/rtat-datagen-0.1.0-SNAPSHOT.jar --rtat.send=price
 ```
 
-`position`, `price`, `rate`, `trade`, `hedge-fill`. Naming none of them lists them.
+What a real client sends instead is written down in [docs/wire-format.md](../docs/wire-format.md).
 
 ## Tuning
 
