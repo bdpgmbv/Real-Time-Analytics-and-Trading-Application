@@ -13,7 +13,7 @@ import java.util.Map;
 public final class HoldingsLoader {
 
   static final String THE_QUESTION =
-      "SELECT pos.product_id, acc.fund_id, prod.currency, sum(pos.how_many)"
+      "SELECT pos.product_id, acc.fund_id, prod.currency, sum(pos.quantity)"
           + "  FROM position pos"
           + "  JOIN account acc ON acc.account_id = pos.account_id"
           + "  JOIN product prod ON prod.product_id = pos.product_id"

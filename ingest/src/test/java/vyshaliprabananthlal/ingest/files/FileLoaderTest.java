@@ -89,7 +89,7 @@ class FileLoaderTest {
 
     Double whatWePaid =
         database.queryForObject(
-            "SELECT what_we_paid FROM position p JOIN product r ON r.product_id = p.product_id"
+            "SELECT cost FROM position p JOIN product r ON r.product_id = p.product_id"
                 + " WHERE r.identifier = '000000001'",
             Double.class);
 
@@ -225,7 +225,8 @@ class FileLoaderTest {
   void howItArrivedIsRecorded() {
     loader.load("northgate.csv", commaFile(), "UI UPLOAD");
 
-    String arrivedHow = database.queryForObject("SELECT arrived_how FROM file_load", String.class);
+    String arrivedHow =
+        database.queryForObject("SELECT arrival_method FROM file_load", String.class);
 
     assertThat(arrivedHow).isEqualTo("UI UPLOAD");
   }
@@ -249,7 +250,7 @@ class FileLoaderTest {
   private double howManyWeHold(String identifier) {
     Double held =
         database.queryForObject(
-            "SELECT p.how_many FROM position p"
+            "SELECT p.quantity FROM position p"
                 + " JOIN product r ON r.product_id = p.product_id"
                 + " WHERE r.identifier = ?",
             Double.class,

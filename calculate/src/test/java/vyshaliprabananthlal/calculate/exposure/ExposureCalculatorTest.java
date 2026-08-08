@@ -42,7 +42,7 @@ class ExposureCalculatorTest {
         "INSERT INTO currency VALUES ('USD','US Dollar',2),('EUR','Euro',2),"
             + "('GBP','Pound',2),('JPY','Yen',0),('CHF','Franc',2)");
     database.execute(
-        "INSERT INTO fx_rate (from_currency,to_currency,rate,rate_date,where_from) VALUES"
+        "INSERT INTO fx_rate (from_currency,to_currency,rate,rate_date,source) VALUES"
             + " ('USD','USD',1.0,CURRENT_DATE,'SEED'),"
             + " ('EUR','USD',1.10,CURRENT_DATE,'SEED'),"
             + " ('GBP','USD',1.25,CURRENT_DATE,'SEED'),"
@@ -61,7 +61,7 @@ class ExposureCalculatorTest {
             + "        (101,'SHARES','Shell','GBP','000000101'),"
             + "        (102,'SHARES','Sony','JPY','000000102')");
     database.execute(
-        "INSERT INTO price (product_id,price,how_fresh,price_date,arrived_at) VALUES"
+        "INSERT INTO price (product_id,price,freshness,price_date,arrived_at) VALUES"
             + " (100,100.0,'EOD',CURRENT_DATE,now()),"
             + " (101,50.0,'EOD',CURRENT_DATE,now()),"
             + " (102,2000.0,'EOD',CURRENT_DATE,now())");
@@ -160,7 +160,7 @@ class ExposureCalculatorTest {
   @DisplayName("a price typed in by hand wins over the price that came off the feed")
   void aTypedInPriceWins() {
     hold(10, 100, 500);
-    database.execute("UPDATE position SET price_typed_in = 120 WHERE account_id=10");
+    database.execute("UPDATE position SET manual_price = 120 WHERE account_id=10");
 
     FundExposure exposure = calculator.forWholeFund(1);
 
@@ -212,7 +212,7 @@ class ExposureCalculatorTest {
         "INSERT INTO product (product_id,kind,name,currency,identifier) OVERRIDING SYSTEM VALUE"
             + " VALUES (103,'SHARES','Apple','USD','000000103')");
     database.execute(
-        "INSERT INTO price (product_id,price,how_fresh,price_date,arrived_at)"
+        "INSERT INTO price (product_id,price,freshness,price_date,arrived_at)"
             + " VALUES (103,10.0,'EOD',CURRENT_DATE,now())");
     hold(10, 103, 100);
 
@@ -223,7 +223,7 @@ class ExposureCalculatorTest {
 
   private void hold(int accountId, int productId, double howMany) {
     database.update(
-        "INSERT INTO position (account_id,product_id,how_many,what_we_paid,is_a_hedge,"
+        "INSERT INTO position (account_id,product_id,quantity,cost,is_hedge,"
             + "position_date) VALUES (?,?,?,0,false,CURRENT_DATE)",
         accountId,
         productId,

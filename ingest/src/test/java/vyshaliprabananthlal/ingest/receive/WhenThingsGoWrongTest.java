@@ -92,7 +92,7 @@ class WhenThingsGoWrongTest {
             () ->
                 batch.writeThenAcknowledge(
                     "position",
-                    "UPDATE position SET how_many = ? WHERE account_id = ? AND product_id = ?",
+                    "UPDATE position SET quantity = ? WHERE account_id = ? AND product_id = ?",
                     List.<Object[]>of(new Object[] {1.0, 1, 1}),
                     kafka))
         .isInstanceOf(DataAccessResourceFailureException.class);
@@ -132,7 +132,7 @@ class WhenThingsGoWrongTest {
 
     try {
       batch.write(
-          "position", "UPDATE position SET how_many = ?", List.<Object[]>of(new Object[] {1}));
+          "position", "UPDATE position SET quantity = ?", List.<Object[]>of(new Object[] {1}));
     } catch (RuntimeException expected) {
       assertThat(expected).isNotNull();
     }
@@ -149,7 +149,7 @@ class WhenThingsGoWrongTest {
 
   private int howManyPositions() {
     Integer counted =
-        database.queryForObject("SELECT count(*) FROM position WHERE how_many <> 0", Integer.class);
+        database.queryForObject("SELECT count(*) FROM position WHERE quantity <> 0", Integer.class);
     return counted == null ? 0 : counted;
   }
 

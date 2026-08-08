@@ -51,11 +51,11 @@ class PositionPriceAndRateListenerTest {
         "INSERT INTO product (kind, name, currency, identifier)"
             + " VALUES ('SHARES', 'Test Co', 'USD', '000000001')");
     database.execute(
-        "INSERT INTO price (product_id, price, how_fresh, price_date, arrived_at)"
+        "INSERT INTO price (product_id, price, freshness, price_date, arrived_at)"
             + " SELECT product_id, 100.0, 'DELAYED 20 MINUTES', CURRENT_DATE, now() FROM product");
     database.execute(
-        "INSERT INTO position (account_id, product_id, how_many, what_we_paid,"
-            + " is_a_hedge, position_date)"
+        "INSERT INTO position (account_id, product_id, quantity, cost,"
+            + " is_hedge, position_date)"
             + " SELECT a.account_id, p.product_id, 1000, 5000, false, CURRENT_DATE"
             + " FROM account a, product p");
   }
@@ -151,7 +151,7 @@ class PositionPriceAndRateListenerTest {
   }
 
   private double howManyWeHold() {
-    Double held = database.queryForObject("SELECT how_many FROM position", Double.class);
+    Double held = database.queryForObject("SELECT quantity FROM position", Double.class);
     return held == null ? 0 : held;
   }
 
@@ -166,7 +166,7 @@ class PositionPriceAndRateListenerTest {
   }
 
   private String whereTheRateCameFrom() {
-    String found = database.queryForObject("SELECT where_from FROM fx_rate", String.class);
+    String found = database.queryForObject("SELECT source FROM fx_rate", String.class);
     return found == null ? "" : found;
   }
 

@@ -2,7 +2,7 @@ WITH what_we_hold AS (
   SELECT pos.account_id,
          pos.product_id,
          prod.currency AS product_currency,
-         pos.how_many * coalesce(pos.price_typed_in, latest.price) AS market_value
+         pos.quantity * coalesce(pos.manual_price, latest.price) AS market_value
     FROM position pos
     JOIN product prod ON prod.product_id = pos.product_id
     JOIN price latest ON latest.product_id = pos.product_id

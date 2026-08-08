@@ -174,7 +174,7 @@ class FolderWatcherTest {
   }
 
   private double howManyWeHold() {
-    Double held = database.queryForObject("SELECT how_many FROM position", Double.class);
+    Double held = database.queryForObject("SELECT quantity FROM position", Double.class);
     return held == null ? 0 : held;
   }
 

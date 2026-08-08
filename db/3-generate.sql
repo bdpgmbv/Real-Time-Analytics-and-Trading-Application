@@ -97,7 +97,7 @@ FROM currency;
 
 \echo 'STEP 4  -  a starting price for every product'
 
-INSERT INTO price (product_id, price, how_fresh, price_date, arrived_at)
+INSERT INTO price (product_id, price, freshness, price_date, arrived_at)
 SELECT product_id,
        CASE WHEN kind IN ('SHARES', 'EQUITY SWAP')
             THEN (random() * 300 + 5)::numeric(20,6)
@@ -189,8 +189,8 @@ JOIN fund ON fund.client_id = app_user.client_id;
 \echo 'STEP 9  -  positions:  400 per small account,  1,000 medium,  2,500 large'
 \echo '          this is the big one'
 
-INSERT INTO position (account_id, product_id, how_many, what_we_paid,
-                      is_a_hedge, position_date)
+INSERT INTO position (account_id, product_id, quantity, cost,
+                      is_hedge, position_date)
 SELECT account.account_id,
 
        1 + ((account.account_id * 100 + position_number) % 250000),

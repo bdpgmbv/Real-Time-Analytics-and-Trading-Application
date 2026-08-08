@@ -1,12 +1,12 @@
 WITH newly_recorded AS (
-  INSERT INTO trade (trade_id, account_id, product_id, how_many, price,
-                     happened_at, trade_date, came_from)
+  INSERT INTO trade (trade_id, account_id, product_id, quantity, price,
+                     happened_at, trade_date, source)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT (trade_id) DO NOTHING
-  RETURNING account_id, product_id, how_many
+  RETURNING account_id, product_id, quantity
 )
 UPDATE position
-   SET how_many = position.how_many + newly_recorded.how_many
+   SET quantity = position.quantity + newly_recorded.quantity
   FROM newly_recorded
  WHERE position.account_id = newly_recorded.account_id
    AND position.product_id = newly_recorded.product_id

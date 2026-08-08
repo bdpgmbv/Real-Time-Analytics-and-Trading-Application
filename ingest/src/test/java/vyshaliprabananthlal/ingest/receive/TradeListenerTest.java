@@ -51,8 +51,8 @@ class TradeListenerTest {
         "INSERT INTO product (kind, name, currency, identifier)"
             + " VALUES ('SHARES', 'Test Co', 'USD', '000000001')");
     database.execute(
-        "INSERT INTO position (account_id, product_id, how_many, what_we_paid,"
-            + " is_a_hedge, position_date)"
+        "INSERT INTO position (account_id, product_id, quantity, cost,"
+            + " is_hedge, position_date)"
             + " SELECT a.account_id, p.product_id, 1000, 5000, false, CURRENT_DATE"
             + " FROM account a, product p");
   }
@@ -122,7 +122,7 @@ class TradeListenerTest {
   }
 
   private double howManyWeHold() {
-    Double held = database.queryForObject("SELECT how_many FROM position", Double.class);
+    Double held = database.queryForObject("SELECT quantity FROM position", Double.class);
     return held == null ? 0 : held;
   }
 

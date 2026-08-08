@@ -31,7 +31,7 @@ class LoadWhoHoldsWhatTest {
             + " VALUES (100,10,'A'),(101,10,'B'),(200,11,'C');"
             + "INSERT INTO product (product_id,kind,name,currency,identifier)"
             + " OVERRIDING SYSTEM VALUE VALUES (500,'SHARES','Airbus','EUR','000000500');"
-            + "INSERT INTO position (account_id,product_id,how_many,what_we_paid,is_a_hedge,"
+            + "INSERT INTO position (account_id,product_id,quantity,cost,is_hedge,"
             + "position_date) VALUES (100,500,6,0,false,CURRENT_DATE),"
             + " (101,500,4,0,false,CURRENT_DATE),(200,500,100,0,false,CURRENT_DATE);");
   }

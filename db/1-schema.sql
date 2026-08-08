@@ -21,7 +21,7 @@ CREATE TABLE fx_rate (
   to_currency   CHAR(3)        NOT NULL REFERENCES currency,
   rate          NUMERIC(20,10) NOT NULL,
   rate_date     DATE           NOT NULL,
-  where_from    TEXT           NOT NULL,
+  source    TEXT           NOT NULL,
   PRIMARY KEY (from_currency, to_currency, rate_date)
 );
 
@@ -65,10 +65,10 @@ CREATE TABLE account (
 CREATE TABLE position (
   account_id       INTEGER       NOT NULL,
   product_id       INTEGER       NOT NULL,
-  how_many         NUMERIC(20,4) NOT NULL,
-  what_we_paid     NUMERIC(20,4) NOT NULL,
-  is_a_hedge       BOOLEAN       NOT NULL,
-  price_typed_in   NUMERIC(20,6),
+  quantity         NUMERIC(20,4) NOT NULL,
+  cost     NUMERIC(20,4) NOT NULL,
+  is_hedge       BOOLEAN       NOT NULL,
+  manual_price   NUMERIC(20,6),
   comments         TEXT,
   position_date    DATE          NOT NULL
 );
@@ -86,7 +86,7 @@ CREATE TABLE position_exposure (
 CREATE TABLE price (
   product_id   INTEGER       NOT NULL,
   price        NUMERIC(20,6) NOT NULL,
-  how_fresh    TEXT          NOT NULL,
+  freshness    TEXT          NOT NULL,
   price_date   DATE          NOT NULL,
   arrived_at   TIMESTAMPTZ   NOT NULL
 );
@@ -96,11 +96,11 @@ CREATE TABLE trade (
   trade_id    BIGINT        PRIMARY KEY,
   account_id  INTEGER       NOT NULL REFERENCES account,
   product_id  INTEGER       NOT NULL REFERENCES product,
-  how_many    NUMERIC(20,4) NOT NULL,
+  quantity    NUMERIC(20,4) NOT NULL,
   price       NUMERIC(20,6) NOT NULL,
   happened_at TIMESTAMPTZ   NOT NULL,
   trade_date  DATE          NOT NULL,
-  came_from   TEXT          NOT NULL
+  source   TEXT          NOT NULL
 );
 
 
@@ -110,14 +110,14 @@ CREATE TABLE hedge (
   currency           CHAR(3)       NOT NULL REFERENCES currency,
   hedge_date         DATE          NOT NULL,
   exposure_amount    NUMERIC(20,4) NOT NULL,
-  we_suggested       NUMERIC(20,4) NOT NULL,
-  client_chose       NUMERIC(20,4) NOT NULL,
+  suggested_amount       NUMERIC(20,4) NOT NULL,
+  chosen_amount       NUMERIC(20,4) NOT NULL,
   instrument         TEXT          NOT NULL,
   settles_on         DATE          NOT NULL,
   status             TEXT          NOT NULL,
   sent_by            TEXT,
   sent_at            TIMESTAMPTZ,
-  their_reference    TEXT
+  external_reference    TEXT
 );
 
 
@@ -125,9 +125,9 @@ CREATE TABLE hedge_fill (
   fill_id         BIGINT         PRIMARY KEY,
   hedge_id        BIGINT         NOT NULL REFERENCES hedge,
   amount_filled   NUMERIC(20,4)  NOT NULL,
-  rate_we_got     NUMERIC(20,10) NOT NULL,
+  fill_rate     NUMERIC(20,10) NOT NULL,
   filled_at       TIMESTAMPTZ    NOT NULL,
-  their_reference TEXT
+  external_reference TEXT
 );
 
 
@@ -152,8 +152,8 @@ CREATE TABLE file_load (
   file_name      TEXT        NOT NULL,
   fingerprint    TEXT        NOT NULL UNIQUE,
   custodian      TEXT        NOT NULL,
-  arrived_how    TEXT        NOT NULL,
-  rows_in_file   INTEGER     NOT NULL,
+  arrival_method    TEXT        NOT NULL,
+  total_rows   INTEGER     NOT NULL,
   rows_loaded    INTEGER     NOT NULL,
   rows_rejected  INTEGER     NOT NULL,
   started_at     TIMESTAMPTZ NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE file_load (
 CREATE TABLE file_row_problem (
   file_load_id INTEGER NOT NULL REFERENCES file_load,
   line_number  INTEGER NOT NULL,
-  the_line     TEXT    NOT NULL,
-  what_is_wrong TEXT   NOT NULL,
+  line_text     TEXT    NOT NULL,
+  reason TEXT   NOT NULL,
   PRIMARY KEY (file_load_id, line_number)
 );

@@ -43,8 +43,8 @@ class HedgeBookTest {
 
     assertThat(sent).hasSize(1);
     assertThat(statusOf(sent.get(0))).isEqualTo("SENT");
-    assertThat(columnOf(sent.get(0), "client_chose")).isEqualTo(-5000000.0);
-    assertThat(columnOf(sent.get(0), "we_suggested")).isEqualTo(-5000000.0);
+    assertThat(columnOf(sent.get(0), "chosen_amount")).isEqualTo(-5000000.0);
+    assertThat(columnOf(sent.get(0), "suggested_amount")).isEqualTo(-5000000.0);
   }
 
   @Test
@@ -52,8 +52,8 @@ class HedgeBookTest {
   void whatTheClientChoseIsKept() {
     List<Long> sent = book.submit(1, List.of(euroAdvice()), List.of(-3000000.0), "a.person");
 
-    assertThat(columnOf(sent.get(0), "we_suggested")).isEqualTo(-5000000.0);
-    assertThat(columnOf(sent.get(0), "client_chose")).isEqualTo(-3000000.0);
+    assertThat(columnOf(sent.get(0), "suggested_amount")).isEqualTo(-5000000.0);
+    assertThat(columnOf(sent.get(0), "chosen_amount")).isEqualTo(-3000000.0);
   }
 
   @Test
@@ -121,7 +121,7 @@ class HedgeBookTest {
   }
 
   private String referenceOf(long hedgeId) {
-    return oneText("SELECT their_reference FROM hedge WHERE hedge_id = ?", hedgeId);
+    return oneText("SELECT external_reference FROM hedge WHERE hedge_id = ?", hedgeId);
   }
 
   private String oneText(String question, long hedgeId) {

@@ -34,7 +34,7 @@ public class PositionSender implements Sender {
   public void sendContinuously() throws InterruptedException {
     List<MovingHolding> holdings =
         rows.queryRequired(
-            "SELECT account_id, product_id, how_many FROM position LIMIT " + HOW_MANY_TO_LOAD,
+            "SELECT account_id, product_id, quantity FROM position LIMIT " + HOW_MANY_TO_LOAD,
             (row, number) -> new MovingHolding(row.getInt(1), row.getInt(2), row.getDouble(3)),
             "no positions found - run db/3-generate.sql first");
 

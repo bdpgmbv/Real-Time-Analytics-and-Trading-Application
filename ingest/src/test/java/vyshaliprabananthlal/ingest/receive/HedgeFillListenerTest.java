@@ -50,7 +50,7 @@ class HedgeFillListenerTest {
             + " SELECT client_id, 'Fund', 'EUR' FROM client");
     database.execute(
         "INSERT INTO hedge (hedge_id, fund_id, currency, hedge_date, exposure_amount,"
-            + " we_suggested, client_chose, instrument, settles_on, status, their_reference)"
+            + " suggested_amount, chosen_amount, instrument, settles_on, status, external_reference)"
             + " SELECT 500, fund_id, 'EUR', CURRENT_DATE, -9000000, 9000000, 9000000,"
             + " 'FORWARD', CURRENT_DATE + 30, 'SENT', 'FXM-77120' FROM fund");
   }
@@ -116,8 +116,7 @@ class HedgeFillListenerTest {
 
     List<Double> rates =
         database.query(
-            "SELECT rate_we_got FROM hedge_fill ORDER BY fill_id",
-            (row, number) -> row.getDouble(1));
+            "SELECT fill_rate FROM hedge_fill ORDER BY fill_id", (row, number) -> row.getDouble(1));
 
     assertThat(rates).containsExactly(1.1540, 1.1538);
   }

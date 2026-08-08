@@ -69,11 +69,11 @@ The lost batch is exactly one `max.poll.records`. Nothing logged an error.
 **Why write-then-commit is safe here, and when it stops being safe.** The write is
 
 ```sql
-UPDATE position SET how_many = ? WHERE account_id = ? AND product_id = ?
+UPDATE position SET quantity = ? WHERE account_id = ? AND product_id = ?
 ```
 
 Setting a value to 500 twice leaves it at 500, so replaying a batch changes nothing. Had it
-been `how_many = how_many + ?`, replaying would double the position — trading silent loss for
+been `quantity = quantity + ?`, replaying would double the position — trading silent loss for
 silent corruption, which is worse because it looks like a real number.
 
 **The follow-up to expect:** what if the write is genuinely not idempotent, such as appending a

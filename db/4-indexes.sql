@@ -19,7 +19,7 @@ ALTER TABLE price
 
 CREATE INDEX ON position(product_id);
 
-CREATE INDEX ON position(is_a_hedge);
+CREATE INDEX ON position(is_hedge);
 
 CREATE INDEX ON account (fund_id);
 

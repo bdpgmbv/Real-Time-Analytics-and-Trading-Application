@@ -136,7 +136,7 @@ VALUES
   ('RUB', 0.0111),
   ('XAU', 2400.0);
 
-INSERT INTO fx_rate (from_currency, to_currency, rate, rate_date, where_from)
+INSERT INTO fx_rate (from_currency, to_currency, rate, rate_date, source)
 SELECT
   one.code,
   other.code,

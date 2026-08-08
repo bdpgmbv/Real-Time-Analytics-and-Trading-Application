@@ -67,7 +67,7 @@ public class HedgeFillSender implements Sender {
 
   private List<WaitingHedge> pendingHedges() {
     return rows.query(
-        "SELECT hedge_id, client_chose, their_reference FROM hedge"
+        "SELECT hedge_id, chosen_amount, external_reference FROM hedge"
             + " WHERE status IN ('SENT', 'PARTIALLY FILLED')"
             + " ORDER BY hedge_id LIMIT "
             + HOW_MANY_TO_LOAD,
